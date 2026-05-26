@@ -1,0 +1,3118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Plan Mensual</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--v:#1D9E75;--vd:#0F6E56;--vl:#E1F5EE;--vm:#5DCAA5;--am:#EF9F27;--al:#FAEEDA;--bl:#E6F1FB;--pl:#FBEAF0;--bg:#FAFAF8;--card:#FFF;--tx:#1A1A1A;--mu:#6B7280;--br:rgba(0,0,0,.08);--rad:16px;--rsm:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+.hdr{background:linear-gradient(135deg,#0F6E56,#1D9E75 55%,#5DCAA5);padding:2rem 1.5rem 2.5rem;position:relative;overflow:hidden;}
+.hdr::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06);}
+.hc{position:relative;z-index:1;max-width:960px;margin:0 auto;}
+.htag{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:.75rem;}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:clamp(22px,4vw,36px);color:#fff;line-height:1.15;margin-bottom:.4rem;}
+.hdr p{color:rgba(255,255,255,.75);font-size:13px;}
+.hmacros{display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap;}
+.hmacro{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:var(--rsm);padding:8px 14px;text-align:center;}
+.hmacro .val{font-size:16px;font-weight:600;color:#fff;}
+.hmacro .lbl{font-size:10px;color:rgba(255,255,255,.7);margin-top:1px;}
+.mbar{background:var(--card);border-bottom:1px solid var(--br);padding:.6rem 1rem;}
+.mbar-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.mbar label{font-size:13px;font-weight:600;white-space:nowrap;}
+.mchips{display:flex;gap:4px;flex-wrap:wrap;}
+.mchip{padding:4px 10px;border-radius:20px;border:1px solid var(--br);font-size:11px;font-weight:500;cursor:pointer;background:var(--card);color:var(--mu);transition:all .15s;}
+.mchip.active{background:var(--v);color:#fff;border-color:var(--v);}
+.sbnr{max-width:960px;margin:.4rem auto 0;padding:0 1rem;display:flex;gap:5px;flex-wrap:wrap;}
+.sbadge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;}
+.sb-f{background:#E1F5EE;color:#085041;}.sb-v{background:#E6F1FB;color:#0C447C;}
+.nav-wrap{background:var(--card);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100;}
+.nav{display:flex;max-width:960px;margin:0 auto;overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nbtn{padding:13px 16px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--mu);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;}
+.nbtn.active{color:var(--v);border-bottom-color:var(--v);}
+.main{max-width:960px;margin:0 auto;padding:1.5rem 1.25rem 4rem;}
+.sec{display:none;}.sec.active{display:block;}
+.stitle{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:.25rem;}
+.ssub{font-size:13px;color:var(--mu);margin-bottom:1.25rem;line-height:1.6;}
+.wkt{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:.6rem;}
+.wkd{height:1px;background:var(--br);margin:1.25rem 0;}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:1.25rem;}
+.cal-hd{text-align:center;font-size:10px;font-weight:700;color:var(--mu);padding:5px 0;text-transform:uppercase;letter-spacing:.06em;}
+.cal-day{background:var(--card);border:1px solid var(--br);border-radius:9px;padding:6px 5px;min-height:150px;position:relative;}
+.cal-day.gym{border-left:3px solid var(--v);}.cal-day.mov{border-left:3px solid var(--am);}.cal-day.rest{border-left:3px solid #D3D1C7;}
+.cal-day.q1{background:#FDFFFE;}.cal-day.q2{background:#FFFDF8;}
+.dnum{font-size:12px;font-weight:700;margin-bottom:4px;}
+.q1 .dnum{color:var(--vd);}.q2 .dnum{color:#854F0B;}
+.chip{display:block;font-size:9px;padding:2px 5px;border-radius:4px;margin-bottom:2px;cursor:pointer;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip:hover{opacity:.7;}
+.chip-d{background:#E1F5EE;color:#085041;}.chip-m{background:#FAEEDA;color:#633806;}
+.chip-m2{background:#FFF0FA;color:#72243E;}.chip-a{background:#E6F1FB;color:#0C447C;}.chip-c{background:#FBEAF0;color:#72243E;}
+.dico{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;}
+.ico-g{background:var(--v);}.ico-m{background:var(--am);}.ico-r{background:#B4B2A9;}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;padding:8px 12px;background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mu);}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal{background:var(--card);border-radius:var(--rad);max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.mtop{padding:1rem 1.4rem;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--br);}
+.mtop h3{font-family:'DM Serif Display',serif;font-size:18px;line-height:1.2;}
+.mmeta{font-size:11px;color:var(--mu);margin-top:3px;}
+.mclose{background:none;border:none;font-size:20px;cursor:pointer;color:var(--mu);padding:0 0 0 10px;flex-shrink:0;}
+.mbody{padding:1rem 1.4rem;}
+.rlabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:10px 0 5px;}
+.ing-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--br);}
+.ing-row:last-child{border-bottom:none;}.ing-qty{color:var(--mu);font-weight:500;}
+.step-item{display:flex;gap:8px;font-size:12px;margin-bottom:7px;line-height:1.6;}
+.snum{min-width:18px;height:18px;border-radius:50%;background:var(--v);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.rtip{background:var(--vl);border-left:3px solid var(--v);padding:8px 12px;font-size:12px;color:var(--vd);margin-top:8px;line-height:1.5;border-radius:0 6px 6px 0;}
+.rsust{background:var(--al);border-left:3px solid var(--am);padding:8px 12px;font-size:12px;color:#633806;margin-top:6px;line-height:1.5;border-radius:0 6px 6px 0;}
+.rec-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:.5rem;}
+.rmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;}
+.rpill{font-size:11px;background:var(--bg);border:1px solid var(--br);padding:2px 8px;border-radius:20px;color:var(--mu);}
+.rec-idx-card{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);margin-bottom:6px;overflow:hidden;cursor:pointer;}
+.rec-idx-inner{display:flex;justify-content:space-between;align-items:flex-start;padding:.8rem 1rem;}
+.rec-idx-inner:hover{background:var(--bg);}
+.ex-week{margin-bottom:2rem;}
+.ex-wt{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:.2rem;}
+.ex-ws{font-size:12px;color:var(--mu);margin-bottom:1rem;}
+/* Bloque de día — estilo tarjeta con header */
+.ex-bloque{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);overflow:hidden;margin-bottom:10px;}
+.ex-bloque-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;}
+.ex-bloque-header:hover{background:var(--bg);}
+.ex-bloque-left{display:flex;align-items:center;gap:10px;}
+.ex-bloque-emoji{font-size:20px;}
+.ex-bloque-title{font-size:15px;font-weight:700;}
+.ex-bloque-sub{font-size:11px;color:var(--mu);margin-top:1px;}
+.ex-bloque-meta{display:flex;align-items:center;gap:8px;}
+.ex-bloque-timer{background:#0F6E56;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.ex-bloque-chevron{font-size:13px;color:var(--mu);transition:transform .2s;margin-left:4px;}
+.ex-bloque-chevron.open{transform:rotate(180deg);}
+/* Progreso del bloque */
+.ex-bloque-prog{font-size:11px;color:var(--mu);font-weight:600;}
+/* Tabla de tareas */
+.ex-tabla-wrap{display:none;}
+.ex-tabla-wrap.open{display:block;}
+.ex-tabla-head{display:grid;grid-template-columns:1fr 140px 80px 80px 44px;gap:0;background:#F7F6F3;border-top:1px solid var(--br);}
+.ex-tabla-head span{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;padding:8px 14px;}
+.ex-tarea{display:grid;grid-template-columns:1fr 140px 80px 80px 44px;gap:0;border-top:1px solid var(--br);align-items:center;transition:background .15s;}
+.ex-tarea:hover{background:var(--bg);}
+.ex-tarea.done{opacity:.45;}
+.ex-tarea.done .ex-tnombre{text-decoration:line-through;}
+.ex-tcell{padding:12px 14px;font-size:13px;}
+.ex-tcell:last-child{padding:10px;display:flex;justify-content:center;}
+.ex-tnombre{font-weight:600;font-size:13px;line-height:1.3;}
+.ex-tdesc{font-size:11px;color:var(--mu);margin-top:2px;}
+.ex-tguia{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:var(--v);background:var(--vl);padding:3px 9px;border-radius:20px;cursor:pointer;border:none;font-family:inherit;}
+.ex-tguia:hover{background:var(--vm);color:#fff;}
+.ex-tsets{font-size:12px;color:var(--mu);}
+.ex-nivel{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.nivel-facil{background:#E1F5EE;color:#085041;}
+.nivel-medio{background:#FAEEDA;color:#633806;}
+.nivel-dificil{background:#FFE4E4;color:#991B1B;}
+.ex-tcheck{width:20px;height:20px;accent-color:var(--v);cursor:pointer;}
+/* Guia modal */
+.guia-modal{background:var(--card);border-radius:var(--rad);padding:1.5rem;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.guia-modal h3{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:.75rem;}
+.guia-step{display:flex;gap:10px;font-size:13px;margin-bottom:8px;line-height:1.6;}
+.guia-snum{min-width:20px;height:20px;border-radius:50%;background:var(--v);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+/* Responsive tabla ejercicio */
+@media(max-width:600px){
+  .ex-tabla-head{grid-template-columns:1fr 70px 50px 44px;}
+  .ex-tabla-head span:nth-child(2){display:none;}
+  .ex-tarea{grid-template-columns:1fr 70px 50px 44px;}
+  .ex-tcell:nth-child(2){display:none;}
+  .ex-tcell{padding:9px 10px;}
+}
+.chevron{width:14px;height:14px;flex-shrink:0;color:var(--mu);transition:transform .2s;}
+.chevron.open{transform:rotate(180deg);}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem;}
+@media(max-width:560px){.hgrid{grid-template-columns:1fr;}}
+.hcard{background:var(--card);border:1px solid var(--br);border-top:3px solid var(--v);border-radius:0 0 var(--rad) var(--rad);padding:1rem;}
+.hcard h4{font-size:13px;font-weight:600;margin-bottom:6px;}.hcard p{font-size:12px;color:var(--mu);line-height:1.6;}
+
+
+/* ══════════════════════════════════════
+   RESPONSIVE — móvil, tablet, desktop
+══════════════════════════════════════ */
+
+/* ── NAVEGACIÓN MÓVIL ── */
+@media(max-width:600px){
+  .hdr{padding:1.25rem 1rem 1.75rem;}
+  .hdr h1{font-size:22px;}
+  .hdr p{font-size:12px;}
+  .hmacros{gap:6px;}
+  .hmacro{padding:6px 10px;flex:1;min-width:70px;}
+  .hmacro .val{font-size:15px;}
+  .hmacro .lbl{font-size:9px;}
+
+  .mbar{padding:.5rem .75rem;}
+  .mbar label{font-size:12px;}
+  .mchip{font-size:10px;padding:3px 8px;}
+
+  .nav{padding:0;}
+  .nbtn{padding:10px 11px;font-size:11px;}
+
+  .main{padding:1rem .75rem 5rem;}
+  .stitle{font-size:20px;}
+  .ssub{font-size:12px;}
+}
+
+/* ── CRONOGRAMA — MÓVIL: lista por semana en lugar de grid 7col ── */
+@media(max-width:700px){
+  /* Ocultar el grid de 7 columnas */
+  .cal{
+    display:block;
+  }
+  .cal-hd{display:none;}
+  /* Cada día ocupa el ancho completo */
+  .cal-day{
+    min-height:auto;
+    margin-bottom:8px;
+    border-radius:10px;
+    padding:10px 12px;
+    display:grid;
+    grid-template-columns:40px 1fr 1fr 1fr;
+    grid-template-rows:auto auto;
+    gap:4px 8px;
+    align-items:center;
+  }
+  .dnum{
+    grid-column:1;
+    grid-row:1/3;
+    font-size:18px;
+    font-weight:700;
+    text-align:center;
+    margin:0;
+    border-right:1px solid var(--br);
+    padding-right:8px;
+    align-self:center;
+  }
+  /* chips en fila horizontal */
+  .chip{
+    display:inline-flex;
+    font-size:9px;
+    padding:3px 6px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+    margin:1px;
+  }
+  .chip-d{grid-column:2;grid-row:1;}
+  .chip-m{grid-column:3;grid-row:1;}
+  .chip-a{grid-column:2;grid-row:2;}
+  .chip-m2{grid-column:3;grid-row:2;}
+  .chip-c{grid-column:4;grid-row:1/3;align-self:center;}
+  .dico{
+    position:static;
+    grid-column:4;
+    grid-row:1;
+    width:18px;height:18px;
+    font-size:9px;
+    justify-self:end;
+  }
+  .wkt{font-size:15px;}
+}
+
+/* ── CRONOGRAMA — TABLET: 7 col pero más compacto ── */
+@media(min-width:701px) and (max-width:900px){
+  .cal-day{min-height:130px;padding:5px 4px;}
+  .chip{font-size:8px;padding:2px 3px;}
+  .dnum{font-size:11px;}
+}
+
+/* ── MODAL RECETA — MÓVIL ── */
+@media(max-width:600px){
+  .modal{max-height:95vh;border-radius:var(--rad) var(--rad) 0 0;}
+  .overlay{align-items:flex-end;padding:0;}
+  .mtop{padding:.85rem 1rem;}
+  .mtop h3{font-size:16px;}
+  .mbody{padding:.85rem 1rem;}
+  .ing-row{font-size:11px;}
+  .step-item{font-size:11px;}
+}
+
+/* ── COMPRAS — grids ── */
+@media(max-width:600px){
+  .ctabs{gap:5px;}
+  .ctab{font-size:11px;padding:6px 10px;}
+  .mlist-cat-title{font-size:12px;}
+  .mlist-item{font-size:12px;flex-wrap:wrap;gap:4px;}
+  .mlist-need{font-size:11px;}
+}
+
+/* ── INVENTARIO — móvil ── */
+@media(max-width:600px){
+  .inv-header{flex-direction:column;align-items:flex-start;}
+  .inv-summary{gap:5px;}
+  .ist{font-size:11px;padding:5px 10px;}
+  .inv-ftabs{gap:4px;}
+  .inv-ftab{font-size:10px;padding:4px 9px;}
+  .stock-row{flex-wrap:wrap;gap:4px;}
+  .stock-frac{min-width:auto;font-size:10px;}
+  .inv-actions{gap:4px;}
+  .qbtn{width:26px;height:26px;font-size:16px;}
+  .iact{font-size:10px;padding:3px 7px;}
+  .inv-name{font-size:12px;}
+  .inv-sbadge{font-size:9px;}
+}
+
+/* ── EJERCICIO — móvil ── */
+@media(max-width:600px){
+  .ex-ch{padding:.75rem .9rem;}
+  .ex-dn{font-size:13px;}
+  .ex-ds{font-size:10px;}
+  .ex-cb{padding:0 .9rem .75rem;}
+  .ex-table td{padding:4px 5px;font-size:11px;}
+  .ex-badge{font-size:9px;padding:2px 7px;}
+}
+
+/* ── HORMONAL — móvil ── */
+@media(max-width:560px){
+  .hgrid{grid-template-columns:1fr;}
+  .hcard{padding:.85rem;}
+  .hcard h4{font-size:12px;}
+  .hcard p{font-size:11px;}
+}
+
+/* ── LOCK SCREEN — móvil ── */
+@media(max-width:480px){
+  #lockScreen > div{
+    padding:1.5rem 1.25rem;
+  }
+}
+
+/* ── MONTH SELECTOR — scroll horizontal limpio ── */
+@media(max-width:600px){
+  .mbar-inner{gap:6px;}
+  .mchips{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .mchips::-webkit-scrollbar{display:none;}
+  .sbnr{display:none;} /* ocultar badges temporada en móvil — ahorra espacio */
+}
+
+/* ── ADD MODAL — móvil ── */
+@media(max-width:500px){
+  .add-modal{border-radius:var(--rad) var(--rad) 0 0;}
+  #addOverlay{align-items:flex-end;padding:0;}
+  .fg-row{grid-template-columns:1fr 1fr;}
+  .fg-row .fg:last-child{grid-column:1/3;}
+}
+
+/* ── NAVEGACIÓN: tamaño táctil mínimo ── */
+@media(max-width:600px){
+  .nbtn{min-height:44px;display:flex;align-items:center;}
+  .ctab,.inv-ftab,.mchip{min-height:36px;display:inline-flex;align-items:center;}
+}
+
+/* ── TABLA SEMANA VISTA SWIPE (cronograma tablet) ── */
+@media(min-width:601px) and (max-width:700px){
+  .cal{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .cal{grid-template-columns:repeat(7,minmax(90px,1fr));}
+}
+
+/* ── DESKTOP — sin cambios ── */
+@media(min-width:901px){
+  .cal-day{min-height:155px;}
+}
+
+/* ─── COMPRAS + INVENTARIO ─── */
+.ctabs{display:flex;gap:6px;margin-bottom:1.25rem;}
+.ctab{padding:6px 14px;border-radius:20px;border:1px solid var(--br);font-size:12px;font-weight:500;cursor:pointer;background:var(--card);color:var(--mu);transition:all .15s;}
+.ctab.active{background:var(--v);color:#fff;border-color:var(--v);}
+
+/* Lista de mercado */
+.mlist-cat{margin-bottom:.75rem;}
+.mlist-cat-count{font-size:11px;color:var(--mu);font-weight:400;}
+/* Items mercado */
+.mlist-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--br);font-size:13px;transition:all .35s ease;}
+.mlist-item:last-child{border-bottom:none;}
+.mlist-item.bought{opacity:.4;text-decoration:line-through;}
+/* Checkbox compra */
+.mcb{width:17px;height:17px;accent-color:var(--v);cursor:pointer;flex-shrink:0;}
+/* Nombre y badge tienda */
+.mlist-name{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.mlist-right{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.mlist-need{font-size:12px;font-weight:600;}
+.mlist-need.ok{color:var(--v);}
+.mlist-need.warn{color:var(--am);}
+.mlist-need.crit{color:#EF4444;}
+/* Badge de tienda */
+.tienda-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;white-space:nowrap;}
+.tb-super{background:#E1F5EE;color:#085041;}
+.tb-mercado{background:#FAEEDA;color:#633806;}
+.tb-asiatica{background:#EDE9FE;color:#5B21B6;}
+.tb-drogueria{background:#FFE4E4;color:#991B1B;}
+.tb-cualquiera{background:#F1EFE8;color:#5F5E5A;}
+/* Borde izquierdo por tienda */
+.tienda-super{border-left:3px solid #1D9E75;}
+.tienda-mercado{border-left:3px solid #EF9F27;}
+.tienda-asiatica{border-left:3px solid #8B5CF6;}
+.tienda-drogueria{border-left:3px solid #EF4444;}
+.tienda-cualquiera{border-left:3px solid #B4B2A9;}
+/* Categoría desplegable */
+.mcat-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:var(--bg);user-select:none;border-radius:var(--rsm) var(--rsm) 0 0;}
+.mcat-header:hover{background:#ECEAE4;}
+.mcat-chevron{font-size:14px;transition:transform .2s;display:inline-block;}
+.mcat-chevron.open{transform:rotate(0deg);}
+.mcat-chevron:not(.open){transform:rotate(-90deg);}
+.mcat-body{overflow:hidden;}
+.mcat-body:not(.open){display:none;}
+.mlist-card{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);overflow:hidden;margin-bottom:8px;}
+.mlist-empty{text-align:center;padding:1.5rem;font-size:13px;color:var(--mu);}
+.season-note{font-size:12px;background:var(--vl);color:var(--vd);padding:8px 12px;border-radius:var(--rsm);margin-bottom:.75rem;}
+.mlist-name{flex:1;}
+.mlist-need{font-size:12px;font-weight:600;color:var(--v);white-space:nowrap;margin-left:8px;}
+.mlist-need.warn{color:var(--am);}
+.mlist-need.crit{color:#EF4444;}
+.mlist-empty{text-align:center;padding:1.5rem;font-size:13px;color:var(--mu);}
+.mlist-card{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);overflow:hidden;margin-bottom:10px;}
+.season-note{font-size:12px;background:var(--vl);color:var(--vd);padding:8px 12px;border-radius:var(--rsm);margin-bottom:.75rem;}
+
+/* Inventario */
+.inv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
+.inv-summary{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;}
+.ist{border-radius:var(--rsm);padding:7px 12px;font-size:12px;font-weight:600;}
+.ist-ok{background:var(--vl);color:var(--vd);}.ist-low{background:var(--al);color:#633806;}.ist-out{background:#FFE4E4;color:#991B1B;}.ist-all{background:var(--bg);border:1px solid var(--br);color:var(--mu);}
+.inv-ftabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem;}
+.inv-ftab{padding:5px 11px;border-radius:20px;border:1px solid var(--br);font-size:11px;font-weight:500;cursor:pointer;background:var(--card);color:var(--mu);}
+.inv-ftab.active{background:var(--v);color:#fff;border-color:var(--v);}
+.inv-cat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin:1rem 0 .5rem;padding-bottom:4px;border-bottom:1px solid var(--br);}
+.inv-item{background:var(--card);border:1px solid var(--br);border-radius:10px;padding:.7rem 1rem;margin-bottom:5px;}
+.inv-item.ok{border-left:3px solid var(--v);}.inv-item.low{border-left:3px solid var(--am);background:#FFFEF5;}.inv-item.out{border-left:3px solid #EF4444;background:#FFF8F8;}
+.inv-top{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.inv-name{font-size:13px;font-weight:600;flex:1;}
+.inv-sbadge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.sb-ok{background:#E1F5EE;color:#085041;}.sb-low{background:#FAEEDA;color:#633806;}.sb-out{background:#FFE4E4;color:#991B1B;}
+.stock-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.stock-lbl{font-size:11px;color:var(--mu);white-space:nowrap;}
+.bar-wrap{flex:1;height:6px;background:#EBEBEB;border-radius:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:20px;transition:width .3s;}
+.bar-ok{background:linear-gradient(90deg,var(--v),var(--vm));}.bar-low{background:linear-gradient(90deg,var(--am),#F5C97F);}.bar-out{background:#EF4444;}
+.stock-frac{font-size:11px;font-weight:700;white-space:nowrap;min-width:80px;text-align:right;}
+.inv-actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.qbtn{width:22px;height:22px;border-radius:50%;border:1px solid var(--br);background:var(--bg);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;}
+.qbtn:hover{background:var(--vl);border-color:var(--v);color:var(--vd);}
+.qnum{font-size:13px;font-weight:700;min-width:20px;text-align:center;}
+.iact{padding:3px 8px;border-radius:7px;border:1px solid var(--br);font-size:11px;cursor:pointer;background:var(--bg);color:var(--tx);font-weight:500;}
+.iact:hover{background:var(--vl);border-color:var(--v);color:var(--vd);}
+.iact.del:hover{background:#FFE4E4;border-color:#EF4444;color:#991B1B;}
+.add-modal{background:var(--card);border-radius:var(--rad);padding:1.5rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+.add-modal h3{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:1rem;}
+.fg{margin-bottom:.7rem;}
+.fg label{font-size:11px;font-weight:700;color:var(--mu);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.fg input,.fg select{width:100%;padding:8px 10px;border:1px solid var(--br);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--tx);}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--v);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.form-btns{display:flex;gap:8px;margin-top:1rem;}
+.btn-prim{flex:1;background:var(--v);color:#fff;border:none;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-sec{padding:9px 14px;border:1px solid var(--br);border-radius:8px;font-size:13px;cursor:pointer;background:var(--bg);}
+
+/* ══ LISTA MERCADO — TIENDAS Y MEJORAS ══ */
+/* Colores por tienda */
+.tienda-super  {border-left:4px solid #1D9E75 !important;}
+.tienda-mercado{border-left:4px solid #EF9F27 !important;}
+.tienda-asiatica{border-left:4px solid #8B5CF6 !important;}
+.tienda-drogueria{border-left:4px solid #EF4444 !important;}
+.tienda-cualquiera{border-left:4px solid #6B7280 !important;}
+
+.tienda-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;white-space:nowrap;}
+.tb-super  {background:#E1F5EE;color:#085041;}
+.tb-mercado{background:#FAEEDA;color:#633806;}
+.tb-asiatica{background:#EDE9FE;color:#5B21B6;}
+.tb-drogueria{background:#FFE4E4;color:#991B1B;}
+.tb-cualquiera{background:#F1EFE8;color:#5F5E5A;}
+
+/* Filtros de tienda */
+.tienda-filtros{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem;}
+.tienda-filtros{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem;}
+.tienda-ftab{padding:6px 13px;border-radius:20px;border:1.5px solid var(--br);font-size:11px;font-weight:600;cursor:pointer;background:var(--card);color:var(--mu);transition:all .15s;}
+.tienda-ftab:hover{opacity:.8;}
+.tienda-ftab.active{color:#fff;}
+.tienda-ftab[data-t="todos"].active{background:#1A1A1A;}
+.tienda-ftab[data-t="super"].active{background:#1D9E75;}
+.tienda-ftab[data-t="mercado"].active{background:#EF9F27;}
+.tienda-ftab[data-t="asiatica"].active{background:#8B5CF6;}
+.tienda-ftab[data-t="drogueria"].active{background:#EF4444;}
+.tienda-ftab[data-t="cualquiera"].active{background:#6B7280;}
+
+/* Categorías desplegables */
+.mcat-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;border-radius:var(--rsm);background:var(--bg);user-select:none;}
+.mcat-header:hover{background:#F0F0EC;}
+.mcat-body{display:none;border-top:1px solid var(--br);}
+.mcat-body.open{display:block;}
+.mcat-chevron{font-size:13px;color:var(--mu);transition:transform .2s;}
+.mcat-chevron.open{transform:rotate(180deg);}
+
+/* Checkboxes mercado */
+.mlist-item{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--br);font-size:13px;}
+.mlist-item:last-child{border-bottom:none;}
+.mlist-item.bought{opacity:.45;text-decoration:line-through;}
+.mcb{width:17px;height:17px;accent-color:var(--v);cursor:pointer;flex-shrink:0;}
+.mlist-name{flex:1;}
+.mlist-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.mlist-need{font-size:12px;font-weight:600;}
+.mlist-need.crit{color:#EF4444;}
+.mlist-need.warn{color:#EF9F27;}
+.mlist-need.ok{color:var(--v);}
+
+/* ── CONSERVACIÓN ── */
+.conserva-selector{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);padding:1rem 1.25rem;margin-bottom:1rem;}
+.conserva-selector-title{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--tx);}
+.conserva-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.conserva-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--br);font-size:12px;cursor:pointer;background:var(--card);color:var(--mu);transition:all .15s;display:flex;align-items:center;gap:5px;}
+.conserva-chip.selected{border-color:var(--v);background:var(--vl);color:var(--vd);font-weight:600;}
+.conserva-chip:hover{border-color:var(--vm);}
+.conserva-results{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1rem;}
+@media(max-width:580px){.conserva-results{grid-template-columns:1fr;}}
+.conserva-card{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);overflow:hidden;}
+.conserva-card-header{padding:.85rem 1rem;display:flex;align-items:center;gap:10px;}
+.conserva-card-emoji{font-size:22px;}
+.conserva-card-name{font-size:14px;font-weight:600;}
+.conserva-card-duracion{font-size:11px;color:var(--mu);margin-top:1px;}
+.conserva-card-body{padding:0 1rem .85rem;}
+.conserva-metodo{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--br);font-size:12px;}
+.conserva-metodo:last-child{border-bottom:none;}
+.conserva-metodo-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.conserva-metodo-text{flex:1;line-height:1.5;}
+.conserva-metodo-title{font-weight:600;color:var(--tx);}
+.conserva-metodo-desc{color:var(--mu);}
+.conserva-tip{background:var(--vl);border-left:3px solid var(--v);padding:7px 10px;font-size:11px;color:var(--vd);margin-top:8px;line-height:1.5;border-radius:0 6px 6px 0;}
+.conserva-empty{text-align:center;padding:2.5rem;color:var(--mu);font-size:13px;}
+.conserva-btn-sel{background:var(--v);color:#fff;border:none;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;margin-right:6px;}
+.conserva-btn-clear{background:var(--bg);color:var(--mu);border:1px solid var(--br);padding:8px 14px;border-radius:20px;font-size:12px;cursor:pointer;}
+.conserva-duracion-bar{height:4px;border-radius:20px;background:linear-gradient(90deg,var(--v),var(--vm));margin-top:4px;}
+
+/* Panel cuenta drawer */
+@media(max-width:600px){
+  #cuenta-drawer{width:100% !important;top:auto !important;bottom:0 !important;height:auto !important;max-height:80vh;border-radius:16px 16px 0 0;}
+  #cuenta-panel > div:first-child + div{position:absolute;top:0;right:0;bottom:0;left:0;}
+}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;}
+#tienda-popup{animation:popIn .15s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.toast.show{opacity:1;}
+</style>
+<link rel="manifest" id="pwa-manifest">
+<meta name="theme-color" content="#0F6E56">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Plan Fitness">
+<script>
+// Inyectar manifest dinámicamente (para funcionar como archivo local y hosted)
+const manifest={name:'Mi Plan Fitness',short_name:'Mi Plan',start_url:'.',display:'standalone',background_color:'#FAFAF8',theme_color:'#0F6E56',description:'Plan de nutrición y fitness personalizado',icons:[{src:'https://img.icons8.com/color/192/salad.png',sizes:'192x192',type:'image/png'},{src:'https://img.icons8.com/color/512/salad.png',sizes:'512x512',type:'image/png'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+document.getElementById('pwa-manifest').href=URL.createObjectURL(blob);
+// Service Worker básico para offline
+if('serviceWorker' in navigator){
+  const swCode=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
+  const swBlob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+</script>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<div class="hdr">
+  <div class="hc">
+    <span class="htag">Plan mensual · Colombia · Adaptado por mes</span>
+    <h1>Mi plan de nutrición<br><em>&amp; fitness femenino</em></h1>
+    <p>25 años · Gym 4 días/semana · 5 comidas/día · Inventario sincronizado con compras</p>
+    <div class="hmacros">
+      <div class="hmacro"><div class="val">1.850</div><div class="lbl">kcal/día</div></div>
+      <div class="hmacro"><div class="val">130g</div><div class="lbl">Proteína</div></div>
+      <div class="hmacro"><div class="val">210g</div><div class="lbl">Carbos</div></div>
+      <div class="hmacro"><div class="val">55g</div><div class="lbl">Grasas</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="mbar">
+  <div class="mbar-inner">
+    <label>📅 Mes:</label>
+    <div class="mchips" id="monthChips"></div>
+  </div>
+  <div class="sbnr" id="seasonBanner"></div>
+</div>
+
+<div class="nav-wrap">
+  <nav class="nav">
+    <button class="nbtn active" onclick="showSec('cronograma',this)">📅 Cronograma</button>
+    <button class="nbtn" onclick="showSec('recetas',this)">👩‍🍳 Recetas</button>
+    <button class="nbtn" onclick="showSec('ejercicio',this)">🏋️ Ejercicio</button>
+    <button class="nbtn" onclick="showSec('compras',this)">🛒 Compras</button>
+    <button class="nbtn" onclick="showSec('hormonal',this)">💚 Hormonal</button>
+    <button class="nbtn" onclick="showSec('conserva',this)">🧊 Conservación</button>
+    <button class="nbtn" id="pwa-install-btn" onclick="installPWA()" title="Instalar en pantalla principal" style="display:none;margin-left:auto;color:var(--v);font-weight:600;">📲 Instalar</button>
+    <button class="nbtn" onclick="toggleCuentaPanel()" id="btn-cuenta" title="Mi cuenta" style="color:var(--v);font-weight:600;">👤 Cuenta</button>
+    <button class="nbtn" onclick="sbLogout()" title="Cerrar sesión" style="color:#6B7280;">🔐 Salir</button>
+  </nav>
+</div>
+
+<div class="main">
+
+<div class="sec active" id="sec-cronograma">
+  <h2 class="stitle">Cronograma mensual</h2>
+  <p class="ssub" id="cron-sub">5 comidas por día. Toca cualquier comida para ver la receta completa.</p>
+  <div class="legend">
+    <div class="li"><div class="ld" style="background:var(--vl);border:1.5px solid var(--v)"></div>Q1 1–15</div>
+    <div class="li"><div class="ld" style="background:var(--al);border:1.5px solid var(--am)"></div>Q2 16–30</div>
+    <div class="li"><div class="ld" style="background:var(--v)"></div>Gym</div>
+    <div class="li"><div class="ld" style="background:var(--am)"></div>Movilidad</div>
+    <div class="li"><div class="ld" style="background:#B4B2A9"></div>Descanso</div>
+  </div>
+  <div id="cal-container"></div>
+</div>
+
+<div class="sec" id="sec-recetas">
+  <h2 class="stitle">Todas las recetas</h2>
+  <p class="ssub">Ingredientes en gramos, pasos y macros. Desayunos/cenas ≤30 min · Almuerzos ≤40 min.</p>
+  <div id="recetas-container"></div>
+</div>
+
+<div class="sec" id="sec-ejercicio">
+  <h2 class="stitle">Plan de ejercicio mensual</h2>
+  <p class="ssub">4 semanas de progresión. Semanas 1–2: técnica. Semanas 3–4: volumen y carga.</p>
+  <div id="ejercicio-container"></div>
+</div>
+
+<div class="sec" id="sec-compras">
+  <h2 class="stitle">Compras e Inventario</h2>
+  <p class="ssub">El inventario controla la lista. Solo aparece lo que falta comprar. Si tienes suficiente stock, no aparece.</p>
+  <div class="ctabs">
+    <button class="ctab active" onclick="showCTab('mercado',this)">🛒 Lista de mercado</button>
+    <button class="ctab" onclick="showCTab('inventario',this)">📦 Inventario</button>
+  </div>
+  <div id="ctab-mercado"></div>
+  <div id="ctab-inventario" style="display:none">
+    <div class="inv-header">
+      <div>
+        <div style="font-weight:600;font-size:15px">Inventario del hogar</div>
+        <div style="font-size:12px;color:var(--mu);margin-top:2px">Ajusta con +/− · La lista de mercado se actualiza automáticamente</div>
+      </div>
+      <button onclick="showAddModal()" style="background:var(--v);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer">+ Agregar</button>
+    </div>
+    <div class="inv-summary" id="inv-summary"></div>
+    <div class="inv-ftabs">
+      <button class="inv-ftab active" onclick="filterInv('all',this)">Todos</button>
+      <button class="inv-ftab" onclick="filterInv('ok',this)">✅ Completo</button>
+      <button class="inv-ftab" onclick="filterInv('low',this)">⚠️ Bajo</button>
+      <button class="inv-ftab" onclick="filterInv('out',this)">❌ Agotado</button>
+    </div>
+    <div id="inv-container"></div>
+    <div id="inv-empty" style="display:none;text-align:center;padding:2rem;color:var(--mu);font-size:13px">Sin productos con este filtro.</div>
+  </div>
+</div>
+
+<div class="sec" id="sec-conserva">
+  <h2 class="stitle">Guía de conservación</h2>
+  <p class="ssub" id="conserva-sub">Selecciona los productos que compraste y te digo exactamente cómo guardarlos para que duren más y no pierdas nada.</p>
+  <div id="conserva-container"></div>
+</div>
+
+<div class="sec" id="sec-hormonal">
+  <h2 class="stitle">Salud hormonal femenina</h2>
+  <p class="ssub">Cómo cada alimento apoya tu equilibrio hormonal.</p>
+  <div id="hormonal-container"></div>
+</div>
+
+</div>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="addOverlay" onclick="if(event.target===this)closeAddModal()">
+  <div class="add-modal">
+    <h3>Agregar al inventario</h3>
+    <div class="fg"><label>Nombre</label><input type="text" id="addName" placeholder="Ej: Aguacate"></div>
+    <div class="fg"><label>Categoría</label>
+      <select id="addCat">
+        <option value="Proteínas">Proteínas</option>
+        <option value="Verduras">Verduras</option>
+        <option value="Frutas">Frutas</option>
+        <option value="Lácteos">Lácteos</option>
+        <option value="Despensa">Despensa</option>
+        <option value="Especias">Especias</option>
+        <option value="Aseo del hogar">Aseo del hogar</option>
+        <option value="Mascotas">Mascotas</option>
+        <option value="Otros">Otros</option>
+      </select>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Stock actual</label><input type="number" id="addCur" min="0" value="0"></div>
+      <div class="fg"><label>Stock meta</label><input type="number" id="addMax" min="1" value="1"></div>
+      <div class="fg"><label>Unidad</label><input type="text" id="addUnit" value="unidades"></div>
+    </div>
+    <div class="form-btns">
+      <button class="btn-sec" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn-prim" onclick="saveNew()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECIPE MODAL -->
+<div class="overlay" id="recOv" onclick="if(event.target===this)closeRec()">
+  <div class="modal" id="recBox">
+    <div class="mtop"><div><h3 id="mTitle"></h3><div class="mmeta" id="mMeta"></div></div><button class="mclose" onclick="closeRec()">✕</button></div>
+    <div class="mbody" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ TEMPORADAS ═══════════════
+const TEMP={
+  1:{
+    f:[
+      {n:'Mango tommy',   id:'f04', qty:6,  unit:'unidades'},
+      {n:'Piña',          id:'f10', qty:2,  unit:'unidades'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Guanábana',     id:'f11', qty:1,  unit:'unidad'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+      {n:'Naranja',       id:'f18', qty:6,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+    ],
+    v:['Espinaca','Zanahoria','Tomate chonto','Brócoli','Habichuela','Pepino','Aguacate','Cebolla']
+  },
+  2:{
+    f:[
+      {n:'Mango tommy',   id:'f04', qty:6,  unit:'unidades'},
+      {n:'Melón',         id:'f19', qty:1,  unit:'unidad'},
+      {n:'Piña',          id:'f10', qty:2,  unit:'unidades'},
+      {n:'Sandía',        id:'f20', qty:1,  unit:'unidad'},
+      {n:'Naranja',       id:'f18', qty:6,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+    ],
+    v:['Espinaca','Zanahoria','Tomate chonto','Brócoli','Pepino','Zucchini','Cebolla','Aguacate']
+  },
+  3:{
+    f:[
+      {n:'Fresa',         id:'f08', qty:500,unit:'g'},
+      {n:'Mora de castilla',id:'f05',qty:500,unit:'g'},
+      {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Lulo',          id:'f07', qty:8,  unit:'unidades'},
+      {n:'Granadilla',    id:'f16', qty:4,  unit:'unidades'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Tomate de árbol',id:'f14',qty:6,  unit:'unidades'},
+    ],
+    v:['Espinaca','Acelga','Brócoli','Zanahoria','Tomate chonto','Habichuela','Pimentón','Aguacate']
+  },
+  4:{
+    f:[
+      {n:'Mora de castilla',id:'f05',qty:500,unit:'g'},
+      {n:'Fresa',         id:'f08', qty:500,unit:'g'},
+      {n:'Uchuva',        id:'f06', qty:300,unit:'g'},
+      {n:'Guayaba rosada',id:'f13', qty:500,unit:'g'},
+      {n:'Lulo',          id:'f07', qty:8,  unit:'unidades'},
+      {n:'Tomate de árbol',id:'f14',qty:6,  unit:'unidades'},
+      {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+    ],
+    v:['Espinaca','Acelga','Brócoli','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
+  },
+  5:{
+    f:[
+      {n:'Mango tommy',   id:'f04', qty:6,  unit:'unidades'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Piña',          id:'f10', qty:2,  unit:'unidades'},
+      {n:'Mora de castilla',id:'f05',qty:300,unit:'g'},
+      {n:'Guanábana',     id:'f11', qty:1,  unit:'unidad'},
+      {n:'Lulo',          id:'f07', qty:6,  unit:'unidades'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+    ],
+    v:['Espinaca','Zanahoria','Brócoli','Tomate chonto','Pepino','Zucchini','Cebolla','Aguacate']
+  },
+  6:{
+    f:[
+      {n:'Mora de castilla',id:'f05',qty:500,unit:'g'},
+      {n:'Uchuva',        id:'f06', qty:300,unit:'g'},
+      {n:'Lulo',          id:'f07', qty:8,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Melón',         id:'f19', qty:1,  unit:'unidad'},
+      {n:'Mango tommy',   id:'f04', qty:3,  unit:'unidades'},
+      {n:'Pitaya amarilla',id:'f15',qty:3,  unit:'unidades'},
+      {n:'Granadilla',    id:'f16', qty:4,  unit:'unidades'},
+    ],
+    v:['Repollo morado','Remolacha','Habichuela','Ahuyama','Espinaca','Zanahoria','Tomate chonto','Aguacate']
+  },
+  7:{
+    f:[
+      {n:'Pitaya amarilla',id:'f15',qty:3,  unit:'unidades'},
+      {n:'Uchuva',        id:'f06', qty:300,unit:'g'},
+      {n:'Mora de castilla',id:'f05',qty:300,unit:'g'},
+      {n:'Guayaba rosada',id:'f13', qty:500,unit:'g'},
+      {n:'Melón',         id:'f19', qty:1,  unit:'unidad'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Lulo',          id:'f07', qty:6,  unit:'unidades'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+    ],
+    v:['Repollo morado','Remolacha','Ahuyama','Habichuela','Espinaca','Zanahoria','Pepino','Aguacate']
+  },
+  8:{
+    f:[
+      {n:'Guayaba rosada',id:'f13', qty:500,unit:'g'},
+      {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Guanábana',     id:'f11', qty:1,  unit:'unidad'},
+      {n:'Tomate de árbol',id:'f14',qty:6,  unit:'unidades'},
+      {n:'Granadilla',    id:'f16', qty:4,  unit:'unidades'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+    ],
+    v:['Espinaca','Acelga','Tomate chonto','Zanahoria','Brócoli','Habichuela','Repollo','Aguacate']
+  },
+  9:{
+    f:[
+      {n:'Mora de castilla',id:'f05',qty:500,unit:'g'},
+      {n:'Fresa',         id:'f08', qty:500,unit:'g'},
+      {n:'Uchuva',        id:'f06', qty:300,unit:'g'},
+      {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
+      {n:'Granadilla',    id:'f16', qty:4,  unit:'unidades'},
+      {n:'Lulo',          id:'f07', qty:6,  unit:'unidades'},
+      {n:'Guayaba rosada',id:'f13', qty:300,unit:'g'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+    ],
+    v:['Espinaca','Acelga','Brócoli','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
+  },
+  10:{
+    f:[
+      {n:'Mora de castilla',id:'f05',qty:500,unit:'g'},
+      {n:'Pitaya amarilla',id:'f15',qty:3,  unit:'unidades'},
+      {n:'Guayaba rosada',id:'f13', qty:500,unit:'g'},
+      {n:'Tomate de árbol',id:'f14',qty:6,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
+      {n:'Lulo',          id:'f07', qty:4,  unit:'unidades'},
+    ],
+    v:['Espinaca','Acelga','Brócoli','Habichuela','Remolacha','Zanahoria','Tomate chonto','Aguacate']
+  },
+  11:{
+    f:[
+      {n:'Naranja',       id:'f18', qty:6,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Mango tommy',   id:'f04', qty:4,  unit:'unidades'},
+      {n:'Guayaba rosada',id:'f13', qty:300,unit:'g'},
+      {n:'Maracuyá',      id:'f03', qty:6,  unit:'unidades'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+      {n:'Guanábana',     id:'f11', qty:1,  unit:'unidad'},
+      {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
+    ],
+    v:['Espinaca','Zanahoria','Tomate chonto','Brócoli','Pepino','Zucchini','Cebolla','Aguacate']
+  },
+  12:{
+    f:[
+      {n:'Mango tommy',   id:'f04', qty:6,  unit:'unidades'},
+      {n:'Naranja',       id:'f18', qty:6,  unit:'unidades'},
+      {n:'Mandarina',     id:'f17', qty:1,  unit:'kg'},
+      {n:'Piña',          id:'f10', qty:2,  unit:'unidades'},
+      {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
+      {n:'Sandía',        id:'f20', qty:1,  unit:'unidad'},
+      {n:'Melón',         id:'f19', qty:1,  unit:'unidad'},
+      {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
+    ],
+    v:['Espinaca','Zanahoria','Tomate chonto','Brócoli','Pepino','Habichuela','Cebolla','Aguacate']
+  },
+};
+const MN=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let curMonth=new Date().getMonth()+1;
+function getT(m){return TEMP[m]||TEMP[1];}
+
+// ═══════════════ INVENTARIO ═══════════════
+// Cada producto tiene: id, name, cat, cur (stock actual), max (stock meta), unit
+// La lista de mercado muestra: max - cur si cur < max, o nada si cur >= max
+const INV_KEY='inv_v4';
+
+const DEFAULT_INV=[
+  // ══════════════════════════════
+  // PROTEÍNAS
+  // ══════════════════════════════
+  {id:'p01',name:'Pechuga de pollo',cat:'Proteínas',cur:566,max:1500,unit:'g'},
+  {id:'p02',name:'Pierna / Pernil de pollo',cat:'Proteínas',cur:744,max:900,unit:'g'},
+  {id:'p03',name:'Cadera de res (molida)',cat:'Proteínas',cur:511,max:700,unit:'g'},
+  {id:'p04',name:'Murillo de res',cat:'Proteínas',cur:490,max:700,unit:'g'},
+  {id:'p05',name:'Lomo de cerdo',cat:'Proteínas',cur:680,max:800,unit:'g'},
+  {id:'p06',name:'Salmón',cat:'Proteínas',cur:4,max:6,unit:'porciones'},
+  {id:'p07',name:'Tilapia',cat:'Proteínas',cur:249,max:500,unit:'g'},
+  {id:'p08',name:'Trucha',cat:'Proteínas',cur:114,max:400,unit:'g'},
+  {id:'p09',name:'Atún en agua (latas)',cat:'Proteínas',cur:0,max:5,unit:'latas'},
+  {id:'p10',name:'Camarones limpios',cat:'Proteínas',cur:0,max:400,unit:'g'},
+  {id:'p11',name:'Huevos',cat:'Proteínas',cur:0,max:30,unit:'unidades'},
+  // ══════════════════════════════
+  // LÁCTEOS
+  // ══════════════════════════════
+  {id:'l01',name:'Queso campesino',cat:'Lácteos',cur:0,max:400,unit:'g'},
+  {id:'l02',name:'Mozzarella fresca',cat:'Lácteos',cur:0,max:250,unit:'g'},
+  {id:'l03',name:'Leche entera',cat:'Lácteos',cur:0,max:4,unit:'litros'},
+  {id:'l04',name:'Yogur griego natural',cat:'Lácteos',cur:0,max:1,unit:'kg'},
+  {id:'l05',name:'Queso parmesano rallado',cat:'Lácteos',cur:0,max:80,unit:'g'},
+  // ══════════════════════════════
+  // FRUTAS — todas las de las recetas + temporadas
+  // ══════════════════════════════
+  // Frutas que aparecen en recetas (ingredientes fijos)
+  {id:'f01',name:'Limón',cat:'Frutas',cur:0,max:10,unit:'unidades'},
+  {id:'f02',name:'Banano',cat:'Frutas',cur:0,max:1,unit:'racimo'},
+  {id:'f03',name:'Maracuyá',cat:'Frutas',cur:0,max:8,unit:'unidades'},
+  // Frutas de temporada Colombia (rotan según el mes)
+  {id:'f04',name:'Mango tommy',cat:'Frutas',cur:0,max:6,unit:'unidades'},
+  {id:'f05',name:'Mora de castilla',cat:'Frutas',cur:0,max:500,unit:'g'},
+  {id:'f06',name:'Uchuva',cat:'Frutas',cur:0,max:300,unit:'g'},
+  {id:'f07',name:'Lulo',cat:'Frutas',cur:0,max:8,unit:'unidades'},
+  {id:'f08',name:'Fresa',cat:'Frutas',cur:0,max:500,unit:'g'},
+  {id:'f09',name:'Papaya',cat:'Frutas',cur:0,max:1,unit:'unidad'},
+  {id:'f10',name:'Piña',cat:'Frutas',cur:0,max:2,unit:'unidades'},
+  {id:'f11',name:'Guanábana',cat:'Frutas',cur:0,max:1,unit:'unidad'},
+  {id:'f12',name:'Feijoa',cat:'Frutas',cur:0,max:6,unit:'unidades'},
+  {id:'f13',name:'Guayaba rosada',cat:'Frutas',cur:0,max:500,unit:'g'},
+  {id:'f14',name:'Tomate de árbol',cat:'Frutas',cur:0,max:6,unit:'unidades'},
+  {id:'f15',name:'Pitaya amarilla',cat:'Frutas',cur:0,max:3,unit:'unidades'},
+  {id:'f16',name:'Granadilla',cat:'Frutas',cur:0,max:4,unit:'unidades'},
+  {id:'f17',name:'Mandarina',cat:'Frutas',cur:0,max:1,unit:'kg'},
+  {id:'f18',name:'Naranja',cat:'Frutas',cur:0,max:6,unit:'unidades'},
+  {id:'f19',name:'Melón',cat:'Frutas',cur:0,max:1,unit:'unidad'},
+  {id:'f20',name:'Sandía',cat:'Frutas',cur:0,max:1,unit:'unidad'},
+  // ══════════════════════════════
+  // VERDURAS
+  // ══════════════════════════════
+  {id:'v01',name:'Cebolla larga',cat:'Verduras',cur:1,max:2,unit:'atados'},
+  {id:'v02',name:'Cebolla cabezona blanca',cat:'Verduras',cur:0,max:500,unit:'g'},
+  {id:'v03',name:'Pimentón',cat:'Verduras',cur:1,max:3,unit:'unidades'},
+  {id:'v04',name:'Brócoli',cat:'Verduras',cur:1,max:2,unit:'unidades'},
+  {id:'v05',name:'Yuca',cat:'Verduras',cur:1,max:3,unit:'unidades'},
+  {id:'v06',name:'Tomate chonto',cat:'Verduras',cur:0,max:700,unit:'g'},
+  {id:'v07',name:'Zanahoria',cat:'Verduras',cur:0,max:500,unit:'g'},
+  {id:'v08',name:'Espinaca fresca',cat:'Verduras',cur:0,max:400,unit:'g'},
+  {id:'v09',name:'Pepino cohombro',cat:'Verduras',cur:0,max:4,unit:'unidades'},
+  {id:'v10',name:'Ajo',cat:'Verduras',cur:0,max:2,unit:'cabezas'},
+  {id:'v11',name:'Aguacate hass',cat:'Verduras',cur:0,max:6,unit:'unidades'},
+  {id:'v12',name:'Papa pastusa',cat:'Verduras',cur:0,max:1,unit:'kg'},
+  {id:'v13',name:'Papa sabanera',cat:'Verduras',cur:1,max:2,unit:'kg'},
+  {id:'v14',name:'Papa criolla',cat:'Verduras',cur:0,max:500,unit:'g'},
+  {id:'v15',name:'Plátano maduro',cat:'Verduras',cur:0,max:4,unit:'unidades'},
+  {id:'v16',name:'Plátano verde',cat:'Verduras',cur:0,max:3,unit:'unidades'},
+  {id:'v18',name:'Habichuela',cat:'Verduras',cur:0,max:300,unit:'g'},
+  {id:'v19',name:'Zucchini / Calabacín',cat:'Verduras',cur:0,max:2,unit:'unidades'},
+  {id:'v20',name:'Repollo morado',cat:'Verduras',cur:0,max:1,unit:'unidad'},
+  {id:'v21',name:'Remolacha',cat:'Verduras',cur:0,max:400,unit:'g'},
+  {id:'v22',name:'Ahuyama / Zapallo',cat:'Verduras',cur:0,max:500,unit:'g'},
+  {id:'v23',name:'Acelga',cat:'Verduras',cur:0,max:300,unit:'g'},
+  {id:'v24',name:'Cilantro fresco',cat:'Verduras',cur:0,max:2,unit:'manojos'},
+  {id:'v25',name:'Cebollín',cat:'Verduras',cur:0,max:1,unit:'manojo'},
+  // ══════════════════════════════
+  // CARBOHIDRATOS / DESPENSA
+  // ══════════════════════════════
+  {id:'c01',name:'Arroz blanco',cat:'Despensa',cur:1,max:2,unit:'kg'},
+  {id:'c02',name:'Arroz integral',cat:'Despensa',cur:1,max:1,unit:'kg'},
+  {id:'c03',name:'Arroz para sushi',cat:'Despensa',cur:0,max:500,unit:'g'},
+  {id:'c04',name:'Avena en hojuelas',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
+  {id:'c05',name:'Harina de arepa',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
+  {id:'c06',name:'Fettuccine / Pasta integral',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
+  {id:'c07',name:'Fideos de arroz',cat:'Despensa',cur:0,max:200,unit:'g'},
+  {id:'c08',name:'Fideos ramen (sin sobre)',cat:'Despensa',cur:0,max:200,unit:'g'},
+  {id:'c09',name:'Galletas integrales',cat:'Despensa',cur:0,max:1,unit:'paquete'},
+  {id:'c10',name:'Pan integral tajado',cat:'Despensa',cur:0,max:1,unit:'paquete'},
+  {id:'c11',name:'Pan baguette',cat:'Despensa',cur:0,max:3,unit:'unidades'},
+  {id:'c12',name:'Maicena',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c13',name:'Fríjoles negros secos',cat:'Despensa',cur:0,max:500,unit:'g'},
+  {id:'c14',name:'Edamame congelado',cat:'Despensa',cur:0,max:300,unit:'g'},
+  {id:'c15',name:'Arveja congelada',cat:'Despensa',cur:0,max:300,unit:'g'},
+  {id:'c16',name:'Café',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c17',name:'Cacao en polvo',cat:'Despensa',cur:1,max:1,unit:'unidad'},
+  {id:'c18',name:'Panela',cat:'Despensa',cur:1,max:3,unit:'unidades'},
+  {id:'c19',name:'Azúcar pulverizada',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c20',name:'Azúcar morena',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c21',name:'Azúcar blanca',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c22',name:'Gelatina sin sabor',cat:'Despensa',cur:1,max:3,unit:'sobres'},
+  {id:'c23',name:'Polvo de hornear',cat:'Despensa',cur:0,max:1,unit:'frasco'},
+  // ══════════════════════════════
+  // ESPECIAS Y CONDIMENTOS — todos los de las recetas
+  // ══════════════════════════════
+  // Salsas asiáticas
+  {id:'s01',name:'Salsa soya baja en sodio',cat:'Especias',cur:0,max:250,unit:'ml'},
+  {id:'s02',name:'Aceite de sésamo',cat:'Especias',cur:0,max:100,unit:'ml'},
+  {id:'s03',name:'Vinagre de arroz',cat:'Especias',cur:0,max:250,unit:'ml'},
+  {id:'s04',name:'Sriracha',cat:'Especias',cur:0,max:1,unit:'botella'},
+  {id:'s05',name:'Salsa teriyaki / ponzu',cat:'Especias',cur:0,max:1,unit:'frasco'},
+  // Aceites y vinagres
+  {id:'s06',name:'Aceite de oliva',cat:'Especias',cur:0,max:250,unit:'ml'},
+  {id:'s07',name:'Vinagre blanco',cat:'Especias',cur:0,max:250,unit:'ml'},
+  // Semillas y granos
+  {id:'s08',name:'Sésamo tostado',cat:'Especias',cur:0,max:80,unit:'g'},
+  {id:'s09',name:'Semillas de chía',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  // Especias secas
+  {id:'s10',name:'Sal',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s11',name:'Pimienta negra',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s12',name:'Comino',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s13',name:'Canela en polvo',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s14',name:'Orégano seco',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s15',name:'Romero seco',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s16',name:'Color / Cúrcuma',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s17',name:'Ajo en polvo',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s18',name:'Curry amarillo en pasta',cat:'Especias',cur:0,max:1,unit:'lata'},
+  // Dulces y endulzantes
+  {id:'s19',name:'Miel de abejas',cat:'Especias',cur:0,max:1,unit:'frasco'},
+  {id:'s20',name:'Panela (para cocina)',cat:'Especias',cur:0,max:2,unit:'unidades'},
+  // Frescos
+  {id:'s21',name:'Jengibre fresco',cat:'Especias',cur:0,max:100,unit:'g'},
+  // Otras salsas
+  {id:'s22',name:'Leche de coco (lata)',cat:'Especias',cur:0,max:2,unit:'latas'},
+  {id:'s23',name:'Hojas de nori',cat:'Especias',cur:0,max:10,unit:'hojas'},
+  // ══════════════════════════════
+  // ASEO DEL HOGAR
+  // ══════════════════════════════
+  {id:'a01',name:'Limpiador de paredes',cat:'Aseo',cur:1,max:1,unit:'unidad'},
+  {id:'a02',name:'Ziploc',cat:'Aseo',cur:2,max:2,unit:'paquetes'},
+  {id:'a03',name:'Papel higiénico',cat:'Aseo',cur:1,max:4,unit:'paquetes'},
+  {id:'a04',name:'Papel de cocina',cat:'Aseo',cur:2,max:4,unit:'rollos'},
+  {id:'a05',name:'Servilletas',cat:'Aseo',cur:2,max:4,unit:'paquetes'},
+  {id:'a06',name:'Esponja',cat:'Aseo',cur:2,max:4,unit:'unidades'},
+  {id:'a07',name:'Jabón lavaloza',cat:'Aseo',cur:1,max:2,unit:'unidades'},
+  {id:'a08',name:'Jabón para ropa',cat:'Aseo',cur:2,max:4,unit:'unidades'},
+  {id:'a09',name:'Perlas de olor',cat:'Aseo',cur:4,max:8,unit:'unidades'},
+  {id:'a10',name:'Paños húmedos',cat:'Aseo',cur:6,max:12,unit:'paquetes'},
+  {id:'a11',name:'Bolsas de basura',cat:'Aseo',cur:3,max:6,unit:'rollos'},
+  {id:'a12',name:'Bolsas de mascotas',cat:'Mascotas',cur:2,max:4,unit:'rollos'},
+  {id:'a13',name:'Limpiador de pisos',cat:'Aseo',cur:2,max:4,unit:'litros'},
+  {id:'a14',name:'Desinfectante de verduras',cat:'Aseo',cur:1,max:2,unit:'frascos'},
+  {id:'a15',name:'Alcohol isopropílico',cat:'Aseo',cur:1,max:2,unit:'frascos'},
+  {id:'a16',name:'Desinfectante',cat:'Aseo',cur:1,max:2,unit:'litros'},
+  {id:'a17',name:'Desengrasante',cat:'Aseo',cur:2,max:4,unit:'frascos'},
+  {id:'a18',name:'Cloro en gel',cat:'Aseo',cur:1,max:2,unit:'frascos'},
+  {id:'a19',name:'Limpiador de inodoro',cat:'Aseo',cur:1,max:2,unit:'frascos'},
+  {id:'a20',name:'Cif (limpiador cremoso)',cat:'Aseo',cur:1,max:2,unit:'frascos'},
+];
+
+function loadInv(){
+  try{
+    const s=localStorage.getItem(INV_KEY);
+    if(s){
+      const saved=JSON.parse(s);
+      // Verificar que tenga los IDs de frutas nuevos (f01-f20)
+      const hasFrutas=saved.some(i=>i.id==='f04'||i.id==='f05');
+      if(hasFrutas)return saved;
+    }
+  }catch(e){}
+  // Sin datos guardados o datos viejos → usar DEFAULT_INV fresco
+  return JSON.parse(JSON.stringify(DEFAULT_INV));
+}
+function saveInv(inv){try{localStorage.setItem(INV_KEY,JSON.stringify(inv));}catch(e){}}
+
+function statusOf(i){
+  if(i.cur<=0)return'out';
+  if(i.cur/i.max<0.4)return'low';
+  if(i.cur>=i.max)return'ok';
+  return'low';
+}
+function needAmount(item){
+  // Returns how much to buy: max - cur (if positive), else 0
+  // Si max=0 el item no aplica este mes (fruta fuera de temporada)
+  if(item.max<=0)return 0;
+  const need=item.max-item.cur;
+  return need>0?need:0;
+}
+function formatNeed(item){
+  const n=needAmount(item);
+  if(n<=0)return null; // nothing needed
+  return n+' '+item.unit;
+}
+
+// ═══════════════ LISTA DE MERCADO (dinámica) ═══════════════
+const CAT_ORDER=['Proteínas','Lácteos','Frutas','Verduras','Despensa','Especias','Aseo','Mascotas'];
+const CAT_EMOJI={'Proteínas':'🥩','Lácteos':'🥛','Frutas':'🍉','Verduras':'🥦','Despensa':'🍞','Especias':'🌶️','Aseo':'🧴','Mascotas':'🐾'};
+
+// Tienda por categoría/id de producto
+// ── Tiendas: nombres editables guardados en localStorage ──
+const TIENDA_NAMES_KEY='tienda_names_v1';
+const ITEM_TIENDA_KEY='item_tienda_v1'; // overrides por item
+
+const TIENDA_DEFAULTS={
+  super:     {label:'Supermercado',     emoji:'🟢', cls:'tb-super',     border:'tienda-super'},
+  mercado:   {label:'Plaza/Mercado',    emoji:'🟡', cls:'tb-mercado',   border:'tienda-mercado'},
+  asiatica:  {label:'Tienda asiática',  emoji:'🟣', cls:'tb-asiatica',  border:'tienda-asiatica'},
+  drogueria: {label:'Droguería',        emoji:'🔴', cls:'tb-drogueria', border:'tienda-drogueria'},
+  cualquiera:{label:'Cualquier tienda', emoji:'⚪', cls:'tb-cualquiera',border:'tienda-cualquiera'},
+};
+
+function loadTiendaNames(){
+  try{const s=localStorage.getItem(TIENDA_NAMES_KEY);return s?JSON.parse(s):{};}catch(e){return {};}
+}
+function saveTiendaNames(d){try{localStorage.setItem(TIENDA_NAMES_KEY,JSON.stringify(d));}catch(e){}}
+
+function loadItemTiendas(){
+  try{const s=localStorage.getItem(ITEM_TIENDA_KEY);return s?JSON.parse(s):{};}catch(e){return {};}
+}
+function saveItemTiendas(d){try{localStorage.setItem(ITEM_TIENDA_KEY,JSON.stringify(d));}catch(e){}}
+
+// Obtener etiqueta de tienda (con nombre personalizado si existe)
+const TIENDA_LABEL = new Proxy({}, {
+  get(_, key){
+    const def=TIENDA_DEFAULTS[key]||TIENDA_DEFAULTS.cualquiera;
+    const names=loadTiendaNames();
+    return {...def, label: names[key]||def.label};
+  }
+});
+
+// Asignación de tienda por defecto según categoría
+function getTiendaDefault(item){
+  const c=item.cat;
+  if(c==='Aseo'||c==='Mascotas') return 'drogueria';
+  if(c==='Proteínas'||c==='Lácteos') return 'super';
+  if(c==='Frutas'||c==='Verduras') return 'mercado';
+  if(c==='Despensa'){
+    if(['c03','s01','s02','s03','s04','s05','s08','s22','s23'].includes(item.id)) return 'asiatica';
+    return 'super';
+  }
+  if(c==='Especias'){
+    if(['s01','s02','s03','s04','s05','s08','s22','s23'].includes(item.id)) return 'asiatica';
+    return 'super';
+  }
+  return 'cualquiera';
+}
+
+// Obtener tienda real de un item (override > default)
+function getTienda(item){
+  const overrides=loadItemTiendas();
+  return overrides[item.id] || getTiendaDefault(item);
+}
+
+// Cambiar tienda de un item específico
+function setItemTienda(itemId, tiendaKey){
+  const overrides=loadItemTiendas();
+  overrides[itemId]=tiendaKey;
+  saveItemTiendas(overrides);
+  buildMercado();
+  closePopup();
+}
+
+// Renombrar una tienda
+function renameTienda(key){
+  const names=loadTiendaNames();
+  const def=TIENDA_DEFAULTS[key];
+  const current=names[key]||def.label;
+  const nuevo=prompt(`Renombrar "${current}":`, current);
+  if(nuevo&&nuevo.trim()&&nuevo.trim()!==current){
+    names[key]=nuevo.trim();
+    saveTiendaNames(names);
+    buildMercado();
+    showToast('✅ Tienda renombrada: '+nuevo.trim());
+  }
+}
+
+// Popup para cambiar tienda de un item
+let _activePopup=null;
+function closePopup(){
+  if(_activePopup){_activePopup.remove();_activePopup=null;}
+}
+function showTiendaPopup(itemId, itemName, anchorEl, ev){
+  ev&&ev.stopPropagation();
+  closePopup();
+  const names=loadTiendaNames();
+  const overrides=loadItemTiendas();
+  const current=overrides[itemId]||'';
+
+  const popup=document.createElement('div');
+  popup.id='tienda-popup';
+  popup.style.cssText=`position:fixed;z-index:400;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);padding:12px;min-width:200px;font-family:'DM Sans',sans-serif;`;
+
+  // Posicionar junto al badge
+  const rect=anchorEl.getBoundingClientRect();
+  const top=rect.bottom+6;
+  const left=Math.min(rect.left, window.innerWidth-220);
+  popup.style.top=top+'px';
+  popup.style.left=left+'px';
+
+  popup.innerHTML=`
+    <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.08)">
+      ¿Dónde comprar?<br><span style="font-weight:400;font-size:11px;color:#1A1A1A">${itemName}</span>
+    </div>
+    ${Object.entries(TIENDA_DEFAULTS).map(([key,def])=>{
+      const label=names[key]||def.label;
+      const isActive=current===key||(!current&&getTiendaDefault({id:itemId,cat:''})=== key);
+      return `<div onclick="setItemTienda('${itemId}','${key}')" style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:8px;cursor:pointer;background:${isActive?'#E1F5EE':'transparent'};font-size:13px;" onmouseover="this.style.background='#F5F5F0'" onmouseout="this.style.background='${isActive?'#E1F5EE':'transparent'}'">
+        <span>${def.emoji}</span><span style="flex:1">${label}</span>${isActive?'<span style="color:#1D9E75;font-weight:700">✓</span>':''}
+      </div>`;
+    }).join('')}
+    <div style="border-top:1px solid rgba(0,0,0,.08);margin-top:6px;padding-top:6px;font-size:11px;color:#6B7280;text-align:center;cursor:pointer" onclick="closePopup()">Cancelar</div>`;
+
+  document.body.appendChild(popup);
+  _activePopup=popup;
+
+  // Cerrar al tocar fuera
+  setTimeout(()=>document.addEventListener('click', closePopup, {once:true}), 10);
+}
+
+let tiendaFilter='todos';
+
+function filterTienda(t, btn){
+  tiendaFilter=t;
+  document.querySelectorAll('.tienda-ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Show/hide items
+  document.querySelectorAll('.mlist-item[data-tienda]').forEach(el=>{
+    el.style.display=(t==='todos'||el.dataset.tienda===t)?'flex':'none';
+  });
+  // Show/hide cats with no visible items
+  document.querySelectorAll('.mcat-body').forEach(body=>{
+    const visible=body.querySelectorAll('.mlist-item[data-tienda]');
+    const hasVisible=[...visible].some(el=>el.style.display!=='none');
+    const card=body.closest('.mlist-card');
+    if(card) card.style.display=hasVisible?'':'none';
+  });
+}
+
+function toggleMcat(header){
+  const body=header.nextElementSibling;
+  const ch=header.querySelector('.mcat-chevron');
+  const open=body.classList.toggle('open');
+  ch.classList.toggle('open',open);
+}
+
+// Marcar item como comprado → actualiza inventario al stock máximo
+function markBought(id, el){
+  const checked = el.checked;
+  const row = el.closest('.mlist-item');
+  if(!row) return;
+
+  if(checked){
+    row.classList.add('bought');
+
+    // 1. Actualizar inventario: cur = max
+    const inv = loadInv();
+    const item = inv.find(i => i.id === id);
+    if(item){
+      item.cur = item.max;
+      saveInv(inv);
+      if(typeof sbPatchSave === 'function') sbPatchSave();
+    }
+
+    // 2. Toast con nombre limpio
+    const nameEl = row.querySelector('.mlist-name');
+    const rawName = nameEl ? nameEl.textContent : '';
+    const cleanName = rawName.replace(/[❌⚠️🟡]/g,'').replace(/Supermercado|Plaza\/Mercado|Tienda asiática|Droguería|Cualquier tienda/g,'').trim();
+    showToast('✅ ' + cleanName + ' — comprado y stock actualizado');
+
+    // 3. Animar y remover
+    row.style.maxHeight = row.offsetHeight + 'px';
+    row.style.overflow  = 'hidden';
+    row.style.transition= 'all .35s ease';
+    setTimeout(()=>{
+      row.style.maxHeight = '0';
+      row.style.opacity   = '0';
+      row.style.padding   = '0';
+      row.style.borderWidth = '0';
+    }, 50);
+    setTimeout(()=>{
+      row.remove();
+      buildInventario();
+      // Ocultar categoría si quedó vacía
+      document.querySelectorAll('.mcat-body').forEach(b=>{
+        const visible = b.querySelectorAll('.mlist-item');
+        if(visible.length === 0){
+          const card = b.closest('.mlist-card');
+          if(card) card.style.display = 'none';
+        }
+      });
+      // Actualizar contador total
+      const total = document.querySelectorAll('.mlist-item').length;
+      const totalEl = document.querySelector('.mercado-total');
+      if(totalEl) totalEl.textContent = total + ' por comprar';
+      if(total === 0){
+        const ct = document.getElementById('ctab-mercado');
+        const snote = ct ? ct.querySelector('.season-note') : null;
+        const existEmpty = ct ? ct.querySelector('.mlist-empty') : null;
+        if(!existEmpty && ct){
+          const em = document.createElement('div');
+          em.innerHTML = '<div class="mlist-empty">🎉 <strong>¡Todo comprado!</strong><br>Inventario actualizado.</div>';
+          ct.appendChild(em);
+        }
+      }
+    }, 400);
+
+  } else {
+    // Desmarcar: no devolver al inventario automáticamente
+    row.classList.remove('bought');
+  }
+}
+
+function buildMercado(){
+  const inv=loadInv();
+  const t=getT(curMonth);
+  const container=document.getElementById('ctab-mercado');
+  container.innerHTML='';
+
+  // Season note
+  const snote=document.createElement('div');
+  snote.className='season-note';
+  snote.innerHTML=`🍃 <strong>Frutas de ${MN[curMonth]}:</strong> ${t.f.slice(0,5).map(x=>x.n).join(', ')} · <strong>Verduras:</strong> ${t.v.slice(0,5).join(', ')}`;
+  // Tip instrucción
+  const tipEl=document.createElement('div');
+  tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.75rem;display:flex;gap:6px;align-items:center;';
+  tipEl.innerHTML='<span>💡</span><span>Toca el <strong>badge de color</strong> de cualquier ítem para cambiar dónde comprarlo · Mantén presionado un filtro para renombrarlo</span>';
+  container.appendChild(tipEl);  
+  container.appendChild(snote);
+
+  // Group needed items by category
+  const needed={}; // cat -> [{name, need}]
+  CAT_ORDER.forEach(cat=>needed[cat]=[]);
+
+  inv.forEach(item=>{
+    const n=needAmount(item);
+    if(n<=0)return; // has enough — SKIP
+    const cat=item.cat==='Aseo del hogar'?'Aseo':item.cat;
+    if(!needed[cat])needed[cat]=[];
+    const pct=item.cur/item.max;
+    needed[cat].push({id:item.id,name:item.name,need:formatNeed(item),have:item.cur,max:item.max,unit:item.unit,pct,status:statusOf(item)});
+  });
+
+  // Las frutas de temporada ya están sincronizadas en el inventario
+  // via syncFrutasInventario() — el loop principal las recoge automáticamente
+  // Solo agregar badge visual de cuáles son de temporada este mes
+  if(!needed['Frutas'])needed['Frutas']=[];
+  // Frutas con max=0 no aparecen (no son de temporada este mes) — lógica automática
+
+  // Check if anything needed at all
+  const totalNeeded=Object.values(needed).flat().length;
+  if(totalNeeded===0){
+    const empty=document.createElement('div');
+    empty.innerHTML=`<div class="mlist-empty">🎉 <strong>¡Stock completo!</strong><br>Tienes todo en inventario. No necesitas comprar nada por ahora.</div>`;
+    container.appendChild(empty);
+    return;
+  }
+
+  // Resumen
+  const allItems=Object.values(needed).flat();
+  const sumEl=document.createElement('div');
+  sumEl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;';
+  sumEl.innerHTML=`
+    <div class="mercado-total" style="background:var(--vl);border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:var(--vd);font-weight:600">📋 ${totalNeeded} por comprar</div>
+    ${allItems.filter(i=>i.status==='out').length?`<div style="background:#FFE4E4;border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:#991B1B;font-weight:600">❌ ${allItems.filter(i=>i.status==='out').length} agotados</div>`:''}
+    ${allItems.filter(i=>i.status==='low').length?`<div style="background:var(--al);border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:#633806;font-weight:600">⚠️ ${allItems.filter(i=>i.status==='low').length} bajos</div>`:''}`;
+  container.appendChild(sumEl);
+
+  // Filtros de tienda
+  const filtrosEl=document.createElement('div');
+  filtrosEl.className='tienda-filtros';
+  filtrosEl.innerHTML=`
+    <button class=\"tienda-ftab${tiendaFilter==='todos'?' active':''}\" data-t=\"todos\" onclick=\"filterTienda('todos',this)\">🏪 Todas</button>
+    ${['super','mercado','asiatica','drogueria'].map(key=>{
+      const def=TIENDA_DEFAULTS[key];
+      const names=loadTiendaNames();
+      const label=names[key]||def.label;
+      const short=label.length>10?label.slice(0,10)+'…':label;
+      return `<button class="tienda-ftab${tiendaFilter===key?' active':''}" data-t="${key}"
+        onclick="filterTienda('${key}',this)"
+        oncontextmenu="renameTienda('${key}');return false;"
+        title="${label} — mantén presionado para renombrar">
+        ${def.emoji} ${short}
+      </button>`;
+    }).join('')}`;
+  container.appendChild(filtrosEl);
+
+  // Categorías desplegables
+  CAT_ORDER.forEach(cat=>{
+    const items=needed[cat];
+    if(!items||items.length===0)return;
+    const emoji=CAT_EMOJI[cat]||'📦';
+    const card=document.createElement('div');
+    card.className='mlist-card mlist-cat';
+    card.style.marginBottom='8px';
+    card.style.overflow='hidden';
+
+    const header=document.createElement('div');
+    header.className='mcat-header';
+    header.onclick=()=>toggleMcat(header);
+    header.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
+        <span>${emoji} <strong>${cat}</strong></span>
+        <span style="font-size:11px;color:var(--mu)">${items.length} producto${items.length>1?'s':''}</span>
+      </div>
+      <span class="mcat-chevron">▾</span>`;
+    card.appendChild(header);
+
+    const body=document.createElement('div');
+    body.className='mcat-body';
+
+    items.forEach(item=>{
+      const tienda=getTienda(item);
+      const tInfo=TIENDA_LABEL[tienda]||TIENDA_LABEL.cualquiera;
+      const statusCls=item.status==='out'?'crit':item.status==='low'?'warn':'ok';
+      const icon=item.status==='out'?'❌':item.status==='low'?'⚠️':'🟡';
+      const row=document.createElement('div');
+      row.className=`mlist-item ${tInfo.border}`;
+      row.dataset.tienda=tienda;
+      row.innerHTML=`
+        <input type="checkbox" class="mcb" onchange="markBought('${item.id}',this)">
+        <span class="mlist-name">
+          ${icon} ${item.name}
+          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" 
+            onclick="showTiendaPopup('${item.id}','${item.name}',this,event)" 
+            title="Toca para cambiar tienda">
+            ${tInfo.label} ✎
+          </span>
+        </span>
+        <div class="mlist-right">
+          <span class="mlist-need ${statusCls}">Comprar: ${item.need}</span>
+        </div>`;
+      body.appendChild(row);
+    });
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+
+  // Aplicar filtro activo si hay uno
+  if(tiendaFilter!=='todos'){
+    setTimeout(()=>filterTienda(tiendaFilter,document.querySelector(`.tienda-ftab[data-t="${tiendaFilter}"]`)),0);
+  }
+}
+
+// ═══════════════ INVENTARIO UI ═══════════════
+let invFilter='all';
+function buildInventario(){
+  const inv=loadInv();
+  const ok=inv.filter(i=>statusOf(i)==='ok').length;
+  const low=inv.filter(i=>statusOf(i)==='low').length;
+  const out=inv.filter(i=>statusOf(i)==='out').length;
+  document.getElementById('inv-summary').innerHTML=`
+    <div class="ist ist-ok">✅ ${ok} completos</div>
+    ${low?`<div class="ist ist-low">⚠️ ${low} bajos</div>`:''}
+    ${out?`<div class="ist ist-out">❌ ${out} agotados</div>`:''}
+    <div class="ist ist-all">📦 ${inv.length} total</div>`;
+
+  const c=document.getElementById('inv-container');c.innerHTML='';
+  const filtered=invFilter==='all'?inv:inv.filter(i=>statusOf(i)===invFilter);
+  if(!filtered.length){document.getElementById('inv-empty').style.display='block';return;}
+  document.getElementById('inv-empty').style.display='none';
+
+  const cats={};
+  filtered.forEach(i=>{if(!cats[i.cat])cats[i.cat]=[];cats[i.cat].push(i);});
+  Object.entries(cats).forEach(([cat,items])=>{
+    const t=document.createElement('div');t.className='inv-cat-lbl';t.textContent=cat;c.appendChild(t);
+    items.forEach(item=>{c.appendChild(renderItem(item));});
+  });
+}
+
+function renderItem(item){
+  const s=statusOf(item);
+  const pct=item.max>0?Math.min(100,Math.round(item.cur/item.max*100)):0;
+  const barCls=s==='out'?'bar-out':s==='low'?'bar-low':'bar-ok';
+  const sbCls=s==='ok'?'sb-ok':s==='low'?'sb-low':'sb-out';
+  const sLabel=s==='ok'?'✅ Completo':s==='low'?'⚠️ Bajo':'❌ Agotado';
+  const need=needAmount(item);
+  const div=document.createElement('div');
+  div.className=`inv-item ${s}`;
+  div.id=`ii-${item.id}`;
+  div.innerHTML=`
+    <div class="inv-top">
+      <div class="inv-name">${item.name}</div>
+      <span class="inv-sbadge ${sbCls}">${sLabel}</span>
+    </div>
+    <div class="stock-row">
+      <span class="stock-lbl">Stock:</span>
+      <div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${pct}%"></div></div>
+      <span class="stock-frac" style="color:${s==='out'?'#EF4444':s==='low'?'#EF9F27':'var(--v)'}">
+        ${item.cur} / ${item.max} ${item.unit}
+        ${need>0?`<span style="color:#EF4444;font-size:10px;display:block">Falta: ${need} ${item.unit}</span>`:''}
+      </span>
+    </div>
+    <div class="inv-actions">
+      <button class="qbtn" onclick="adj('${item.id}',-1)">−</button>
+      <span class="qnum">${item.cur}</span>
+      <button class="qbtn" onclick="adj('${item.id}',+1)">+</button>
+      <button class="iact" onclick="restock('${item.id}')">🔄 Llenar</button>
+      <button class="iact" onclick="editItem('${item.id}')">✏️ Editar</button>
+      <button class="iact del" onclick="delItem('${item.id}')">🗑</button>
+    </div>`;
+  return div;
+}
+
+function adj(id,d){
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);if(!item)return;
+  item.cur=Math.max(0,Math.min(item.max,item.cur+d));
+  saveInv(inv);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  refreshAll();
+  showToast(d>0?`+1 → ${item.name}: ${item.cur}/${item.max} ${item.unit}`:`−1 → ${item.name}: ${item.cur}/${item.max} ${item.unit}`);
+}
+
+function restock(id){
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);if(!item)return;
+  item.cur=item.max;saveInv(inv);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  refreshAll();
+  showToast(`✅ ${item.name} — llenado al máximo`);
+}
+
+function editItem(id){
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);if(!item)return;
+  const newMax=prompt(`Stock máximo de "${item.name}" (actual: ${item.max} ${item.unit}):`,item.max);
+  if(newMax===null||isNaN(parseInt(newMax))||parseInt(newMax)<1)return;
+  item.max=parseInt(newMax);
+  item.cur=Math.min(item.cur,item.max);
+  saveInv(inv);refreshAll();
+}
+
+function delItem(id){
+  if(!confirm('¿Eliminar este producto del inventario?'))return;
+  let inv=loadInv();inv=inv.filter(i=>i.id!==id);saveInv(inv);
+  refreshAll();showToast('Producto eliminado');
+}
+
+function filterInv(f,btn){
+  invFilter=f;
+  document.querySelectorAll('.inv-ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildInventario();
+}
+
+function refreshAll(){
+  buildInventario();
+  buildMercado();
+}
+
+function showAddModal(){document.getElementById('addOverlay').classList.add('open');document.getElementById('addName').focus();}
+function closeAddModal(){document.getElementById('addOverlay').classList.remove('open');}
+
+function saveNew(){
+  const name=document.getElementById('addName').value.trim();
+  if(!name){alert('Escribe el nombre del producto');return;}
+  const cur=parseInt(document.getElementById('addCur').value)||0;
+  const max=parseInt(document.getElementById('addMax').value)||1;
+  const unit=document.getElementById('addUnit').value.trim()||'unidades';
+  const cat=document.getElementById('addCat').value;
+  const inv=loadInv();
+  inv.push({id:'u'+Date.now(),name,cat,cur:Math.min(cur,max),max,unit});
+  saveInv(inv);if(typeof sbPatchSave==='function')sbPatchSave();closeAddModal();refreshAll();
+  showToast(`✅ "${name}" agregado al inventario`);
+}
+
+// COMPRAS TABS
+function showCTab(tab,btn){
+  document.getElementById('ctab-mercado').style.display=tab==='mercado'?'block':'none';
+  document.getElementById('ctab-inventario').style.display=tab==='inventario'?'block':'none';
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(tab==='inventario')buildInventario();
+  if(tab==='mercado')buildMercado();
+}
+
+// ═══════════════ TEMPORADAS / MES ═══════════════
+function buildMonthSel(){
+  const c=document.getElementById('monthChips');
+  MN.slice(1).forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='mchip'+(i+1===curMonth?' active':'');
+    b.textContent=m.slice(0,3);b.title=m;
+    b.onclick=()=>{curMonth=i+1;document.querySelectorAll('.mchip').forEach(x=>x.classList.remove('active'));b.classList.add('active');syncFrutasInventario();updateSeason();buildCal();buildMercado();buildInventario();buildConserva();};
+    c.appendChild(b);
+  });
+  updateSeason();
+}
+function updateSeason(){
+  const t=getT(curMonth);
+  document.getElementById('seasonBanner').innerHTML=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${t.f.slice(0,4).map(x=>`<span class="sbadge sb-f">🍓 ${x.n}</span>`).join('')}${t.v.slice(0,4).map(x=>`<span class="sbadge sb-v">🥦 ${x}</span>`).join('')}</div>`;
+}
+// Actualiza el max del inventario de frutas según el mes seleccionado
+function syncFrutasInventario(){
+  const t=getT(curMonth);
+  const inv=loadInv();
+
+  // IDs de TODAS las frutas del inventario
+  const todasFrutas=[
+    'f01','f02','f03','f04','f05','f06','f07',
+    'f08','f09','f10','f11','f12','f13','f14',
+    'f15','f16','f17','f18','f19','f20'
+  ];
+
+  // Paso 1: poner max=0 a todas → ninguna aparece en lista por defecto
+  todasFrutas.forEach(fid=>{
+    const item=inv.find(i=>i.id===fid);
+    if(item) item.max=0;
+  });
+
+  // Paso 2: activar SOLO las frutas del mes actual con cantidad y nombre correctos
+  t.f.forEach(fr=>{
+    let item=inv.find(i=>i.id===fr.id);
+    if(!item){
+      // Si no existe en el inventario guardado, crearla desde DEFAULT_INV
+      const def=DEFAULT_INV.find(d=>d.id===fr.id);
+      if(def){item=JSON.parse(JSON.stringify(def));inv.push(item);}
+    }
+    if(item){
+      item.max  = fr.qty;
+      item.unit = fr.unit;
+      item.name = fr.n;
+    }
+  });
+
+  // Paso 3: Limón siempre visible (ingrediente fijo todo el año)
+  let limon=inv.find(i=>i.id==='f01');
+  if(!limon){
+    const def=DEFAULT_INV.find(d=>d.id==='f01');
+    if(def){limon=JSON.parse(JSON.stringify(def));inv.push(limon);}
+  }
+  if(limon){limon.max=10;limon.unit='unidades';limon.name='Limón';}
+
+  saveInv(inv);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+}
+
+// ═══════════════ RECETAS ═══════════════
+const REC={
+  avena_fruta:{n:'Avena cremosa con {{F0}} y miel',t:'Desayuno',cls:'chip-d',min:15,dif:'Muy fácil',kcal:480,prot:32,
+    i(f,v){return[['Avena en hojuelas','60g'],['Leche entera','200ml'],[f[0]+' fresca','100g'],['Miel de abejas','10ml'],['Canela en polvo','1 pizca'],['Huevos enteros','2 unidades'],['Aceite de oliva','3ml']]},
+    p:['Calienta la leche a fuego medio. Agrega la avena y revuelve 5-7 min hasta que espese. Agrega miel y canela.','Bate los huevos con sal. Cocínalos revueltos a fuego medio-bajo 2 min, retira cuando estén jugosos.','Pica la fruta en cubos medianos.','Sirve la avena en bowl. Coloca la fruta encima, huevos al lado, hilo de miel.'],
+    tip:'Prepara avena doble el domingo y guarda en nevera. Al día siguiente calienta con un chorrito de leche. Ahorra 10 min en días de gym.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Miel → panela raspada`}},
+  tostadas_huevo:{n:'Tostadas con queso campesino y huevo pochado',t:'Desayuno',cls:'chip-d',min:15,dif:'Fácil',kcal:460,prot:30,
+    i(f,v){return[['Pan integral','2 tajadas'],['Queso campesino','60g'],['Huevos enteros','2 unidades'],['Tomate chonto','1 unidad'],['Vinagre blanco','15ml'],['Sal, pimienta','Al gusto'],['Café con leche','250ml']]},
+    p:['Tuesta el pan. Corta el queso y el tomate en rodajas.','Pochar: agua hirviendo + vinagre, crea remolino suave. Desliza los huevos. Cocina 3 min.','Seca los huevos en papel absorbente.','Arma: pan + queso + tomate + huevo pochado. Pimienta al gusto.'],
+    tip:'El truco del pochado es el remolino — practica una vez y ya lo dominas para siempre.',
+    s:'Queso campesino → mozzarella · Pan integral → arepa'},
+  arepa_huevo:{n:'Arepa con huevo y aguacate',t:'Desayuno',cls:'chip-d',min:20,dif:'Muy fácil',kcal:490,prot:28,
+    i(f,v){return[['Arepa blanca','1 unidad (80g)'],['Huevos enteros','2 unidades'],['Aguacate hass','½ unidad'],['Tomate chonto','1 unidad'],['Limón','¼ unidad'],['Sal, pimienta','Al gusto'],['Café con leche','250ml']]},
+    p:['Calienta la arepa en sartén sin grasa 3 min por lado.','Aplasta el aguacate con tenedor. Condimenta con sal y limón.','Fríe los huevos a fuego medio-bajo. Tapa los últimos 30 seg.','Sirve la arepa con aguacate, huevos y tomate.'],
+    tip:'100% colombiano. Arepa + huevos + aguacate = plan de tu nutricionista en 20 min.',
+    s:'Aguacate → queso campesino · Arepa blanca → integral'},
+  yogur_fruta:{n:'Yogur griego con granola y {{F0}}',t:'Desayuno',cls:'chip-d',min:5,dif:'Muy fácil',kcal:450,prot:24,
+    i(f,v){return[['Yogur griego natural','200g'],['Avena tostada (granola)','40g'],[f[0],'100g'],['Miel de abejas','8ml'],['Almendras crudas','15g']]},
+    p:['Tuesta la avena en sartén seca 3 min. Agrega almendras los últimos 30 seg.','Prepara la fruta.','Bowl: yogur base, granola, fruta, miel y almendras.'],
+    tip:'El yogur griego tiene 17g proteína por 200g y probióticos que regulan el estrógeno.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Granola → nueces`}},
+  changua:{n:'Changua bogotana fitness',t:'Desayuno',cls:'chip-d',min:20,dif:'Fácil',kcal:460,prot:28,
+    i(f,v){return[['Leche entera','250ml'],['Agua','200ml'],['Huevos enteros','2 unidades'],['Cebolla larga','1 tallo'],['Cilantro fresco','5g'],['Sal','Al gusto'],['Pan integral','2 tajadas']]},
+    p:['Hierve agua con cebolla y sal 5 min.','Agrega la leche. Calienta sin dejar hervir.','Rompe los huevos en la olla caliente. Cocina 3 min.','Sirve con cilantro y pan integral tostado.'],
+    tip:'Receta bogotana que cumple exactamente el plan de tu nutricionista. Perfecta en días fríos.',
+    s:'Pan integral → arepa blanca · Cebolla larga → cabezona'},
+  pancakes:{n:'Pancakes de avena con {{F0}}',t:'Desayuno',cls:'chip-d',min:20,dif:'Fácil',kcal:470,prot:26,
+    i(f,v){return[['Avena en hojuelas (triturada)','70g'],['Huevos enteros','2 unidades'],['Leche entera','80ml'],['Miel de abejas','8ml'],['Polvo de hornear','3g'],[f[0]+' fresca','150g']]},
+    p:['Tritura la avena en licuadora 30 seg.','Mezcla avena + huevos + leche + miel + polvo de hornear. Reposa 2 min.','Cocina en sartén a fuego medio-bajo, ¼ de mezcla por pancake. 2-3 min, voltea 1 min.','Sirve con fruta fresca y hilo de miel.'],
+    tip:'La mezcla dura 2 días en nevera. En la mañana tienes los pancakes listos en 5 min.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Leche → yogur griego`}},
+  calentado:{n:'Calentado andino con huevo',t:'Desayuno',cls:'chip-d',min:15,dif:'Muy fácil',kcal:500,prot:32,
+    i(f,v){return[['Arroz cocido del día anterior','120g'],['Fríjoles negros cocidos','80g'],['Huevos enteros','2 unidades'],['Arepa blanca','1 unidad'],['Aceite de oliva','5ml'],['Café con leche entera','250ml']]},
+    p:['Calienta arroz y fríjoles en sartén con aceite 3 min hasta dorar.','Fríe los huevos al lado.','Calienta la arepa. Sirve todo junto con café.'],
+    tip:'Cero desperdicio — usa sobrados. El arroz frío recalentado tiene menor índice glucémico.',
+    s:'Fríjoles → lentejas · Arroz blanco → integral'},
+  yogur_frutos:{n:'Yogur griego con {{F0}} y frutos secos',t:'Merienda',cls:'chip-m',min:5,dif:'Muy fácil',kcal:320,prot:18,
+    i(f,v){return[['Yogur griego natural','180g'],['Almendras crudas','20g'],['Maní tostado sin sal','15g'],[f[0]+' fresca','120g'],['Miel de abejas','5ml']]},
+    p:['Sirve el yogur.','Coloca frutos secos, fruta en cubos y miel encima.'],
+    tip:'5 min, 18g proteína. Los probióticos regulan el estrógeno en el intestino.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Almendras → nueces`}},
+  pan_queso:{n:'Pan francés con mozzarella y {{F0}}',t:'Merienda',cls:'chip-m',min:5,dif:'Muy fácil',kcal:310,prot:14,
+    i(f,v){return[['Pan baguette','80g'],['Mozzarella fresca','50g'],[f[0],'80g'],['Nueces de castilla','15g']]},
+    p:['Prepara la fruta de temporada.','Coloca mozzarella sobre el baguette.','Fruta encima. Nueces al lado.'],
+    tip:'La fruta ácida de temporada + mozzarella satisface el antojo de dulce con proteína.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Mozzarella → queso campesino`}},
+  avena_merienda:{n:'Avena caliente con {{F0}} y almendras',t:'Merienda',cls:'chip-m',min:10,dif:'Muy fácil',kcal:300,prot:12,
+    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],[f[0]+' fresca','100g'],['Almendras laminadas','20g'],['Miel de abejas','5ml']]},
+    p:['Cocina la avena en leche 5 min revolviendo.','Prepara la fruta.','Sirve la avena tibia con fruta y almendras encima.'],
+    tip:'Avena + fruta de temporada mantiene el azúcar estable y evita antojos nocturnos.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Almendras → maní`}},
+  galletas_queso:{n:'Galletas integrales con queso y {{F0}}',t:'Merienda',cls:'chip-m',min:5,dif:'Muy fácil',kcal:290,prot:13,
+    i(f,v){return[['Galletas integrales','5 unidades'],['Queso campesino','50g'],[f[0],'80g'],['Maní tostado','15g']]},
+    p:['Queso campesino en láminas sobre galletas.','Fruta de temporada encima.','Maní al lado.'],
+    tip:'5 min, sin cocinar. Proteína + fibra + grasa saludable.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Galletas → baguette`}},
+  smoothie:{n:'Smoothie de {{F0}} con leche',t:'Merienda',cls:'chip-m',min:5,dif:'Muy fácil',kcal:310,prot:14,
+    i(f,v){return[['Leche entera','250ml'],[f[0]+' fresca','150g'],['Avena en hojuelas','30g'],['Almendras','15g'],['Jengibre fresco rallado','5g']]},
+    p:['Coloca todos los ingredientes en la licuadora.','Licúa 45 seg.','Sirve de inmediato.'],
+    tip:'El jengibre es antiinflamatorio. Ideal post-entrenamiento.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Leche → de avena`}},
+  overnight:{n:'Overnight oats con {{F0}} y chía',t:'Merienda',cls:'chip-m2',min:5,dif:'Muy fácil',kcal:330,prot:18,
+    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],['Yogur griego','60g'],[f[0]+' fresca','80g'],['Semillas de chía','10g'],['Miel de abejas','8ml']]},
+    p:['Noche anterior: mezcla avena + leche + yogur + chía + miel en frasco. Refrigera.','En la mañana agrega la fruta fresca encima.'],
+    tip:'Cero tiempo en la mañana. La chía aporta omega-3 que regula el ciclo hormonal.',
+    s(f,v){return`${f[0]} → ${f[1]||'banano'} · Chía → linaza`}},
+  pechuga_fruta:{n:'Pechuga en salsa de {{F0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:620,prot:42,
+    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Pulpa de '+f[0].toLowerCase(),'60ml'],['Miel de abejas','10ml'],['Ajo','2 dientes'],['Aceite de oliva','10ml'],['Sal, pimienta, comino','Al gusto'],['Arroz blanco (crudo)','70g'],['Plátano maduro','½ unidad'],[v[0]+' para ensalada','80g'],['Limón','½ unidad']]},
+    p:['Marina la pechuga con ajo, sal, pimienta, comino y aceite 10 min.','Sella en sartén 3 min por lado. Reserva.','En la misma sartén mezcla la pulpa de la fruta + miel + 30ml agua. Espesa 2 min. Vierte sobre la pechuga.','Hornea a 180°C 12 min. Cocina el arroz. Asa el plátano sin grasa 3 min por lado.','Sirve con ensalada de la verdura de temporada con limón.'],
+    tip:'Prepara 3 pechugas a la vez — duran 4 días en nevera. La fruta de temporada cambia el sabor completamente cada mes.',
+    s(f,v){return`${f[0]} → ${f[1]||'naranja'} · Plátano → papa cocida`}},
+  bandeja_paisa:{n:'Bandeja paisa fitness',t:'Almuerzo',cls:'chip-a',min:40,dif:'Medio',kcal:650,prot:45,
+    i(f,v){return[['Carne de res magra','150g'],['Fríjoles negros cocidos','100g'],['Arroz integral cocido','150g'],['Aguacate hass','½ unidad'],['Huevo entero','1 unidad'],['Plátano verde (patacón)','½ unidad'],['Hogao (tomate + cebolla)','50g'],['Ajo, comino, sal','Al gusto']]},
+    p:['Sazona la carne con ajo, sal, pimienta y comino. Sella 4 min por lado. Reposa 5 min.','Hogao: sofríe tomate y cebolla 8 min. Agrega a los fríjoles.','Patacón: corta plátano, fríe 3 min, aplana, fríe 2 min más.','Fríe el huevo. Sirve todo junto con aguacate en láminas.'],
+    tip:'Cocina 500g de fríjoles el domingo — rinden toda la semana. Son la mejor fuente de hierro hormonal.',
+    s:'Carne res → pechuga · Arroz integral → blanco · Patacón → papa'},
+  pollo_teriyaki:{n:'Pollo teriyaki con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:600,prot:40,
+    i(f,v){return[['Muslo de pollo sin piel','180g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10ml'],['Vinagre de arroz','10ml'],['Ajo','2 dientes'],['Jengibre fresco','5g'],['Arroz blanco (crudo)','70g'],[v[0]+' fresca','100g'],['Aceite de oliva','5ml']]},
+    p:['Salsa teriyaki: soya + miel + vinagre + ajo + jengibre. Divide en dos.','Marina el pollo 15 min en la primera mitad.','Sella en sartén 5 min por lado. Últimos 2 min glasea con la segunda mitad.','Sirve sobre arroz con la verdura de temporada salteada.'],
+    tip:'El glaseado final crea ese brillo de restaurante japonés. Aplícalo en los últimos 2 min.',
+    s(f,v){return`Muslo → pechuga · ${v[0]} → ${v[1]||'zanahoria'} · Miel → panela`}},
+  sancocho:{n:'Pollo en salsa de tomate con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:590,prot:40,
+    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Tomate chonto','150g'],['Cebolla cabezona','80g'],['Ajo','3 dientes'],['Pimentón rojo','½ unidad'],['Aceite de oliva','8ml'],['Sal, comino, pimienta','Al gusto'],['Arroz blanco (crudo)','70g'],[v[0],'80g'],['Aguacate','½ unidad']]},
+    p:['Sofríe cebolla, ajo y pimentón en aceite 5 min. Agrega tomate en cubos y cocina 8 min hasta que forme una salsa.','Sella la pechuga en cubos 3 min por lado. Agrega la salsa de tomate, tapa y cocina a fuego bajo 12 min.','Cocina el arroz. Saltea la verdura de temporada 4 min.','Sirve pechuga con su salsa, arroz y verdura. Aguacate al lado.'],
+    tip:'La salsa de tomate casera tiene más licopeno que el tomate crudo — antioxidante clave para la salud hormonal.',
+    s(f,v){return`Pechuga → muslo sin piel · ${v[0]} → ${v[1]||'brócoli'} · Pimentón → zanahoria`}},
+  pollo_hogao:{n:'Pollo en hogao con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:610,prot:40,
+    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Tomate chonto','120g'],['Cebolla cabezona','80g'],['Ajo','2 dientes'],['Comino, sal','Al gusto'],['Aceite de oliva','8ml'],['Arroz blanco','70g'],[v[0],'100g'],['Plátano maduro','½ unidad']]},
+    p:['Hogao: sofríe cebolla, tomate y ajo a fuego medio 10 min.','Sella la pechuga 3 min por lado. Cubre con hogao. Cocina a fuego bajo 10 min tapado.','Cocina el arroz. Saltea la verdura de temporada 4 min.','Asa el plátano sin grasa 3 min. Sirve todo.'],
+    tip:'El hogao cocinado libera más licopeno del tomate — antioxidante clave para la salud hormonal.',
+    s(f,v){return`${v[0]} → ${v[1]||'brócoli'} · Plátano → papa cocida`}},
+  sudado_res:{n:'Sudado de res con {{V0}} y arroz',t:'Almuerzo',cls:'chip-a',min:40,dif:'Fácil',kcal:630,prot:44,
+    i(f,v){return[['Carne de res magra','160g'],['Papa pastusa','100g'],[v[0],'80g'],['Cebolla cabezona','50g'],['Tomate chonto','80g'],['Ajo','2 dientes'],['Arroz blanco','70g'],['Aguacate','½ unidad'],['Sal, comino, pimienta','Al gusto']]},
+    p:['Sella la carne en cubos con aceite y ajo 3 min.','Agrega cebolla y tomate 3 min. Agrega 200ml agua, sal y comino. Tapa y cocina 20 min a fuego bajo.','Agrega papa y la verdura de temporada en trozos. Cocina 15 min más.','Sirve con arroz y aguacate.'],
+    tip:'Fuego bajo y tapa — el vapor hace la carne tierna sin mucho tiempo.',
+    s(f,v){return`Carne res → muslo de pollo · Papa → yuca · ${v[0]} → ${v[1]||'zanahoria'}`}},
+  salmon:{n:'Salmón al horno con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:650,prot:44,
+    i(f,v){return[['Filete de salmón','180g'],['Arroz integral (crudo)','70g'],[v[0],'100g'],['Aguacate hass','½ unidad'],['Limón','1 unidad'],['Ajo','2 dientes'],['Aceite de oliva','10ml'],['Sal, pimienta, romero','Al gusto']]},
+    p:['Precalienta horno a 190°C. Condimenta el salmón con sal, pimienta, ajo y romero. Rocía aceite y limón.','Hornea en papel aluminio 18-20 min.','Cocina el arroz integral. Prepara la verdura de temporada blanqueada 4 min.','Sirve salmón, arroz y verdura con aguacate al lado.'],
+    tip:'En papillote el salmón se cocina en sus propios jugos. Aporta vitamina D esencial para la ovulación regular.',
+    s(f,v){return`Arroz integral → blanco · ${v[0]} → ${v[1]||'brócoli'} · Salmón → tilapia`}},
+  pollo_limon:{n:'Pollo al limón con papa y {{V0}}',t:'Almuerzo',cls:'chip-a',min:40,dif:'Fácil',kcal:600,prot:42,
+    i(f,v){return[['Pechuga de pollo sin piel','200g'],['Papa pastusa','150g'],['Limón','1 unidad'],['Romero seco','5g'],['Ajo','3 dientes'],['Aceite de oliva','10ml'],[v[0]+' para ensalada','100g'],['Sal, pimienta','Al gusto']]},
+    p:['Mezcla jugo de limón + ralladura + ajo + romero + aceite + sal. Cubre la pechuga y marina 10 min.','Corta la papa en gajos, condimenta con aceite y sal.','Hornea pechuga y papa a 190°C 28-30 min.','Prepara ensalada con la verdura de temporada con limón y sal.'],
+    tip:'La ralladura de limón es más aromática que el jugo — úsala siempre que puedas.',
+    s(f,v){return`Papa pastusa → papa criolla · ${v[0]} → ${v[1]||'espinaca'}`}},
+  sushi_salmon:{n:'Sushi bowl de salmón',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:430,prot:35,
+    i(f,v){return[['Salmón fresco','150g'],['Arroz para sushi (crudo)','80g'],['Vinagre de arroz','15ml'],['Aguacate hass','½ unidad'],['Pepino cohombro','60g'],['Zanahoria rallada','40g'],['Salsa soya baja en sodio','15ml'],['Aceite de sésamo','5ml'],['Sésamo tostado','5g'],['Jengibre fresco rallado','3g'],['Hoja de nori','1 unidad']]},
+    p:['Cocina el arroz sushi. Mezcla templado con vinagre, sal y 5g azúcar. Enfría 10 min.','Corta el salmón en cubos de 2cm. Marina con soya, sésamo y jengibre 10 min.','Corta aguacate en láminas, pepino en medias lunas, ralla zanahoria.','Bowl: arroz base, salmón, aguacate, pepino, zanahoria, nori en tiras. Sésamo encima.'],
+    tip:'El arroz dura 2 días en nevera. El salmón marina máximo 30 min. Para recalentar: solo el arroz, salmón frío encima.',
+    s:'Salmón → camarones o atún · Aguacate → mango · Soya → ponzu'},
+  poke_atun:{n:'Poke bowl de atún y {{V0}}',t:'Cena',cls:'chip-c',min:20,dif:'Muy fácil',kcal:420,prot:36,
+    i(f,v){return[['Atún en agua (lata)','170g'],['Arroz para sushi','80g'],['Edamame pelado congelado','60g'],[v[0]+' (rallada)','60g'],['Aguacate','½ unidad'],['Pepino cohombro','60g'],['Salsa soya + limón','20ml'],['Sésamo tostado','5g'],['Cebollín','10g']]},
+    p:['Cocina el arroz sushi. Descongela el edamame en agua caliente 3 min.','Escurre bien el atún. Mezcla con un poco de salsa.','Prepara la verdura de temporada rallada.','Bowl: arroz, atún, edamame, verdura, aguacate y pepino. Salsa, sésamo y cebollín.'],
+    tip:'El poke más rápido — el atún en lata no necesita preparación. Ten latas siempre para emergencias.',
+    s(f,v){return`Atún → camarones cocidos · ${v[0]} → ${v[1]||'zanahoria'}`}},
+  sushi_camaron:{n:'Sushi bowl de camarón con {{F0}}',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:420,prot:34,
+    i(f,v){return[['Camarones limpios pelados','180g'],['Arroz para sushi (crudo)','80g'],['Vinagre de arroz','15ml'],[f[0]+' fresca','80g'],['Repollo morado rallado','60g'],['Pepino cohombro','60g'],['Aguacate hass','½ unidad'],['Salsa soya baja en sodio','15ml'],['Sriracha','5ml'],['Aceite de sésamo','5ml'],['Sésamo tostado','5g']]},
+    p:['Cocina arroz sushi. Mezcla con vinagre, sal y azúcar. Enfría.','Sazona camarones con sal. Saltea en sartén caliente 2-3 min por lado hasta rosados.','Corta la fruta en cubos. Ralla el repollo. Prepara aguacate.','Salsa: soya + sésamo + sriracha. Bowl: arroz, camarones, fruta, repollo, aguacate, pepino. Salsa y sésamo.'],
+    tip:'Los camarones están listos cuando forman una C. Si forman una O están sobre-cocinados.',
+    s(f,v){return`${f[0]} → ${f[1]||'pepino'} · Camarón → tilapia en cubos · Sriracha → ají dulce`}},
+  tilapia:{n:'Tilapia al limón con {{V0}} salteada',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:400,prot:38,
+    i(f,v){return[['Filete de tilapia','180g'],[v[0],'100g'],['Ajo','2 dientes'],['Limón','1 unidad'],['Aceite de oliva','8ml'],['Papa cocida pequeña','100g'],['Sal, pimienta, orégano','Al gusto']]},
+    p:['Condimenta la tilapia con sal, pimienta, orégano, ajo y limón. Marina 5 min.','Cocina en sartén caliente 3-4 min por lado hasta dorar.','Saltea la verdura de temporada en la misma sartén 4-5 min.','Sirve con papa cocida y limón fresco encima.'],
+    tip:'A fuego alto la tilapia se sella rápido y queda con corteza dorada en menos de 10 min.',
+    s(f,v){return`Tilapia → pechuga en tiras · ${v[0]} → ${v[1]||'brócoli'} · Papa → arroz`}},
+  bowl_asiatico:{n:'Bowl asiático de pollo con {{V0}}',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:420,prot:38,
+    i(f,v){return[['Pechuga de pollo en tiras','170g'],['Fideos de arroz (secos)','60g'],[v[0],'80g'],['Zanahoria en juliana','60g'],['Salsa soya baja en sodio','20ml'],['Aceite de sésamo','5ml'],['Sésamo tostado','5g'],['Jengibre fresco','5g'],['Ajo','2 dientes'],['Aceite de oliva','5ml']]},
+    p:['Hidrata los fideos en agua caliente 8 min. Escurre.','Saltea la pechuga en tiras con ajo y sal 4 min. Reserva.','Saltea la verdura de temporada y zanahoria a fuego alto 3 min.','Agrega fideos, pollo, soya, aceite de sésamo y jengibre. Saltea 2 min.'],
+    tip:'El wok a fuego muy alto es el secreto — sin ese calor los vegetales se cuecen.',
+    s(f,v){return`Fideos de arroz → pasta cocida · ${v[0]} → ${v[1]||'zanahoria'}`}},
+  ramen:{n:'Ramen ligero de pollo con huevo',t:'Cena',cls:'chip-c',min:30,dif:'Fácil',kcal:420,prot:36,
+    i(f,v){return[['Caldo de pollo bajo en sodio','600ml'],['Pechuga desmenuzada cocida','130g'],['Fideos ramen (sin sobre)','60g'],['Huevo entero','1 unidad'],['Espinaca fresca','40g'],['Zanahoria en juliana','40g'],['Cebollín','10g'],['Salsa soya baja en sodio','10ml'],['Jengibre fresco','5g'],['Aceite de sésamo','3ml']]},
+    p:['Huevo ramen: hierve agua, sumerge huevo 7 min exactos. Enfría en agua con hielo. Corta a la mitad.','Sofríe ajo y jengibre 2 min. Agrega caldo, soya y aceite de sésamo. Hierve.','Cocina fideos en el caldo 3-4 min. Agrega espinaca y zanahoria 1 min.','Sirve: fideos + pollo desmenuzado + huevo + cebollín.'],
+    tip:'Congela cubos de caldo cuando cocines pollo. Transforma completamente el sabor del ramen.',
+    s:'Fideos ramen → de arroz · Espinaca → acelga · Huevo → más pollo'},
+  yakitori:{n:'Bowl yakitori de pollo',t:'Cena',cls:'chip-c',min:30,dif:'Fácil',kcal:430,prot:38,
+    i(f,v){return[['Pechuga de pollo en cubos','170g'],['Arroz sushi cocido','150g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10ml'],['Jengibre fresco rallado','5g'],['Ajo','1 diente'],['Repollo morado rallado','60g'],['Cebollín','15g'],['Sésamo tostado','5g']]},
+    p:['Salsa yakitori: soya + miel + ajo + jengibre. Divide en dos mitades.','Marina el pollo en cubos 15 min.','Cocina en sartén 4 min por lado. Últimos 2 min glasea con la segunda mitad.','Sirve sobre arroz sushi con repollo morado, cebollín y sésamo.'],
+    tip:'El glaseado al final para que la miel no se queme. Crea una capa brillante de restaurante japonés.',
+    s:'Pechuga → muslo sin piel (más jugoso) · Miel → panela disuelta'},
+  claras_pasta:{n:'Bowl de claras con {{V0}} y pasta',t:'Cena',cls:'chip-c',min:20,dif:'Muy fácil',kcal:400,prot:32,
+    i(f,v){return[['Claras de huevo','6 unidades (~180g)'],['Pasta integral','70g'],[v[0]+' fresca','80g'],['Ajo','3 dientes'],['Aceite de oliva','10ml'],['Queso parmesano rallado','20g'],['Sal, pimienta, orégano','Al gusto'],['Limón','½ unidad']]},
+    p:['Cocina la pasta en agua con sal. Escurre.','Saltea el ajo en aceite 1 min. Agrega la verdura de temporada 2 min.','Bate claras con sal. Agrega a la sartén. Revuelve suave 2-3 min.','Mezcla con la pasta. Sirve con parmesano y limón.'],
+    tip:'6 claras tienen 21g proteína pura con casi 0 grasa — ideal para la cena.',
+    s(f,v){return`Claras → 2 huevos enteros · ${v[0]} → ${v[1]||'brócoli'} · Parmesano → queso campesino`}},
+};
+
+function rName(k,f,v){const r=REC[k];if(!r)return k;return r.n.replace('{{F0}}',f[0]||'fruta').replace('{{V0}}',v[0]||'verdura');}
+function rShort(k,f,v){return rName(k,f,v).split(' ').slice(0,3).join(' ');}
+
+// ═══════════════ CALENDARIO ═══════════════
+const PLAN=[
+  {q:1,t:'gym',d:'avena_fruta',m1:'yogur_frutos',a:'pechuga_fruta',m2:'pan_queso',c:'sushi_salmon'},
+  {q:1,t:'gym',d:'tostadas_huevo',m1:'pan_queso',a:'bandeja_paisa',m2:'avena_merienda',c:'tilapia'},
+  {q:1,t:'mov',d:'arepa_huevo',m1:'avena_merienda',a:'pollo_teriyaki',m2:'galletas_queso',c:'poke_atun'},
+  {q:1,t:'gym',d:'pancakes',m1:'galletas_queso',a:'sancocho',m2:'smoothie',c:'bowl_asiatico'},
+  {q:1,t:'gym',d:'yogur_fruta',m1:'smoothie',a:'sudado_res',m2:'overnight',c:'ramen'},
+  {q:1,t:'rest',d:'arepa_huevo',m1:'overnight',a:'pollo_limon',m2:'yogur_frutos',c:'yakitori'},
+  {q:1,t:'rest',d:'calentado',m1:'yogur_frutos',a:'salmon',m2:'pan_queso',c:'claras_pasta'},
+  {q:1,t:'gym',d:'avena_fruta',m1:'yogur_frutos',a:'pollo_hogao',m2:'avena_merienda',c:'sushi_camaron'},
+  {q:1,t:'gym',d:'tostadas_huevo',m1:'galletas_queso',a:'bandeja_paisa',m2:'smoothie',c:'tilapia'},
+  {q:1,t:'mov',d:'arepa_huevo',m1:'avena_merienda',a:'pollo_teriyaki',m2:'pan_queso',c:'poke_atun'},
+  {q:1,t:'gym',d:'pancakes',m1:'smoothie',a:'sancocho',m2:'galletas_queso',c:'bowl_asiatico'},
+  {q:1,t:'gym',d:'yogur_fruta',m1:'pan_queso',a:'sudado_res',m2:'overnight',c:'sushi_salmon'},
+  {q:1,t:'rest',d:'yogur_fruta',m1:'overnight',a:'salmon',m2:'yogur_frutos',c:'ramen'},
+  {q:1,t:'rest',d:'calentado',m1:'yogur_frutos',a:'pechuga_fruta',m2:'avena_merienda',c:'yakitori'},
+  {q:1,t:'gym',d:'yogur_fruta',m1:'galletas_queso',a:'pollo_limon',m2:'smoothie',c:'claras_pasta'},
+  {q:2,t:'gym',d:'avena_fruta',m1:'yogur_frutos',a:'pollo_hogao',m2:'pan_queso',c:'sushi_camaron'},
+  {q:2,t:'gym',d:'tostadas_huevo',m1:'smoothie',a:'salmon',m2:'overnight',c:'tilapia'},
+  {q:2,t:'mov',d:'arepa_huevo',m1:'pan_queso',a:'sudado_res',m2:'yogur_frutos',c:'poke_atun'},
+  {q:2,t:'gym',d:'pancakes',m1:'yogur_frutos',a:'pollo_limon',m2:'galletas_queso',c:'bowl_asiatico'},
+  {q:2,t:'gym',d:'yogur_fruta',m1:'avena_merienda',a:'salmon',m2:'overnight',c:'yakitori'},
+  {q:2,t:'rest',d:'pancakes',m1:'overnight',a:'pollo_hogao',m2:'pan_queso',c:'sushi_salmon'},
+  {q:2,t:'rest',d:'calentado',m1:'pan_queso',a:'bandeja_paisa',m2:'yogur_frutos',c:'ramen'},
+  {q:2,t:'gym',d:'avena_fruta',m1:'yogur_frutos',a:'sudado_res',m2:'smoothie',c:'sushi_camaron'},
+  {q:2,t:'gym',d:'tostadas_huevo',m1:'galletas_queso',a:'pollo_limon',m2:'avena_merienda',c:'tilapia'},
+  {q:2,t:'mov',d:'arepa_huevo',m1:'avena_merienda',a:'pollo_hogao',m2:'yogur_frutos',c:'poke_atun'},
+  {q:2,t:'gym',d:'pancakes',m1:'overnight',a:'salmon',m2:'pan_queso',c:'bowl_asiatico'},
+  {q:2,t:'gym',d:'yogur_fruta',m1:'smoothie',a:'pollo_teriyaki',m2:'galletas_queso',c:'yakitori'},
+  {q:2,t:'rest',d:'arepa_huevo',m1:'yogur_frutos',a:'bandeja_paisa',m2:'overnight',c:'claras_pasta'},
+  {q:2,t:'rest',d:'calentado',m1:'pan_queso',a:'sudado_res',m2:'avena_merienda',c:'sushi_salmon'},
+  {q:2,t:'rest',d:'avena_fruta',m1:'yogur_frutos',a:'pollo_limon',m2:'smoothie',c:'ramen'},
+];
+const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+function buildCal(){
+  const ct=document.getElementById('cal-container');ct.innerHTML='';
+  const t=getT(curMonth),f=t.f.map(x=>x.n),v=t.v;
+  const wks=[{s:1,e:7,n:`Semana 1 — Días 1–7 · Q1 · ${MN[curMonth]}`},{s:8,e:15,n:'Semana 2 — Días 8–15 · Q1'},{s:16,e:22,n:'Semana 3 — Días 16–22 · Q2'},{s:23,e:30,n:'Semana 4 — Días 23–30 · Q2'}];
+  wks.forEach((wk,wi)=>{
+    const tt=document.createElement('div');tt.className='wkt';tt.textContent=wk.n;ct.appendChild(tt);
+    const g=document.createElement('div');g.className='cal';
+    DIAS.forEach(d=>{const h=document.createElement('div');h.className='cal-hd';h.textContent=d;g.appendChild(h);});
+    for(let dn=wk.s;dn<=wk.e;dn++){
+      const p=PLAN[dn-1];
+      const dc=document.createElement('div');
+      dc.className=`cal-day ${p.q===1?'q1':'q2'} ${p.t==='gym'?'gym':p.t==='mov'?'mov':'rest'}`;
+      dc.innerHTML=`<div class="dnum">${dn===30?'30 🎯':dn}</div>
+        <span class="chip chip-d" onclick="openR('${p.d}',event)">${rShort(p.d,f,v)}</span>
+        <span class="chip chip-m" onclick="openR('${p.m1}',event)">${rShort(p.m1,f,v)}</span>
+        <span class="chip chip-a" onclick="openR('${p.a}',event)">${rShort(p.a,f,v)}</span>
+        <span class="chip chip-m2" onclick="openR('${p.m2}',event)">${rShort(p.m2,f,v)}</span>
+        <span class="chip chip-c" onclick="openR('${p.c}',event)">${rShort(p.c,f,v)}</span>
+        <div class="dico ${p.t==='gym'?'ico-g':p.t==='mov'?'ico-m':'ico-r'}">${p.t==='gym'?'G':p.t==='mov'?'M':'D'}</div>`;
+      g.appendChild(dc);
+    }
+    ct.appendChild(g);
+    if(wi<3){const d=document.createElement('div');d.className='wkd';ct.appendChild(d);}
+  });
+}
+
+function openR(k,ev){
+  ev&&ev.stopPropagation();
+  const r=REC[k];if(!r)return;
+  const t=getT(curMonth),f=t.f.map(x=>x.n),v=t.v;
+  const name=rName(k,f,v);
+  const bcls={'Desayuno':'chip-d','Merienda':'chip-m','Almuerzo':'chip-a','Cena':'chip-c'}[r.t]||'chip-d';
+  const ings=r.i(f,v);
+  const tip=typeof r.tip==='string'?r.tip:r.tip(f,v);
+  const sust=typeof r.s==='string'?r.s:r.s(f,v);
+  document.getElementById('mTitle').textContent=name;
+  document.getElementById('mMeta').textContent=`${r.t} · ${MN[curMonth]} · ${r.min} min · ${r.dif}`;
+  document.getElementById('mBody').innerHTML=`
+    <span class="rec-badge ${bcls}">${r.t}</span>
+    <div class="rmeta"><span class="rpill">⏱ ${r.min} min</span><span class="rpill">📊 ${r.dif}</span><span class="rpill">🔥 ${r.kcal} kcal</span><span class="rpill">💪 ${r.prot}g prot</span></div>
+    <div style="background:var(--vl);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--vd);margin-bottom:10px">🍃 Frutas de ${MN[curMonth]}: <strong>${f.slice(0,3).join(', ')}</strong> · Verduras: <strong>${v.slice(0,3).join(', ')}</strong></div>
+    <div class="rlabel">Ingredientes</div>
+    ${ings.map(([n,q])=>`<div class="ing-row"><span>${n}</span><span class="ing-qty">${q}</span></div>`).join('')}
+    <div class="rlabel">Preparación</div>
+    ${r.p.map((step,i)=>`<div class="step-item"><div class="snum">${i+1}</div><div>${step}</div></div>`).join('')}
+    <div class="rtip">💡 ${tip}</div>
+    <div class="rsust">🔄 ${sust}</div>`;
+  document.getElementById('recOv').classList.add('open');
+  document.getElementById('recBox').scrollTop=0;
+}
+function closeRec(){document.getElementById('recOv').classList.remove('open');}
+
+// RECETAS INDEX
+function buildRecetas(){
+  const c=document.getElementById('recetas-container');
+  const groups={'Desayunos (≤30 min)':[],'Meriendas (5–10 min)':[],'Almuerzos (≤40 min)':[],'Cenas (≤30 min)':[]};
+  Object.entries(REC).forEach(([k,r])=>{
+    const g={'Desayuno':'Desayunos (≤30 min)','Merienda':'Meriendas (5–10 min)','Almuerzo':'Almuerzos (≤40 min)','Cena':'Cenas (≤30 min)'}[r.t];
+    if(g)groups[g].push([k,r]);
+  });
+  Object.entries(groups).forEach(([gn,items])=>{
+    const h=document.createElement('div');h.style.cssText='font-family:"DM Serif Display",serif;font-size:17px;margin:1.25rem 0 .6rem;';h.textContent=gn;c.appendChild(h);
+    items.forEach(([k,r])=>{
+      const t=getT(curMonth);
+      const name=rName(k,t.f,t.v);
+      const card=document.createElement('div');card.className='rec-idx-card';
+      card.innerHTML=`<div class="rec-idx-inner" onclick="openR('${k}')"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">${name}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="rpill">⏱ ${r.min} min</span><span class="rpill">🔥 ${r.kcal} kcal</span><span class="rpill">💪 ${r.prot}g</span></div></div><div style="color:var(--v);font-size:11px;white-space:nowrap;padding-top:4px">Ver →</div></div>`;
+      c.appendChild(card);
+    });
+  });
+}
+
+// ═══════════════ EJERCICIO ═══════════════
+// ═══ DATOS EJERCICIO ═══
+// Estructura: bloques con tareas detalladas
+// tarea: {nombre, desc, sets, tiempo, nivel, guia:[pasos]}
+const RUTINAS=[
+  {
+    semana:'Semanas 1–2',
+    sub:'Técnica y base — aprende los movimientos con buena forma. El peso es secundario.',
+    bloques:[
+      {
+        id:'b1', emoji:'🦵', titulo:'Bloque 1 · Tren inferior', subtitulo:'Glúteos y cuádriceps — Lunes y Jueves',
+        rango:'0:00–1:00', tipo:'Fuerza',
+        tareas:[
+          {id:'t1a',nombre:'Sentadilla con mancuernas',desc:'Pies al ancho de hombros, espalda recta, baja hasta 90°',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Coloca las mancuernas a los lados del cuerpo.','Pies al ancho de hombros o un poco más.','Baja controlado en 3 seg — rodillas sobre los pies.','Empuja desde los talones para subir.','Mantén el pecho arriba durante todo el movimiento.']},
+          {id:'t1b',nombre:'Hip thrust con barra',desc:'Apoya la espalda alta en el banco, barra sobre caderas',sets:'4×12',tiempo:'12 min',nivel:'Medio',guia:['Siéntate en el suelo apoyando la espalda alta en el banco.','Barra sobre la cadera — usa esponja para proteger.','Empuja desde los talones y contrae glúteo arriba.','En la parte alta, cadera paralela al suelo 1 seg.','Baja controlado sin tocar el suelo entre reps.']},
+          {id:'t1c',nombre:'Prensa de pierna',desc:'Planta completa del pie en la plataforma',sets:'3×12',tiempo:'10 min',nivel:'Fácil',guia:['Siéntate con la espalda pegada al respaldo.','Pies al ancho de hombros en la plataforma.','Baja hasta que las rodillas lleguen a 90°.','Empuja sin llegar a bloquear las rodillas al extender.']},
+          {id:'t1d',nombre:'Extensión de cuádriceps',desc:'Movimiento de aislamiento — contrae arriba 1 segundo',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Ajusta el acolchado para que quede sobre los tobillos.','Extiende completamente y contrae el cuádriceps 1 seg.','Baja en 2 seg de forma controlada.']},
+          {id:'t1e',nombre:'Gemelos de pie',desc:'Rango completo — sube hasta la punta, baja al talón',sets:'3×20',tiempo:'6 min',nivel:'Fácil',guia:['Párate con la punta del pie al borde de un escalón.','Sube lo más alto que puedas, contrae 1 seg.','Baja hasta que el talón quede por debajo del escalón.']},
+          {id:'t1f',nombre:'Caminata inclinada 10%',desc:'Cardio de baja intensidad post-entrenamiento',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Ajusta la cinta a 10% de inclinación.','Velocidad de caminata cómoda (5–6 km/h).','Mantén la postura erguida — no te apoyes en las barras.','Este cardio quema grasa sin afectar la recuperación muscular.']},
+        ]
+      },
+      {
+        id:'b2', emoji:'💪', titulo:'Bloque 2 · Tren superior', subtitulo:'Espalda y bíceps — Martes',
+        rango:'0:00–0:55', tipo:'Fuerza',
+        tareas:[
+          {id:'t2a',nombre:'Jalón al pecho con polea',desc:'Agarre amplio, codos hacia abajo y atrás',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Agarre un poco más ancho que los hombros.','Inclínate levemente hacia atrás — 15°.','Lleva la barra al pecho superior, codos van hacia atrás.','Controla la subida en 2 seg — no sueltes.']},
+          {id:'t2b',nombre:'Remo con mancuerna',desc:'Espalda plana, codo a 45° del cuerpo',sets:'3×12 c/lado',tiempo:'10 min',nivel:'Fácil',guia:['Apoya la rodilla y la mano del mismo lado en el banco.','La mancuerna cuelga del brazo extendido.','Sube el codo hacia el techo — no rotar el torso.','Baja controlado sintiendo el estiramiento de la espalda.']},
+          {id:'t2c',nombre:'Face pull en polea',desc:'Cuerda a nivel de cara, codos a 90°',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Coloca la cuerda al nivel de tu cara.','Tira hacia tu cara separando los extremos de la cuerda.','Codos a la altura de los hombros durante el movimiento.','Contrae los músculos de la espalda alta 1 seg.']},
+          {id:'t2d',nombre:'Curl de bíceps con mancuerna',desc:'Codos pegados al cuerpo, giro de muñeca al subir',sets:'3×12',tiempo:'8 min',nivel:'Fácil',guia:['De pie o sentada, codos pegados al torso.','Sube girando la palma hacia arriba al llegar arriba.','Contrae el bíceps 1 seg y baja en 2 seg.']},
+          {id:'t2e',nombre:'Plancha abdominal',desc:'Cuerpo recto de cabeza a talones, respira',sets:'3×30 seg',tiempo:'6 min',nivel:'Fácil',guia:['Apóyate en antebrazos y puntas de los pies.','Cuerpo completamente recto — sin hundir ni elevar la cadera.','Activa el core como si fueras a recibir un golpe.','Respira de forma controlada durante los 30 seg.']},
+          {id:'t2f',nombre:'Bicicleta estática moderada',desc:'Resistencia media, cadencia constante',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Ajusta el asiento a la altura de la cadera.','Resistencia a nivel 5–7 de 20.','Cadencia de 70–80 RPM constante.']},
+        ]
+      },
+      {
+        id:'b3', emoji:'🧘', titulo:'Bloque 3 · Movilidad', subtitulo:'Descanso activo — Miércoles',
+        rango:'0:00–0:50', tipo:'Movilidad',
+        tareas:[
+          {id:'t3a',nombre:'Yoga cadera y espalda baja',desc:'Busca un video de 20 min en YouTube — "yoga cadera principiante"',sets:'1 sesión',tiempo:'20 min',nivel:'Fácil',guia:['Busca: "yoga cadera 20 minutos principiante" en YouTube.','Paloma, mariposa y torsión espinal son las poses clave.','Respira profundo en cada postura — mínimo 5 respiraciones.']},
+          {id:'t3b',nombre:'Stretching cadena posterior',desc:'Isquiotibiales, lumbares y glúteos',sets:'1 sesión',tiempo:'10 min',nivel:'Fácil',guia:['Flexión hacia adelante de pie — rodillas suaves 30 seg.','Estiramiento de isquiotibial sentada 30 seg c/pierna.','Postura del niño 30 seg para lumbar.','Paloma en el suelo 30 seg c/pierna.']},
+          {id:'t3c',nombre:'Foam roller — glúteos y espalda',desc:'Rueda lento buscando puntos de tensión',sets:'10 min',tiempo:'10 min',nivel:'Fácil',guia:['Glúteos: siéntate sobre el rodillo y rueda lento.','Cuando encuentres un punto tenso, para 20–30 seg.','Espalda alta: rodillo perpendicular, abre los brazos.','No rodar la zona lumbar — solo espalda alta.']},
+          {id:'t3d',nombre:'Caminata ligera',desc:'Al aire libre si es posible',sets:'20 min',tiempo:'20 min',nivel:'Fácil',guia:['Ritmo suave — no es cardio, es recuperación.','Aprovecha para escuchar algo que disfrutes.','Si puedes, descalza en pasto o tierra.']},
+        ]
+      },
+      {
+        id:'b4', emoji:'🔥', titulo:'Bloque 4 · Pecho y hombros', subtitulo:'Tríceps incluidos — Viernes',
+        rango:'0:00–0:55', tipo:'Fuerza',
+        tareas:[
+          {id:'t4a',nombre:'Press de pecho con mancuernas',desc:'Banco plano, codos a 45°, no bloquear codos',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Acuéstate en el banco, pies apoyados en el suelo.','Mancuernas a la altura del pecho, codos a 45°.','Empuja hacia arriba y adentro — sin bloquear los codos.','Baja controlado hasta sentir el estiramiento del pecho.']},
+          {id:'t4b',nombre:'Elevaciones laterales',desc:'Codos ligeramente flexionados, sube hasta hombro',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['De pie, mancuernas a los lados del cuerpo.','Sube los brazos lateralmente hasta el nivel del hombro.','Codos ligeramente doblados durante todo el movimiento.','Baja en 2 seg — no dejes caer las mancuernas.']},
+          {id:'t4c',nombre:'Fondos en banco (tríceps)',desc:'Cuerpo cerca del banco, codos hacia atrás',sets:'3×12',tiempo:'8 min',nivel:'Medio',guia:['Manos en el borde del banco, dedos hacia adelante.','Baja doblando los codos hasta 90° — codos hacia atrás.','Empuja para subir extendiendo los codos completamente.','Si es muy difícil, dobla las rodillas.']},
+          {id:'t4d',nombre:'Press militar con mancuernas',desc:'Sentada, core activo, no arquear la espalda',sets:'3×10',tiempo:'10 min',nivel:'Medio',guia:['Sentada con la espalda recta, mancuernas a la altura de los hombros.','Empuja hacia arriba sin arquear la espalda lumbar.','Baja controlado hasta los hombros.']},
+          {id:'t4e',nombre:'Cruce en polea (pecho)',desc:'Pecho estirado en la apertura, codos suaves',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Poleas arriba, agarre neutral.','Inclínate ligeramente hacia adelante.','Cruza los cables frente al pecho — imagina abrazar un árbol.','Siente el estiramiento al abrir controlado.']},
+        ]
+      },
+      {
+        id:'b5', emoji:'🌅', titulo:'Bloque 5 · Descanso activo', subtitulo:'Sábado — movimiento sin esfuerzo',
+        rango:'0:00–0:45', tipo:'Descanso',
+        tareas:[
+          {id:'t5a',nombre:'Yoga o pilates suave',desc:'Opcional — escucha tu cuerpo',sets:'30–45 min',tiempo:'45 min',nivel:'Fácil',guia:['Busca en YouTube: "yoga suave 30 min" o "pilates principiante".','No fuerces ningún movimiento — es recuperación.']},
+          {id:'t5b',nombre:'Actividad recreativa libre',desc:'Bailar, caminar, nadar — lo que disfrutes',sets:'Lo que quieras',tiempo:'Libre',nivel:'Fácil',guia:['Este día no tiene objetivo de rendimiento.','Muévete por placer, no por obligación.']},
+        ]
+      },
+      {
+        id:'b6', emoji:'🍳', titulo:'Bloque 6 · Descanso total + Meal prep', subtitulo:'Domingo — recuperación y cocina',
+        rango:'0:00–1:30', tipo:'Descanso',
+        tareas:[
+          {id:'t6a',nombre:'Pollo al horno en cantidad',desc:'Base proteica de la semana — hornea 600g',sets:'1 vez',tiempo:'35 min',nivel:'Fácil',guia:['Precalienta el horno a 190°C.','Sazona la pechuga con ajo, sal, pimienta y romero.','Hornea en papel aluminio 25–28 min.','Deja enfriar y guarda en recipientes separados.']},
+          {id:'t6b',nombre:'Arroz blanco e integral',desc:'Cocina porciones para 5 días',sets:'1 vez',tiempo:'25 min',nivel:'Fácil',guia:['Arroz blanco: 2 tazas arroz + 4 agua, 18 min tapado.','Arroz integral: 2 tazas + 5 agua, 40 min tapado.','Guarda en nevera en recipientes herméticos hasta 5 días.']},
+          {id:'t6c',nombre:'Verduras limpias y cortadas',desc:'Zanahoria, brócoli, pepino — listos para usar',sets:'1 vez',tiempo:'20 min',nivel:'Fácil',guia:['Lava todo con desinfectante de verduras.','Corta zanahoria en juliana, brócoli en floretes, pepino en rodajas.','Guarda en recipientes con un papel absorbente debajo.','Duran 4–5 días en nevera listos para usar.']},
+          {id:'t6d',nombre:'Sin entrenamiento',desc:'Recuperación muscular completa',sets:'—',tiempo:'Todo el día',nivel:'Fácil',guia:['El descanso es parte del entrenamiento.','El músculo crece durante el reposo, no durante el ejercicio.','Duerme mínimo 7–8 horas esta noche.']},
+        ]
+      },
+    ]
+  },
+  {
+    semana:'Semanas 3–4',
+    sub:'Progresión de carga — +1–2 kg en principales · +1 serie en compuestos · RPE 7–8.',
+    bloques:[
+      {
+        id:'b7', emoji:'🦵', titulo:'Bloque 1 · Glúteos — Volumen', subtitulo:'Más carga y volumen — Lunes y Jueves',
+        rango:'0:00–1:05', tipo:'Fuerza',
+        tareas:[
+          {id:'t7a',nombre:'Hip thrust con barra (+1 serie)',desc:'Agrega 2–5 kg respecto a la semana 2',sets:'5×10',tiempo:'15 min',nivel:'Medio',guia:['Misma técnica de las semanas 1–2.','Agrega peso si las últimas 2 reps aún se sienten controladas.','5 series en lugar de 4 — el volumen extra hace la diferencia.']},
+          {id:'t7b',nombre:'Sentadilla sumo con mancuerna',desc:'Pies más abiertos, punta de pies hacia afuera',sets:'4×12',tiempo:'12 min',nivel:'Medio',guia:['Pies más anchos que los hombros, puntas 45° hacia afuera.','Mancuerna sostenida con las dos manos frente al cuerpo.','Rodillas siguen la dirección de los pies al bajar.','Activa el glúteo y los aductores al subir.']},
+          {id:'t7c',nombre:'Peso muerto rumano',desc:'Bisagra de cadera, espalda recta, siente el estiramiento',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['Barra o mancuernas frente a los muslos.','Bisagra desde la cadera — no doblar demasiado las rodillas.','Baja hasta sentir el estiramiento de los isquiotibiales.','Aprieta glúteos al volver a la posición inicial.']},
+          {id:'t7d',nombre:'Patada de glúteo en polea',desc:'Aislamiento directo — contrae arriba 2 seg',sets:'3×15 c/pierna',tiempo:'10 min',nivel:'Fácil',guia:['Coloca el tobillo en la polea baja.','Apóyate en la máquina, espalda recta.','Lleva la pierna hacia atrás sin arquear la lumbar.','Contrae el glúteo arriba 2 seg.']},
+          {id:'t7e',nombre:'Abducción de cadera sentada',desc:'Máquina — controla la vuelta, no dejes caer',sets:'3×20',tiempo:'8 min',nivel:'Fácil',guia:['Ajusta el asiento para que las almohadillas queden sobre las rodillas.','Abre lentamente hasta el rango máximo cómodo.','Cierra en 2 seg — sin dejar caer la resistencia.']},
+          {id:'t7f',nombre:'Caminata inclinada 12%',desc:'Un punto más de inclinación que las semanas 1–2',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Aumenta la inclinación de 10% a 12%.','Misma velocidad de caminata.','Si sientes que es muy fácil, aumenta 0.5 km/h.']},
+        ]
+      },
+      {
+        id:'b8', emoji:'💪', titulo:'Bloque 2 · Espalda — Progresión', subtitulo:'Más carga — Martes',
+        rango:'0:00–0:55', tipo:'Fuerza',
+        tareas:[
+          {id:'t8a',nombre:'Jalón agarre cerrado',desc:'Agarre paralelo o supino — más énfasis en bíceps',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['Usa el agarre cerrado paralelo o con palmas hacia ti.','Lleva el agarre hacia el pecho inferior.','Codos van hacia las caderas — más activación de espalda baja.']},
+          {id:'t8b',nombre:'Remo barra o máquina',desc:'Más carga que con mancuerna — progresión real',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['En remo barra: inclinación a 45°, barra hacia el ombligo.','En máquina: pecho apoyado, tira codos hacia atrás.','Agrega 2–4 kg respecto al remo con mancuerna.']},
+          {id:'t8c',nombre:'Pull-over con mancuerna',desc:'Estira la espalda completamente — movimiento nuevo',sets:'3×12',tiempo:'8 min',nivel:'Medio',guia:['Acuéstate perpendicular al banco — hombros en el banco.','Mancuerna con las dos manos sobre el pecho.','Baja la mancuerna hacia atrás de la cabeza en arco.','Sube por el mismo camino activando el dorsal.']},
+          {id:'t8d',nombre:'Curl martillo con mancuerna',desc:'Agarre neutro — trabaja braquial y antebrazo',sets:'3×12',tiempo:'8 min',nivel:'Fácil',guia:['Agarre neutro (pulgares hacia arriba) durante todo el movimiento.','Sube hasta que el antebrazo quede vertical.','Alterna brazos o haz los dos juntos.']},
+          {id:'t8e',nombre:'Plancha lateral',desc:'Caderas sin caer — progresión del core',sets:'3×25 seg c/lado',tiempo:'8 min',nivel:'Medio',guia:['Apóyate en el antebrazo y el lado del pie.','Caderas bien arriba — cuerpo en línea diagonal.','Si es muy difícil, apoya la rodilla de abajo.']},
+          {id:'t8f',nombre:'Bicicleta resistencia media',desc:'Resistencia más alta que semanas 1–2',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Sube la resistencia 1–2 puntos más que la semana anterior.','Mantén la misma cadencia aunque cueste más.']},
+        ]
+      },
+    ]
+  },
+];
+// localStorage key para checks de ejercicio
+const EJ_KEY='ej_checks_v1';
+function loadEjChecks(){try{const s=localStorage.getItem(EJ_KEY);return s?JSON.parse(s):{}}catch(e){return {};}}
+function saveEjChecks(d){try{localStorage.setItem(EJ_KEY,JSON.stringify(d));}catch(e){}}
+
+function buildEjercicio(){
+  const c=document.getElementById('ejercicio-container');
+  c.innerHTML='';
+  const checks=loadEjChecks();
+
+  RUTINAS.forEach(sem=>{
+    const semDiv=document.createElement('div');semDiv.className='ex-week';
+    semDiv.innerHTML=`<div class="ex-wt">${sem.semana}</div><div class="ex-ws">${sem.sub}</div>`;
+
+    sem.bloques.forEach(bloque=>{
+      const totalT=bloque.tareas.length;
+      const doneT=bloque.tareas.filter(t=>checks[t.id]).length;
+      const nivelColor=bloque.tipo==='Fuerza'?'#0C447C':bloque.tipo==='Movilidad'?'#085041':'#5F5E5A';
+      const nivelBg=bloque.tipo==='Fuerza'?'var(--bl)':bloque.tipo==='Movilidad'?'var(--vl)':'#F1EFE8';
+
+      const card=document.createElement('div');card.className='ex-bloque';
+
+      // HEADER desplegable
+      const header=document.createElement('div');header.className='ex-bloque-header';
+      header.onclick=()=>toggleBloque(header);
+      header.innerHTML=`
+        <div class="ex-bloque-left">
+          <span class="ex-bloque-emoji">${bloque.emoji}</span>
+          <div>
+            <div class="ex-bloque-title">${bloque.titulo} <span style="font-size:12px;font-weight:400;color:var(--mu)">${doneT}/${totalT}</span></div>
+            <div class="ex-bloque-sub">${bloque.subtitulo}</div>
+          </div>
+        </div>
+        <div class="ex-bloque-meta">
+          <div style="background:${nivelBg};color:${nivelColor};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">${bloque.tipo}</div>
+          <div class="ex-bloque-timer">${bloque.rango}</div>
+          <span class="ex-bloque-chevron">▾</span>
+        </div>`;
+      card.appendChild(header);
+
+      // BODY — tabla de tareas
+      const body=document.createElement('div');body.className='ex-tabla-wrap';
+
+      // Encabezados
+      const thead=document.createElement('div');thead.className='ex-tabla-head';
+      thead.innerHTML='<span>TAREA</span><span>SERIES / REPS</span><span>TIEMPO</span><span>NIVEL</span><span>✓</span>';
+      body.appendChild(thead);
+
+      bloque.tareas.forEach(tarea=>{
+        const done=!!checks[tarea.id];
+        const nivelCls=tarea.nivel==='Fácil'?'nivel-facil':tarea.nivel==='Medio'?'nivel-medio':'nivel-dificil';
+        const row=document.createElement('div');
+        row.className='ex-tarea'+(done?' done':'');
+        row.id='tarea-'+tarea.id;
+        row.innerHTML=`
+          <div class="ex-tcell">
+            <div class="ex-tnombre">${tarea.nombre}</div>
+            <div class="ex-tdesc">${tarea.desc}</div>
+            <button class="ex-tguia" onclick="openGuia('${tarea.id}',event)">📖 Ver guía</button>
+          </div>
+          <div class="ex-tcell ex-tsets">${tarea.sets}</div>
+          <div class="ex-tcell" style="color:var(--mu);font-size:12px">${tarea.tiempo}</div>
+          <div class="ex-tcell"><span class="ex-nivel ${nivelCls}">${tarea.nivel}</span></div>
+          <div class="ex-tcell"><input type="checkbox" class="ex-tcheck" ${done?'checked':''} onchange="toggleTarea('${bloque.id}','${tarea.id}',this)"></div>`;
+        body.appendChild(row);
+      });
+
+      card.appendChild(body);
+      semDiv.appendChild(card);
+    });
+
+    c.appendChild(semDiv);
+  });
+}
+
+function toggleBloque(header){
+  const body=header.nextElementSibling;
+  const ch=header.querySelector('.ex-bloque-chevron');
+  const open=body.classList.toggle('open');
+  ch.classList.toggle('open',open);
+}
+
+function toggleTarea(bloqueId, tareaId, el){
+  const checks=loadEjChecks();
+  checks[tareaId]=el.checked;
+  saveEjChecks(checks);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  const row=document.getElementById('tarea-'+tareaId);
+  if(row){
+    if(el.checked)row.classList.add('done');
+    else row.classList.remove('done');
+  }
+  // Actualizar contador del bloque
+  buildEjercicio();
+  showToast(el.checked?'✅ Ejercicio completado':'↩️ Ejercicio desmarcado');
+}
+
+function openGuia(tareaId, ev){
+  ev&&ev.stopPropagation();
+  // Buscar la tarea en RUTINAS
+  let tarea=null;
+  for(const sem of RUTINAS){
+    for(const bloque of sem.bloques){
+      const t=bloque.tareas.find(t=>t.id===tareaId);
+      if(t){tarea=t;break;}
+    }
+    if(tarea)break;
+  }
+  if(!tarea)return;
+  document.getElementById('mTitle').textContent=tarea.nombre;
+  document.getElementById('mMeta').textContent=`${tarea.sets} · ${tarea.tiempo} · ${tarea.nivel}`;
+  document.getElementById('mBody').innerHTML=`
+    <div style="font-size:12px;color:var(--mu);margin-bottom:12px">${tarea.desc}</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:8px">Técnica paso a paso</div>
+    ${tarea.guia.map((paso,i)=>`<div class="step-item"><div class="snum">${i+1}</div><div>${paso}</div></div>`).join('')}`;
+  document.getElementById('recOv').classList.add('open');
+  document.getElementById('recBox').scrollTop=0;
+}
+
+function tEx(h){const b=h.nextElementSibling,ch=h.querySelector('.chevron'),o=b.classList.toggle('open');if(ch)ch.classList.toggle('open',o);}
+
+// ═══════════════ HORMONAL ═══════════════
+const HORM=[
+  {t:'Grasas saludables → producción hormonal',p:'El aguacate, los huevos, las nueces y el aceite de oliva son la materia prima del estrógeno y la progesterona. Sin suficiente grasa, el ciclo se desregula.'},
+  {t:'Hierro → energía y ciclo regular',p:'La carne de res magra y los fríjoles negros aportan hierro que las mujeres pierden en la menstruación. El limón en las comidas aumenta la absorción del hierro vegetal hasta un 67%.'},
+  {t:'Magnesio → antiansiedad y sueño',p:'Las almendras, la espinaca y el chocolate negro 85%+ son ricos en magnesio. Reduce la ansiedad, mejora el sueño reparador — cuando el músculo crece de verdad.'},
+  {t:'Proteína constante → cortisol bajo',p:'Distribuir proteína en las 5 comidas estabiliza el azúcar en sangre y mantiene el cortisol controlado. El cortisol alto genera acumulación de grasa abdominal y dificulta el crecimiento muscular.'},
+  {t:'Fibra + probióticos → estrógeno equilibrado',p:'La fibra de verduras, fríjoles y avena ayuda a eliminar el exceso de estrógeno. El yogur griego aporta probióticos que regulan cómo se metabolizan las hormonas.'},
+  {t:'Vitamina C de frutas de temporada',p:'Las frutas colombianas de temporada — mora, uchuva, guayaba, lulo — son ricas en vitamina C, cofactora en la síntesis de progesterona y que reduce el cortisol post-entrenamiento.'},
+  {t:'Remolacha → circulación y hígado',p:'Los nitratos naturales de la remolacha mejoran la circulación y la oxigenación muscular. También apoya la función del hígado donde se metabolizan los estrógenos.'},
+  {t:'Vitamina D del salmón → ciclo regular',p:'El salmón aporta vitamina D, fundamental para la ovulación regular. El atún aporta zinc clave en la síntesis de progesterona. Incluir pescado 2 veces/semana es la estrategia más efectiva.'},
+  {t:'Chía → omega-3 y regulación hormonal',p:'La chía aporta omega-3 vegetal y fibra soluble que reducen la inflamación sistémica que desregula el ciclo y aumenta la ansiedad.'},
+  {t:'Repollo morado → fitoestrógenos',p:'Contiene indol-3-carbinol que ayuda a eliminar el exceso de estrógeno. Fundamental para ciclos más regulares y menor retención de líquidos.'},
+];
+function buildHormonal(){
+  const c=document.getElementById('hormonal-container');
+  const g=document.createElement('div');g.className='hgrid';
+  HORM.forEach(h=>{const card=document.createElement('div');card.className='hcard';card.innerHTML=`<h4>${h.t}</h4><p>${h.p}</p>`;g.appendChild(card);});
+  c.appendChild(g);
+  c.innerHTML+=`<div style="background:var(--vl);border-radius:var(--rad);padding:1.1rem;margin-top:.5rem"><div style="font-weight:600;margin-bottom:7px;color:var(--vd)">💡 Estrategia anti-antojos</div><div style="font-size:12px;color:var(--vd);line-height:1.8">1. Come proteína primero — los antojos de dulce son frecuentemente déficit de proteína.<br>2. Las frutas de temporada con miel satisfacen el dulce con fibra y bajo índice glucémico.<br>3. Si el antojo es intenso: 2 cuadros de chocolate 85%+ con té de canela.<br>4. Bebe agua con limón antes de ceder — muchos antojos son realmente sed.</div></div>`;
+}
+
+// ═══════════════ NAV ═══════════════
+function showSec(id,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════ CONSERVACIÓN ═══════════════
+const CONSERVA_SELECTED_KEY='conserva_sel_v1';
+
+// Base de datos de conservación por producto
+const CONSERVA_DB={
+  // ── PROTEÍNAS ──
+  'Pechuga de pollo':{
+    emoji:'🍗',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (cruda)',desc:'En bolsa hermética o recipiente tapado. Dura 2–3 días. Colócala en la parte más fría (parte baja o cajón de carnes).'},
+      {icon:'🧊',title:'Congelador (cruda)',desc:'Empaca en porciones individuales en bolsas ziploc. Saca el aire al máximo. Dura hasta 9 meses.'},
+      {icon:'🍳',title:'Nevera (cocinada)',desc:'En recipiente hermético. Dura 4–5 días. Ideal para meal prep del domingo.'},
+      {icon:'🧊',title:'Congelador (cocinada)',desc:'Desmenuzada o en cubos en bolsas ziploc. Dura hasta 3 meses. Etiqueta con la fecha.'},
+    ],
+    tip:'Nunca laves el pollo crudo — esparce bacterias. Lava solo con desinfectante de verduras si lo deseas, sobre el mismo recipiente.',
+    duracion:'Cruda: 2–3 días nevera · 9 meses congelada'
+  },
+  'Pierna / Pernil de pollo':{
+    emoji:'🍗',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (cruda)',desc:'En bandeja cubierta con papel film o bolsa hermética. Dura 2–3 días.'},
+      {icon:'🧊',title:'Congelador (cruda)',desc:'Empaca en porciones de 2 piezas en ziploc. Dura hasta 9 meses.'},
+      {icon:'🍳',title:'Nevera (cocinada)',desc:'En recipiente con tapa. Dura 4–5 días. Guarda el caldo aparte — es excelente para sopas.'},
+    ],
+    tip:'Si vas a descongelar, hazlo en la nevera la noche anterior — nunca a temperatura ambiente.',
+    duracion:'Cruda: 2–3 días nevera · 9 meses congelada'
+  },
+  'Cadera de res (molida)':{
+    emoji:'🥩',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (cruda)',desc:'En recipiente hermético o envuelta en papel film. Úsala en máximo 1–2 días — la carne molida se daña más rápido.'},
+      {icon:'🧊',title:'Congelador (cruda)',desc:'Forma porciones planas (100–150g) en bolsas ziploc — se congela y descongela más rápido. Dura 3–4 meses.'},
+      {icon:'🍳',title:'Nevera (cocinada)',desc:'En recipiente hermético. Dura 4–5 días.'},
+    ],
+    tip:'La carne molida tiene más superficie expuesta al aire → se daña más rápido que los cortes enteros. Congela el mismo día de compra si no la usas en 24h.',
+    duracion:'Cruda: 1–2 días nevera · 3–4 meses congelada'
+  },
+  'Murillo de res':{
+    emoji:'🥩',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (cruda)',desc:'En recipiente hermético o bolsa ziploc. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador (cruda)',desc:'Empaca en porciones individuales. Dura hasta 6 meses. Retira todo el aire del empaque.'},
+      {icon:'🍳',title:'Nevera (cocinada)',desc:'El sudado o estofado con líquido dura 4–5 días en nevera.'},
+    ],
+    tip:'Los cortes de res para guisar (murillo, bola negra) mejoran de sabor el segundo día — son perfectos para meal prep.',
+    duracion:'Crudo: 3–5 días nevera · 6 meses congelado'
+  },
+  'Lomo de cerdo':{
+    emoji:'🥩',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (crudo)',desc:'En bolsa hermética o recipiente tapado. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador (crudo)',desc:'Empaca en porciones. Dura hasta 6 meses.'},
+      {icon:'🍳',title:'Nevera (cocinado)',desc:'En recipiente hermético. Dura 4–5 días. Añade un poco del jugo de cocción para que no se seque.'},
+    ],
+    tip:'El lomo de cerdo es una de las carnes más bajas en grasa. Cocina solo la porción que vayas a consumir — reseca fácilmente al recalentar.',
+    duracion:'Crudo: 3–5 días nevera · 6 meses congelado'
+  },
+  'Salmón':{
+    emoji:'🐟',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (fresco)',desc:'En recipiente hermético sobre hielo o en la parte más fría. Úsalo en máximo 1–2 días.'},
+      {icon:'🧊',title:'Congelador (fresco)',desc:'Envuelve cada porción en papel film y luego en ziploc. Dura 2–3 meses.'},
+      {icon:'🍳',title:'Nevera (cocinado)',desc:'En recipiente hermético. Dura 2–3 días. No recalentar demasiado.'},
+    ],
+    tip:'Si el salmón huele fuerte a "pescado", ya no está en su mejor punto. Fresco debe oler a mar suave. Descongela siempre en nevera.',
+    duracion:'Fresco: 1–2 días nevera · 2–3 meses congelado'
+  },
+  'Tilapia':{
+    emoji:'🐟',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (fresca)',desc:'En recipiente hermético. Úsala en máximo 1–2 días.'},
+      {icon:'🧊',title:'Congelador (fresca)',desc:'Empaca cada filete individualmente. Dura hasta 3 meses.'},
+      {icon:'🍳',title:'Nevera (cocinada)',desc:'En recipiente hermético. Dura 2–3 días.'},
+    ],
+    tip:'La tilapia es el pescado más económico y de menor olor. Si la compraste fresca, congela el mismo día si no la cocinas.',
+    duracion:'Fresca: 1–2 días nevera · 3 meses congelada'
+  },
+  'Trucha':{
+    emoji:'🐟',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (fresca)',desc:'En recipiente hermético. Máximo 1–2 días.'},
+      {icon:'🧊',title:'Congelador (fresca)',desc:'Envuelta en papel film + ziploc. Dura 2–3 meses.'},
+    ],
+    tip:'La trucha tiene más grasa que la tilapia (omega-3) — se conserva ligeramente menos que otros pescados blancos.',
+    duracion:'Fresca: 1–2 días nevera · 2–3 meses congelada'
+  },
+  'Atún en agua (latas)':{
+    emoji:'🥫',cat:'Proteínas',
+    metodos:[
+      {icon:'📦',title:'Despensa (cerrado)',desc:'En lugar fresco y seco, alejado de la luz. Dura hasta la fecha impresa (generalmente 2–3 años).'},
+      {icon:'❄️',title:'Nevera (abierto)',desc:'Transfiere a recipiente hermético — NUNCA guardes en la misma lata abierta. Dura 2–3 días.'},
+    ],
+    tip:'Una vez abierta, la lata de aluminio puede dar sabor metálico al alimento. Siempre pasar a recipiente de vidrio o plástico.',
+    duracion:'Cerrado: 2–3 años · Abierto: 2–3 días nevera'
+  },
+  'Camarones limpios':{
+    emoji:'🦐',cat:'Proteínas',
+    metodos:[
+      {icon:'🧊',title:'Congelador (sin cocinar)',desc:'En bolsa ziploc. Si los compraste congelados, no descongeles y vuelvas a congelar. Dura 6 meses.'},
+      {icon:'❄️',title:'Nevera (descongelados)',desc:'Úsalos el mismo día o máximo al día siguiente. No volver a congelar.'},
+      {icon:'🍳',title:'Nevera (cocinados)',desc:'En recipiente hermético. Dura 2–3 días.'},
+    ],
+    tip:'Los camarones se descongielan rápido: en agua fría en 15 minutos. Nunca en agua caliente — cambia la textura.',
+    duracion:'Congelados: 6 meses · Cocinados: 2–3 días nevera'
+  },
+  'Huevos':{
+    emoji:'🥚',cat:'Proteínas',
+    metodos:[
+      {icon:'❄️',title:'Nevera (crudos con cáscara)',desc:'En su cartón original en la parte central de la nevera — no en la puerta (temperatura fluctúa). Duran 3–5 semanas.'},
+      {icon:'❄️',title:'Nevera (crudos sin cáscara)',desc:'Clara y yema juntas en recipiente hermético. Duran 2–4 días.'},
+      {icon:'🍳',title:'Nevera (cocinados con cáscara)',desc:'Duros con cáscara: hasta 1 semana. Pelados: 5 días en recipiente con agua fría.'},
+    ],
+    tip:'Test de frescura: sumerge el huevo en agua. Si se va al fondo = fresco. Si flota = ya no sirve.',
+    duracion:'Crudos con cáscara: 3–5 semanas en nevera'
+  },
+  // ── LÁCTEOS ──
+  'Queso campesino':{
+    emoji:'🧀',cat:'Lácteos',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'En recipiente hermético o envuelto en papel film. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador',desc:'Envuelto doble en film + ziploc. Dura 2 meses. Cambia la textura al descongelar — ideal solo para cocinar.'},
+    ],
+    tip:'El queso campesino tiende a soltar agua. Guárdalo sobre un papel absorbente dentro del recipiente y cámbialo cada 2 días.',
+    duracion:'Nevera: 5–7 días'
+  },
+  'Mozzarella fresca':{
+    emoji:'🧀',cat:'Lácteos',
+    metodos:[
+      {icon:'❄️',title:'Nevera (en su líquido)',desc:'Guárdala en su suero original o en agua con una pizca de sal. Dura 5–7 días.'},
+      {icon:'⚠️',title:'No congelar',desc:'La mozzarella fresca cambia completamente de textura al congelarse — se vuelve grumosa.'},
+    ],
+    tip:'Si el suero original se acabó, cúbrela con agua fría con una pizca de sal. Cambia el agua cada 2 días.',
+    duracion:'Nevera: 5–7 días en suero'
+  },
+  'Leche entera':{
+    emoji:'🥛',cat:'Lácteos',
+    metodos:[
+      {icon:'❄️',title:'Nevera (abierta)',desc:'En la parte central, no en la puerta. Dura 5–7 días después de abrir.'},
+      {icon:'📦',title:'Despensa (cerrada UHT)',desc:'La leche en caja larga vida no necesita nevera hasta abrir. Revisa la fecha.'},
+    ],
+    tip:'Si la leche huele ácida o forma grumos al calentar, ya no está en su punto. Úsala siempre antes de la fecha.',
+    duracion:'Abierta: 5–7 días nevera'
+  },
+  'Yogur griego natural':{
+    emoji:'🥛',cat:'Lácteos',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'Siempre tapado. Dura hasta la fecha impresa (aprox. 2 semanas sin abrir, 5–7 días abierto).'},
+      {icon:'❌',title:'No congelar',desc:'Pierde su textura cremosa y los probióticos se ven afectados.'},
+    ],
+    tip:'El líquido claro que se forma encima es suero de leche — no lo botes, tiene proteína. Revuelve antes de usar.',
+    duracion:'Sin abrir: hasta fecha · Abierto: 5–7 días'
+  },
+  // ── FRUTAS ──
+  'Mango tommy':{
+    emoji:'🥭',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (verde)',desc:'Si está verde, déjalo madurar a temperatura ambiente lejos del sol directo. 2–5 días.'},
+      {icon:'❄️',title:'Nevera (maduro)',desc:'Una vez maduro, guárdalo en nevera. Dura 5–7 días más.'},
+      {icon:'🧊',title:'Congelador (en cubos)',desc:'Pela, corta en cubos y congela en bolsa ziploc. Perfecto para smoothies. Dura 6 meses.'},
+    ],
+    tip:'El mango amadurece bien en una bolsa de papel. Para acelerarlo, ponlo junto a bananos.',
+    duracion:'Verde: 2–5 días ambiente · Maduro: 5–7 días nevera'
+  },
+  'Mora de castilla':{
+    emoji:'🫐',cat:'Frutas',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'En recipiente con papel absorbente debajo. NO lavar hasta el momento de consumir. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador',desc:'Extiende en bandeja 2h, luego pasa a bolsa ziploc. Así no se pegan. Dura 6 meses.'},
+    ],
+    tip:'Las moras son muy delicadas — el agua acelera su deterioro. Lávalas solo justo antes de comerlas.',
+    duracion:'Nevera: 3–5 días · Congelada: 6 meses'
+  },
+  'Uchuva':{
+    emoji:'🫒',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Con cáliz (capuchón)',desc:'Con su capuchón puesto, a temperatura ambiente hasta 1 mes. Es su empaque natural.'},
+      {icon:'❄️',title:'Nevera (sin cáliz)',desc:'Sin capuchón en recipiente hermético. Dura 1–2 semanas.'},
+    ],
+    tip:'¡No quites el capuchón hasta el momento de consumir! Es la mejor protección natural que tiene.',
+    duracion:'Con cáliz: hasta 1 mes ambiente'
+  },
+  'Lulo':{
+    emoji:'🍋',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (verde)',desc:'Madura en 3–5 días fuera de la nevera.'},
+      {icon:'❄️',title:'Nevera (maduro)',desc:'En bolsa plástica perforada. Dura hasta 1 semana.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Extrae la pulpa, congela en cubos de hielo. Dura 6 meses. Ideal para smoothies.'},
+    ],
+    tip:'El lulo está maduro cuando cede suavemente al presionarlo y tiene color amarillo-naranja.',
+    duracion:'Maduro: 1 semana nevera · Pulpa: 6 meses congelada'
+  },
+  'Fresa':{
+    emoji:'🍓',cat:'Frutas',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'En recipiente con papel absorbente. NO lavar hasta consumir. Dura 3–7 días.'},
+      {icon:'🧊',title:'Congelador',desc:'Lava, seca muy bien y congela en bandeja primero. Luego pasa a ziploc. Dura 6 meses.'},
+    ],
+    tip:'Las fresas absorben agua como esponjas — no las sumerjas, solo enjuaga rápido bajo el chorro justo antes de comer.',
+    duracion:'Nevera: 3–7 días · Congelada: 6 meses'
+  },
+  'Papaya':{
+    emoji:'🍈',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (verde)',desc:'Madura en 2–5 días fuera de nevera.'},
+      {icon:'❄️',title:'Nevera (madura)',desc:'Envuelta en plástico o en recipiente. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (en cubos)',desc:'Sin cáscara ni semillas, en cubos. Dura 6 meses.'},
+    ],
+    tip:'Las semillas negras de la papaya son comestibles — tienen sabor a pimienta y propiedades digestivas.',
+    duracion:'Madura: 5–7 días nevera · Cubos: 6 meses congelada'
+  },
+  'Piña':{
+    emoji:'🍍',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (entera)',desc:'Dura 2–3 días fuera de nevera. No madura más una vez cortada.'},
+      {icon:'❄️',title:'Nevera (cortada)',desc:'En recipiente hermético. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (en cubos)',desc:'Dura 6 meses. Perfecta para smoothies — mantiene la bromelina activa.'},
+    ],
+    tip:'La piña no madura después de cortada — compra solo la que vas a usar pronto. Para saber si está madura: jala una hoja del centro, si sale fácil = lista.',
+    duracion:'Entera: 2–3 días · Cortada: 5–7 días nevera'
+  },
+  'Banano':{
+    emoji:'🍌',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'En racimo o sueltos. Dura 2–7 días según madurez.'},
+      {icon:'❄️',title:'Nevera (maduro)',desc:'La cáscara se pone negra pero el interior se conserva 2–3 días más.'},
+      {icon:'🧊',title:'Congelador (sin cáscara)',desc:'Pela, envuelve cada uno o córtalos en rodajas. Dura 3 meses. Perfecto para smoothies.'},
+    ],
+    tip:'Para acelerar la madurez: ponlos en bolsa de papel cerrada. Para frenarla: sepáralos del racimo y aléjalos de otras frutas.',
+    duracion:'Ambiente: 2–7 días · Congelado: 3 meses'
+  },
+  'Guanábana':{
+    emoji:'🍈',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (entera)',desc:'Madura en 2–4 días a temperatura ambiente. Lista cuando cede al presionar y tiene manchas cafés en la cáscara.'},
+      {icon:'❄️',title:'Nevera (madura)',desc:'Entera en bolsa plástica. Dura 3–4 días más.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Extrae la pulpa sin semillas, congela en bolsas ziploc. Dura 3 meses. Ideal para jugos y smoothies.'},
+    ],
+    tip:'Cuando la guanábana está madura huele dulce y su cáscara cede fácilmente. Úsala rápido una vez cortada — oxida en pocas horas.',
+    duracion:'Madura: 3–4 días nevera · Pulpa: 3 meses congelada'
+  },
+  'Feijoa':{
+    emoji:'🫒',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (verde)',desc:'Madura en 3–5 días. Lista cuando cede suavemente y huele intensa y dulce.'},
+      {icon:'❄️',title:'Nevera (madura)',desc:'En bolsa plástica. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Extrae la pulpa con cuchara y congela en cubos. Dura 3 meses.'},
+    ],
+    tip:'La feijoa se come con cuchara — córtala por la mitad y saca la pulpa. La cáscara no se come. Combina muy bien con yogur griego.',
+    duracion:'Madura: 5–7 días nevera'
+  },
+  'Guayaba rosada':{
+    emoji:'🍑',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Madura en 2–3 días si está verde. Lista cuando cede ligeramente y huele dulce.'},
+      {icon:'❄️',title:'Nevera (madura)',desc:'En bolsa plástica perforada. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (en trozos)',desc:'Pela, corta y congela. Dura 6 meses — perfecta para jugos.'},
+    ],
+    tip:'La guayaba tiene 5 veces más vitamina C que la naranja. Come con cáscara y todo — ahí está la mayor concentración de nutrientes.',
+    duracion:'Madura: 5–7 días nevera · Congelada: 6 meses'
+  },
+  'Mandarina':{
+    emoji:'🍊',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Entera dura 1 semana fuera de nevera.'},
+      {icon:'❄️',title:'Nevera',desc:'En el cajón de frutas. Dura 2–3 semanas.'},
+    ],
+    tip:'Las mandarinas con gajos sueltos entre sí están maduras en su punto. Guárdalas sin bolsa en la nevera para que no se apelmacen.',
+    duracion:'Temperatura ambiente: 1 semana · Nevera: 2–3 semanas'
+  },
+  'Naranja':{
+    emoji:'🍊',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Entera dura 1–2 semanas fuera de nevera.'},
+      {icon:'❄️',title:'Nevera',desc:'En el cajón de frutas. Dura 3–4 semanas.'},
+      {icon:'🧊',title:'Congelador (jugo)',desc:'Congela el jugo en cubos de hielo. Dura 4 meses.'},
+    ],
+    tip:'El jugo de naranja se oxida en 20–30 minutos y pierde la mitad de su vitamina C. Exprímela en el momento, no prepares con anticipación.',
+    duracion:'Temperatura ambiente: 1–2 semanas · Nevera: 3–4 semanas'
+  },
+  'Melón':{
+    emoji:'🍈',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (entero)',desc:'Madura a temperatura ambiente. Dura 5–7 días.'},
+      {icon:'❄️',title:'Nevera (cortado)',desc:'Cubierto con film o en recipiente. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador (en bolas o cubos)',desc:'Congela en bandeja y luego en bolsa. Dura 6 meses — solo para smoothies.'},
+    ],
+    tip:'El melón maduro huele dulce en el extremo donde estaba el tallo. Al golpearlo suavemente, suena hueco. Aleja de otros alimentos en nevera — transfiere su aroma.',
+    duracion:'Entero: 5–7 días · Cortado: 3–5 días nevera'
+  },
+  'Pitaya amarilla':{
+    emoji:'🌟',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Madura en 2–3 días si está verde. Lista cuando está completamente amarilla.'},
+      {icon:'❄️',title:'Nevera (madura)',desc:'En bolsa plástica. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Extrae la pulpa, congela en cubos. Dura 3 meses.'},
+    ],
+    tip:'La pitaya amarilla es laxante natural — no comas más de 1 unidad a la vez si no estás acostumbrada. Ideal como primera fruta de la mañana.',
+    duracion:'Madura: 3–5 días nevera'
+  },
+  'Granadilla':{
+    emoji:'🟡',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'En lugar fresco. Dura 1–2 semanas con cáscara intacta.'},
+      {icon:'❄️',title:'Nevera',desc:'En bolsa plástica. Dura 2–3 semanas.'},
+    ],
+    tip:'La granadilla se come directamente con cuchara — parte la cáscara y sorbe la pulpa con semillas. Las semillas son comestibles y tienen fibra.',
+    duracion:'Temperatura ambiente: 1–2 semanas'
+  },
+  'Tomate de árbol':{
+    emoji:'🍅',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (verde)',desc:'Madura en 3–5 días fuera de nevera.'},
+      {icon:'❄️',title:'Nevera (maduro)',desc:'En bolsa plástica. Dura 1–2 semanas.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Blanquea 1 min, pela, congela la pulpa. Dura 3 meses — ideal para jugos.'},
+    ],
+    tip:'El tomate de árbol maduro tiene color naranja-rojo intenso y cede al presionar. Su jugo sin azúcar es una de las fuentes más ricas en vitamina A y C de Colombia.',
+    duracion:'Maduro: 1–2 semanas nevera'
+  },
+  'Sandía':{
+    emoji:'🍉',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (entera)',desc:'Dura 1–2 semanas entera fuera de nevera.'},
+      {icon:'❄️',title:'Nevera (cortada)',desc:'Cubierta con film bien pegado. Dura 3–5 días.'},
+      {icon:'🧊',title:'Congelador (en cubos)',desc:'Sin semillas, en cubos. Dura 6 meses — solo para smoothies, pierde textura.'},
+    ],
+    tip:'La sandía cortada absorbe olores de la nevera — cúbrela siempre con film que toque directo la pulpa. El corazón rojo es la parte más dulce y nutritiva.',
+    duracion:'Entera: 1–2 semanas · Cortada: 3–5 días nevera'
+  },
+  'Limón':{
+    emoji:'🍋',cat:'Frutas',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Enteros duran 1 semana fuera de la nevera.'},
+      {icon:'❄️',title:'Nevera',desc:'En bolsa plástica o cajón de verduras. Duran 3–4 semanas.'},
+      {icon:'🧊',title:'Congelador (jugo)',desc:'Congela el jugo en cubos de hielo. Dura 4 meses.'},
+    ],
+    tip:'Si solo necesitas un poco de jugo, pincha el limón con un tenedor y exprime — no lo cortes. Dura más.',
+    duracion:'Temperatura ambiente: 1 semana · Nevera: 3–4 semanas'
+  },
+  // ── VERDURAS ──
+  'Espinaca fresca':{
+    emoji:'🥬',cat:'Verduras',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'En bolsa plástica con un papel absorbente dentro — absorbe la humedad. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (blanqueada)',desc:'Hierve 1 min, enfría en agua helada, escurre bien y congela. Dura 6 meses.'},
+    ],
+    tip:'La espinaca se marchita rápido. Guárdala lejos de frutas que producen etileno (manzana, banano) — aceleran su deterioro.',
+    duracion:'Nevera: 5–7 días · Blanqueada: 6 meses'
+  },
+  'Brócoli':{
+    emoji:'🥦',cat:'Verduras',
+    metodos:[
+      {icon:'❄️',title:'Nevera (entero)',desc:'Envuelto en papel húmedo en bolsa plástica. Dura 5–7 días.'},
+      {icon:'🧊',title:'Congelador (en floretes)',desc:'Blanquea 2 min, enfría en agua helada, seca bien y congela. Dura 6 meses.'},
+    ],
+    tip:'Guarda el tallo también — pelado y cortado en cubos, es igual de nutritivo y sirve para sopas y salteados.',
+    duracion:'Nevera: 5–7 días · Congelado: 6 meses'
+  },
+  'Zanahoria':{
+    emoji:'🥕',cat:'Verduras',
+    metodos:[
+      {icon:'❄️',title:'Nevera',desc:'Cortada la parte verde si la tiene. En bolsa plástica o recipiente con agua. Dura 2–3 semanas.'},
+      {icon:'🧊',title:'Congelador (en rodajas)',desc:'Blanquea 2 min, seca y congela. Dura 6 meses.'},
+    ],
+    tip:'La zanahoria en agua dentro de la nevera se mantiene crujiente por semanas — cambia el agua cada 5 días.',
+    duracion:'Nevera: 2–3 semanas · Congelada: 6 meses'
+  },
+  'Aguacate hass':{
+    emoji:'🥑',cat:'Verduras',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (duro)',desc:'Madura en 2–5 días. Listo cuando cede al presionar suavemente.'},
+      {icon:'❄️',title:'Nevera (maduro entero)',desc:'Frena la maduración 2–3 días más.'},
+      {icon:'❄️',title:'Nevera (cortado)',desc:'Con el hueso dentro, untado de limón y cubierto con film bien pegado. Dura 1–2 días.'},
+      {icon:'🧊',title:'Congelador (pulpa)',desc:'Aplasta con limón y sal, congela en bolsa plástica plana. Dura 3 meses.'},
+    ],
+    tip:'El limón es el mejor aliado del aguacate cortado — el ácido evita la oxidación. El film debe quedar pegado directo a la pulpa sin aire.',
+    duracion:'Maduro: 3–5 días · Cortado: 1–2 días con limón'
+  },
+  'Tomate chonto':{
+    emoji:'🍅',cat:'Verduras',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Entero y maduro a temperatura ambiente, fuera de la nevera. Dura 3–5 días y mantiene el sabor.'},
+      {icon:'❄️',title:'Nevera (solo si está muy maduro)',desc:'Pierde un poco el sabor pero dura 5–7 días más.'},
+      {icon:'🧊',title:'Congelador (en cubos para cocinar)',desc:'Congela los que estén muy maduros — no sirven crudos pero perfectos para hogao y salsas.'},
+    ],
+    tip:'El tomate es una de las pocas verduras que NO va en nevera si está en su punto — el frío destruye su textura y sabor.',
+    duracion:'Temperatura ambiente: 3–5 días'
+  },
+  'Papa sabanera':{
+    emoji:'🥔',cat:'Verduras',
+    metodos:[
+      {icon:'📦',title:'Despensa oscura y fresca',desc:'En bolsa de malla o canasta. Lejos de la luz — la luz la hace brotar y volverse verde. Dura 2–3 semanas.'},
+      {icon:'❄️',title:'Nevera (cocinada)',desc:'En recipiente hermético. Dura 3–4 días.'},
+      {icon:'⚠️',title:'No guardar cerca de cebollas',desc:'La cebolla libera gases que aceleran el brotado de la papa.'},
+    ],
+    tip:'Si la papa tiene manchas verdes o brotes grandes, quítalos con un pelador — la parte verde tiene solanina (levemente tóxica en grandes cantidades).',
+    duracion:'Cruda despensa: 2–3 semanas · Cocinada nevera: 3–4 días'
+  },
+  'Cebolla larga':{
+    emoji:'🧅',cat:'Verduras',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (entera)',desc:'En lugar fresco y seco, con ventilación. Dura 1–2 semanas.'},
+      {icon:'❄️',title:'Nevera (picada)',desc:'En recipiente hermético. Dura 5–7 días. Guárdala lejos de otros alimentos — transfiere olor.'},
+    ],
+    tip:'La cebolla larga picada es una de las más olorosas en nevera. Guárdala siempre en recipiente de vidrio con tapa, no en plástico.',
+    duracion:'Entera: 1–2 semanas · Picada nevera: 5–7 días'
+  },
+  'Ajo':{
+    emoji:'🧄',cat:'Verduras',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente (cabeza entera)',desc:'En lugar seco, oscuro y con ventilación. Dura 1–2 meses.'},
+      {icon:'❄️',title:'Nevera (dientes pelados)',desc:'En recipiente hermético. Dura 1 semana.'},
+      {icon:'🧊',title:'Congelador (picado)',desc:'Congela ajo picado en bandeja de hielo con aceite de oliva. Dura 3 meses — listo para usar directo.'},
+    ],
+    tip:'El truco del ajo congelado en aceite de oliva es el mejor hack de cocina — nunca más picar ajo en el momento de cocinar.',
+    duracion:'Entero: 1–2 meses · Pelado: 1 semana nevera'
+  },
+  'Plátano maduro':{
+    emoji:'🍌',cat:'Verduras',
+    metodos:[
+      {icon:'🌡️',title:'Temperatura ambiente',desc:'Fuera de nevera. Dura 3–7 días según madurez.'},
+      {icon:'🧊',title:'Congelador (pelado)',desc:'Pela y congela entero o en rodajas. Dura 3 meses. Ideal para asar o hacer tostones dulces.'},
+    ],
+    tip:'El plátano maduro con manchas negras en la cáscara está en su punto más dulce — perfecto para asar al horno sin aceite.',
+    duracion:'Temperatura ambiente: 3–7 días'
+  },
+  // ── DESPENSA ──
+  'Arroz blanco':{
+    emoji:'🍚',cat:'Despensa',
+    metodos:[
+      {icon:'📦',title:'Despensa (crudo)',desc:'En recipiente hermético o bolsa bien cerrada, alejado de la humedad. Dura hasta 2 años.'},
+      {icon:'❄️',title:'Nevera (cocinado)',desc:'En recipiente hermético. Dura 4–6 días. Es ideal para meal prep.'},
+      {icon:'🧊',title:'Congelador (cocinado)',desc:'En porciones individuales en bolsas ziploc. Dura 1–2 meses. Recalienta en microondas con un chorrito de agua.'},
+    ],
+    tip:'El arroz cocinado refrigerado tiene menor índice glucémico que el recién hecho — es técnicamente más saludable para los objetivos de control de peso.',
+    duracion:'Crudo: hasta 2 años · Cocinado: 4–6 días nevera'
+  },
+  'Avena en hojuelas':{
+    emoji:'🌾',cat:'Despensa',
+    metodos:[
+      {icon:'📦',title:'Despensa',desc:'En recipiente hermético alejado de la humedad. Dura 1–2 años.'},
+      {icon:'❄️',title:'Nevera (overnight oats preparada)',desc:'En frasco hermético. Dura 3–4 días lista para consumir.'},
+    ],
+    tip:'Prepara 4 frascos de overnight oats el domingo — tienes merienda lista toda la semana sin esfuerzo.',
+    duracion:'Cruda: 1–2 años · Preparada (overnight): 3–4 días'
+  },
+  'Harina de arepa':{
+    emoji:'🫓',cat:'Despensa',
+    metodos:[
+      {icon:'📦',title:'Despensa (cerrada)',desc:'En lugar seco. Dura hasta la fecha del empaque (generalmente 1 año).'},
+      {icon:'❄️',title:'Nevera o despensa (abierta)',desc:'En recipiente hermético o bolsa bien cerrada. Dura 6 meses.'},
+    ],
+    tip:'Las arepas crudas se pueden congelar — prepara varias el domingo, congélalas separadas y calienta directo en sartén sin descongelar.',
+    duracion:'Abierta: 6 meses · Arepa cruda congelada: 1 mes'
+  },
+  // ── ESPECIAS ──
+  'Jengibre fresco':{
+    emoji:'🫚',cat:'Especias',
+    metodos:[
+      {icon:'❄️',title:'Nevera (entero)',desc:'En bolsa de papel dentro de una bolsa plástica. Dura 3–4 semanas.'},
+      {icon:'🧊',title:'Congelador (entero o rallado)',desc:'Congela el trozo entero — ralla directamente congelado con un microplane. Dura 6 meses.'},
+    ],
+    tip:'El truco del jengibre congelado es el mejor: lo rallas directamente sin descongelar y queda perfecto. Nunca más jengibre seco o en polvo.',
+    duracion:'Nevera: 3–4 semanas · Congelado: 6 meses'
+  },
+  'Leche de coco (lata)':{
+    emoji:'🥥',cat:'Especias',
+    metodos:[
+      {icon:'📦',title:'Despensa (cerrada)',desc:'Hasta la fecha impresa. Generalmente 2–3 años.'},
+      {icon:'❄️',title:'Nevera (abierta)',desc:'Pasa a recipiente hermético — NUNCA en la lata abierta. Dura 4–5 días. Puede separarse (normal).'},
+      {icon:'🧊',title:'Congelador (abierta)',desc:'En cubos de hielo. Dura 2 meses.'},
+    ],
+    tip:'La separación de la leche de coco (parte sólida arriba, líquido abajo) es completamente normal. Solo revuelve antes de usar.',
+    duracion:'Cerrada: 2–3 años · Abierta: 4–5 días nevera'
+  },
+  'Miel de abejas':{
+    emoji:'🍯',cat:'Especias',
+    metodos:[
+      {icon:'📦',title:'Despensa',desc:'A temperatura ambiente en recipiente hermético. Dura indefinidamente — la miel no se daña.'},
+      {icon:'⚠️',title:'No en nevera',desc:'El frío cristaliza la miel y es difícil de usar. Si se cristaliza, caliéntala al baño maría.'},
+    ],
+    tip:'La miel real nunca caduca. Si cristaliza no está dañada — ponla en agua caliente (no hirviendo) y vuelve a ser líquida.',
+    duracion:'Temperatura ambiente: indefinida'
+  },
+  // ── ASEO ──
+  'Papel higiénico':{
+    emoji:'🧻',cat:'Aseo',
+    metodos:[
+      {icon:'📦',title:'Almacenamiento seco',desc:'Lejos de la humedad y el baño si es posible. La humedad daña el papel.'},
+    ],
+    tip:'Guarda el stock extra en un lugar seco como un closet. La humedad del baño puede deteriorar los rollos que están de más.',
+    duracion:'Indefinida si se mantiene seco'
+  },
+  'Jabón lavaloza':{
+    emoji:'🧴',cat:'Aseo',
+    metodos:[
+      {icon:'📦',title:'Despensa o bajo el lavaplatos',desc:'En lugar seco. Dura hasta la fecha del empaque (generalmente 2 años).'},
+    ],
+    tip:'Compra el grande y usa un dispensador pequeño en la cocina — más económico y evita que se contamine.',
+    duracion:'Hasta fecha de vencimiento: ~2 años'
+  },
+};
+
+// Selección del usuario
+let conservaSelected=new Set();
+try{const s=localStorage.getItem(CONSERVA_SELECTED_KEY);if(s)conservaSelected=new Set(JSON.parse(s));}catch(e){}
+
+function saveConservaSelected(){
+  try{localStorage.setItem(CONSERVA_SELECTED_KEY,JSON.stringify([...conservaSelected]));}catch(e){}
+}
+
+function buildConserva(){
+  const c=document.getElementById('conserva-container');
+  if(!c)return;
+  c.innerHTML='';
+
+  // Selector de productos
+  const selectorCard=document.createElement('div');
+  selectorCard.className='conserva-selector';
+
+  // Obtener productos comprados recientemente del inventario
+  const inv=loadInv();
+  const comprados=inv.filter(i=>i.cur>0&&i.cur>=i.max*0.5); // los que tienen stock razonable
+
+  // Frutas y verduras del mes actual (solo las que tienen guía de conservación)
+  const t=getT(curMonth);
+  const frutasMes=t.f.map(f=>f.n); // nombres de frutas de temporada este mes
+  const verdMes=t.v;                // nombres de verduras de temporada
+
+  // Chips organizados por categoría, filtrando frutas/verduras por mes
+  const bycat={};
+  Object.entries(CONSERVA_DB).forEach(([name,data])=>{
+    // Para frutas: solo mostrar las que son de temporada este mes
+    if(data.cat==='Frutas'){
+      if(!frutasMes.includes(name)&&name!=='Limón'&&name!=='Banano') return;
+    }
+    // Para verduras: solo mostrar las que están en el mes actual
+    if(data.cat==='Verduras'){
+      // Siempre mostrar verduras base (aguacate, ajo, papa, plátano) + las del mes
+      const verdBasicas=['Aguacate hass','Ajo','Papa sabanera','Cebolla larga','Plátano maduro','Tomate chonto','Zanahoria'];
+      if(!verdMes.includes(name)&&!verdBasicas.includes(name)) return;
+    }
+    if(!bycat[data.cat])bycat[data.cat]=[];
+    bycat[data.cat].push(name);
+  });
+
+  const catEmojis={'Proteínas':'🥩','Lácteos':'🥛','Frutas':'🍉','Verduras':'🥦','Despensa':'🍞','Especias':'🌶️','Aseo':'🧴'};
+
+  let chipsHTML=`<div style="font-size:11px;background:var(--vl);color:var(--vd);padding:6px 10px;border-radius:var(--rsm);margin-bottom:10px;width:100%">🍃 Frutas y verduras de <strong>${MN[curMonth]}</strong> — los chips cambian cada mes</div>`;
+  Object.entries(bycat).forEach(([cat,names])=>{
+    chipsHTML+=`<div style="width:100%;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">${catEmojis[cat]||'📦'} ${cat}</div>`;
+    names.forEach(name=>{
+      const sel=conservaSelected.has(name);
+      chipsHTML+=`<span class="conserva-chip${sel?' selected':''}" onclick="toggleConservaChip('${name}',this)">${name}</span>`;
+    });
+  });
+
+  selectorCard.innerHTML=`
+    <div class="conserva-selector-title">¿Qué compraste hoy? Selecciona los productos:</div>
+    <div class="conserva-chips" id="conserva-chips">${chipsHTML}</div>
+    <button class="conserva-btn-sel" onclick="selectAllConserva()">Seleccionar todo</button>
+    <button class="conserva-btn-clear" onclick="clearConservaSelection()">Limpiar</button>`;
+  c.appendChild(selectorCard);
+
+  // Resultados
+  if(conservaSelected.size===0){
+    const emptyEl=document.createElement('div');
+    emptyEl.className='conserva-empty';
+    emptyEl.innerHTML='👆 Selecciona los productos que compraste<br><span style="font-size:12px">Te diremos exactamente cómo conservarlos</span>';
+    c.appendChild(emptyEl);
+    return;
+  }
+
+  const titulo=document.createElement('div');
+  titulo.style.cssText='font-family:"DM Serif Display",serif;font-size:18px;margin:1rem 0 .75rem;';
+  titulo.textContent=`Cómo conservar tus ${conservaSelected.size} producto${conservaSelected.size>1?'s':''}`;
+  c.appendChild(titulo);
+
+  const grid=document.createElement('div');
+  grid.className='conserva-results';
+
+  [...conservaSelected].forEach(name=>{
+    const data=CONSERVA_DB[name];
+    if(!data)return;
+    const card=document.createElement('div');
+    card.className='conserva-card';
+    card.innerHTML=`
+      <div class="conserva-card-header">
+        <span class="conserva-card-emoji">${data.emoji}</span>
+        <div>
+          <div class="conserva-card-name">${name}</div>
+          <div class="conserva-card-duracion">${data.duracion}</div>
+          <div class="conserva-duracion-bar" style="width:${Math.min(100,data.duracion.includes('año')?100:data.duracion.includes('semana')?60:data.duracion.includes('mes')?80:40)}%"></div>
+        </div>
+      </div>
+      <div class="conserva-card-body">
+        ${data.metodos.map(m=>`
+          <div class="conserva-metodo">
+            <span class="conserva-metodo-icon">${m.icon}</span>
+            <div class="conserva-metodo-text">
+              <div class="conserva-metodo-title">${m.title}</div>
+              <div class="conserva-metodo-desc">${m.desc}</div>
+            </div>
+          </div>`).join('')}
+        <div class="conserva-tip">💡 ${data.tip}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  c.appendChild(grid);
+}
+
+function toggleConservaChip(name, el){
+  if(conservaSelected.has(name)){
+    conservaSelected.delete(name);
+    el.classList.remove('selected');
+  } else {
+    conservaSelected.add(name);
+    el.classList.add('selected');
+  }
+  saveConservaSelected();
+  buildConserva();
+}
+
+function selectAllConserva(){
+  Object.keys(CONSERVA_DB).forEach(name=>conservaSelected.add(name));
+  saveConservaSelected();
+  buildConserva();
+}
+
+function clearConservaSelection(){
+  conservaSelected.clear();
+  saveConservaSelected();
+  buildConserva();
+}
+
+// ═══════════════ PWA INSTALL ═══════════════
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.style.display='flex';
+});
+async function installPWA(){
+  if(!deferredPrompt){
+    showToast('Abre el menú del navegador → "Agregar a pantalla principal"');
+    return;
+  }
+  deferredPrompt.prompt();
+  const result=await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.style.display='none';
+  if(result.outcome==='accepted')showToast('✅ ¡App instalada en tu pantalla principal!');
+}
+window.addEventListener('appinstalled',()=>{
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.style.display='none';
+  showToast('✅ ¡App instalada correctamente!');
+});
+
+// ═══════════════ INIT ═══════════════
+// Limpiar localStorage de versiones anteriores
+try{
+  ['inv_v1','inv_v2','inv_v3','aseo_shopping_v2','hogar_inv_v2'].forEach(k=>localStorage.removeItem(k));
+}catch(e){}
+buildMonthSel();
+syncFrutasInventario();
+buildCal();
+buildRecetas();
+buildEjercicio();
+buildHormonal();
+buildMercado();
+buildConserva();
+</script>
+
+<!-- ══ PANEL DE CUENTA ══ -->
+<div id="cuenta-panel" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:250;background:rgba(0,0,0,.45);" onclick="if(event.target===this)toggleCuentaPanel()">
+  <div id="cuenta-drawer" style="position:absolute;top:50px;right:0;width:280px;height:calc(100vh - 50px);background:#111;color:#E0E0E0;padding:0;display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.4);overflow-y:auto;">
+
+    <!-- Header -->
+    <div style="padding:1.5rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">CUENTA</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
+        <span id="cuenta-email" style="font-size:14px;color:#E0E0E0;font-weight:500;">—</span>
+        <span style="font-size:11px;color:#1D9E75;font-weight:700;">✓</span>
+      </div>
+    </div>
+
+    <!-- Sync status -->
+    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.5rem;">SINCRONIZACIÓN</div>
+      <div id="sync-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6B7280;margin-bottom:.25rem;">
+        <span>☁️</span><span style="color:#6B7280">Sin sincronizar aún</span>
+      </div>
+      <div id="sync-last" style="font-size:11px;color:#444;"></div>
+    </div>
+
+    <!-- Acciones -->
+    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">DATOS</div>
+
+      <button onclick="sbLoadAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#EF9F27;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">
+        <span style="font-size:18px;">↓</span> Cargar desde nube
+      </button>
+
+      <button onclick="sbUploadAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#1D9E75;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">
+        <span style="font-size:18px;">↑</span> Subir datos locales
+      </button>
+
+      <button onclick="forceSyncAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#5DCAA5;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;">
+        <span style="font-size:18px;">⟳</span> Sincronizar ahora
+      </button>
+    </div>
+
+    <!-- Info -->
+    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">DISPOSITIVO</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">
+        Los datos se guardan aquí y en la nube.<br>
+        <span style="color:#444;">↓ Cargar</span> = trae datos de otro dispositivo<br>
+        <span style="color:#444;">↑ Subir</span> = envía este dispositivo a la nube
+      </div>
+    </div>
+
+    <!-- Cerrar sesión -->
+    <div style="padding:.75rem 1.25rem;margin-top:auto;">
+      <button onclick="sbLogout()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#EF4444;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;">
+        <span style="font-size:18px;">✕</span> Cerrar sesión
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lockScreen" style="display:none;position:fixed;inset:0;background:#0F0F0F;z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="text-align:center;max-width:340px;width:90%;padding:2rem;">
+    <div style="font-family:'DM Serif Display',serif;font-size:32px;color:#1D9E75;margin-bottom:6px;font-style:italic;">Mi Plan</div>
+    <div style="font-size:11px;color:#6B7280;letter-spacing:.15em;text-transform:uppercase;margin-bottom:2.5rem;">Nutrición & Fitness</div>
+    <div id="sb-msg" style="font-size:12px;color:#EF4444;margin-bottom:12px;min-height:18px;"></div>
+    <div style="margin-bottom:12px;text-align:left;">
+      <label style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px;">Email</label>
+      <input id="sb-email" type="email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')sbLogin()"
+        style="width:100%;padding:10px 12px;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:8px;color:#F0F0F0;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:20px;text-align:left;">
+      <label style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px;">Contraseña</label>
+      <input id="sb-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')sbLogin()"
+        style="width:100%;padding:10px 12px;background:#1A1A1A;border:1px solid #2A2A2A;border-radius:8px;color:#F0F0F0;font-size:13px;outline:none;">
+    </div>
+    <button onclick="sbLogin()" id="sb-login-btn"
+      style="width:100%;padding:12px;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;margin-bottom:10px;">
+      Entrar
+    </button>
+    <button onclick="sbRegister()"
+      style="width:100%;padding:10px;background:transparent;color:#6B7280;font-size:12px;border:1px solid #2A2A2A;border-radius:8px;cursor:pointer;">
+      Crear cuenta nueva
+    </button>
+  </div>
+</div>
+
+<!-- ══ SUPABASE AUTH SCRIPT ══ -->
+<script>
+// ──────────────────────────────────────────
+// SUPABASE CONFIG
+// ──────────────────────────────────────────
+// INSTRUCCIONES: Reemplaza SB_URL y SB_KEY con los tuyos de supabase.com
+// Ve a Project Settings → API → Project URL y anon/public key
+const SB_URL = 'https://pqifcndokseoyquzzcfo.supabase.co';
+const SB_KEY = 'sb_publishable_FjTq-JHu45iEXZegKlbAhQ__Tjc_vHi';
+
+let sbClient = null;
+let sbUser = null;
+
+function sbInit() {
+  if (!SB_KEY || SB_KEY.length < 10) {
+    // Sin key configurada — modo local (localStorage only)
+    hideLock();
+    return;
+  }
+  if (typeof supabase === 'undefined') {
+    console.warn('Supabase CDN no cargado');
+    hideLock();
+    return;
+  }
+  // Supabase createClient funciona con publishable key y legacy anon key
+  sbClient = supabase.createClient(SB_URL, SB_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false
+    }
+  });
+
+  // Check active session
+  sbClient.auth.getSession().then(function(result) {
+    const session = result.data && result.data.session;
+    if (session) {
+      sbUser = session.user;
+      hideLock();
+      sbLoadAll();
+    } else {
+      showLock();
+    }
+  });
+
+  sbClient.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_IN' && session) {
+      sbUser = session.user;
+      hideLock();
+      sbLoadAll();
+    } else if (event === 'SIGNED_OUT') {
+      sbUser = null;
+      showLock();
+    }
+  });
+}
+
+function showLock() {
+  const el = document.getElementById('lockScreen');
+  el.style.display = 'flex';
+  setTimeout(() => {
+    const em = document.getElementById('sb-email');
+    if (em) em.focus();
+  }, 100);
+}
+
+function hideLock() {
+  document.getElementById('lockScreen').style.display = 'none';
+}
+
+function sbShowMsg(txt, color) {
+  const el = document.getElementById('sb-msg');
+  if (el) { el.textContent = txt; el.style.color = color || '#EF4444'; }
+}
+
+async function sbLogin() {
+  const email = document.getElementById('sb-email').value.trim();
+  const pass = document.getElementById('sb-pass').value;
+  if (!email || !pass) { sbShowMsg('Completa email y contraseña.'); return; }
+  const btn = document.getElementById('sb-login-btn');
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  sbShowMsg('');
+  const result = await sbClient.auth.signInWithPassword({ email, password: pass });
+  if (result.error) {
+    sbShowMsg('Error: ' + result.error.message);
+    btn.textContent = 'Entrar'; btn.disabled = false;
+  }
+}
+
+async function sbRegister() {
+  const email = document.getElementById('sb-email').value.trim();
+  const pass = document.getElementById('sb-pass').value;
+  if (!email || !pass) { sbShowMsg('Completa email y contraseña.'); return; }
+  sbShowMsg('Creando cuenta...', '#EF9F27');
+  const result = await sbClient.auth.signUp({ email, password: pass });
+  if (result.error) sbShowMsg('Error: ' + result.error.message);
+  else sbShowMsg('¡Cuenta creada! Revisa tu email para verificar.', '#1D9E75');
+}
+
+async function sbLogout() {
+  if (sbClient) await sbClient.auth.signOut();
+}
+
+// ──────────────────────────────────────────
+// SUPABASE DATA SYNC — inventario en la nube
+// ──────────────────────────────────────────
+async function sbSave(key, value) {
+  if (!sbClient || !sbUser) return;
+  try {
+    await sbClient.from('plan_data').upsert(
+      { user_id: sbUser.id, key: key, value: typeof value === 'string' ? value : JSON.stringify(value), updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,key' }
+    );
+  } catch(e) { console.error('SB save error:', e); }
+}
+
+async function sbLoadAll() {
+  if (!sbClient || !sbUser) return;
+  setSyncStatus('loading');
+  try {
+    const result = await sbClient.from('plan_data').select('key,value').eq('user_id', sbUser.id);
+    if (result.error) throw result.error;
+    const data = result.data || [];
+    if (data.length === 0) {
+      setSyncStatus('empty');
+      showToast('☁️ Sin datos en la nube aún — sube tus datos locales');
+      return;
+    }
+    for (const row of data) {
+      try { localStorage.setItem(row.key, row.value); } catch(e) {}
+    }
+    // Recargar TODO el UI
+    syncFrutasInventario();
+    buildMercado();
+    buildInventario();
+    buildConserva();
+    buildEjercicio();
+    setSyncStatus('ok');
+    showToast('✅ Datos cargados desde la nube');
+  } catch(e) {
+    console.error('SB load error:', e);
+    setSyncStatus('error');
+    showToast('❌ Error al cargar: ' + e.message);
+  }
+}
+
+// Subir todos los datos locales a Supabase
+async function sbUploadAll() {
+  if (!sbClient || !sbUser) return;
+  setSyncStatus('loading');
+  try {
+    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+    let count = 0;
+    for (const key of keys) {
+      const val = localStorage.getItem(key);
+      if (val) { await sbSave(key, val); count++; }
+    }
+    setSyncStatus('ok');
+    showToast('✅ ' + count + ' claves subidas a la nube');
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('❌ Error al subir: ' + e.message);
+  }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    loading: {icon:'⏳', text:'Sincronizando...', color:'var(--am)'},
+    ok:      {icon:'✅', text:'Sincronizado',     color:'var(--v)'},
+    error:   {icon:'❌', text:'Error',            color:'#EF4444'},
+    empty:   {icon:'☁️', text:'Sin datos en nube', color:'var(--mu)'},
+    idle:    {icon:'☁️', text:'Sin sincronizar',   color:'var(--mu)'},
+  };
+  const s = map[status] || map.idle;
+  el.innerHTML = `<span>${s.icon}</span><span style="color:${s.color};font-size:12px;font-weight:600">${s.text}</span>`;
+}
+
+// Override saveInv to also sync to Supabase
+const _origSaveInv = typeof saveInv !== 'undefined' ? saveInv : null;
+
+// Hook into localStorage saves
+const _origSetItem = localStorage.setItem.bind(localStorage);
+// Guarda todas las claves relevantes en Supabase
+const SB_KEYS = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+function sbPatchSave() {
+  if (!sbClient || !sbUser) return;
+  SB_KEYS.forEach(key => {
+    const val = localStorage.getItem(key);
+    if (val) sbSave(key, val);
+  });
+}
+
+// ── Panel de cuenta ──
+function toggleCuentaPanel() {
+  const panel = document.getElementById('cuenta-panel');
+  if (!panel) return;
+  const open = panel.style.display === 'none' || !panel.style.display;
+  panel.style.display = open ? 'flex' : 'none';
+  // Actualizar email mostrado
+  if (open && sbUser) {
+    const emailEl = document.getElementById('cuenta-email');
+    if (emailEl) emailEl.textContent = sbUser.email || '—';
+    // Mostrar última sincronización
+    const lastEl = document.getElementById('sync-last');
+    const last = localStorage.getItem('sb_last_sync');
+    if (lastEl && last) {
+      const d = new Date(last);
+      lastEl.textContent = 'Última sync: ' + d.toLocaleString('es-CO', {dateStyle:'short', timeStyle:'short'});
+    }
+  }
+}
+
+async function forceSyncAll() {
+  setSyncStatus('loading');
+  try {
+    // Primero subir local
+    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+    for (const key of keys) {
+      const val = localStorage.getItem(key);
+      if (val) await sbSave(key, val);
+    }
+    // Luego bajar nube (por si otro dispositivo tiene datos más nuevos)
+    const result = await sbClient.from('plan_data').select('key,value').eq('user_id', sbUser.id);
+    if (!result.error && result.data) {
+      for (const row of result.data) {
+        try { localStorage.setItem(row.key, row.value); } catch(e) {}
+      }
+    }
+    localStorage.setItem('sb_last_sync', new Date().toISOString());
+    syncFrutasInventario();
+    buildMercado();
+    buildInventario();
+    buildConserva();
+    setSyncStatus('ok');
+    showToast('✅ Sincronización completa');
+    // Actualizar timestamp en panel
+    const lastEl = document.getElementById('sync-last');
+    if (lastEl) lastEl.textContent = 'Última sync: ' + new Date().toLocaleString('es-CO', {dateStyle:'short', timeStyle:'short'});
+  } catch(e) {
+    setSyncStatus('error');
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+// Auto-sync al hacer login
+const _origHideLock = hideLock;
+function hideLock() {
+  _origHideLock();
+  // Actualizar email en panel si ya está abierto
+  if (sbUser) {
+    const emailEl = document.getElementById('cuenta-email');
+    if (emailEl) emailEl.textContent = sbUser.email || '—';
+  }
+}
+
+// ── llamar sbInit al final, cuando todo está definido ──
+sbInit();
+</script>
+
+</body>
+</html>
