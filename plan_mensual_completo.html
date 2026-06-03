@@ -498,6 +498,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   #cuenta-drawer{width:100% !important;top:auto !important;bottom:0 !important;height:auto !important;max-height:80vh;border-radius:16px 16px 0 0;}
   #cuenta-panel > div:first-child + div{position:absolute;top:0;right:0;bottom:0;left:0;}
 }
+.q-block{margin-bottom:1.5rem;}
+.q-label{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--rsm);margin-bottom:.75rem;font-size:13px;font-weight:700;}
+.q-label.q1{background:var(--vl);color:var(--vd);}
+.q-label.q2{background:var(--al);color:#633806;}
+.q-label-sub{font-size:11px;font-weight:400;opacity:.8;}
+.q-empty{text-align:center;padding:1rem;font-size:12px;color:var(--mu);background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);}
+/* Campo numérico editable inventario */
+.qty-input{width:44px;text-align:center;border:1px solid var(--br);border-radius:6px;font-size:13px;font-weight:700;padding:2px 4px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);}
+.qty-input:focus{outline:none;border-color:var(--v);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;}
 #tienda-popup{animation:popIn .15s ease;}
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -1248,134 +1257,295 @@ function markBought(id, el){
   }
 }
 
+// Calcula qué ingredientes del inventario se necesitan en cada quincena
+// basándose en las recetas del cronograma
+function getIngredientesQuincena(q){
+  const t=getT(curMonth);
+  const frutas=t.f.map(x=>x.n);
+  const verduras=t.v;
+  // Días de la quincena
+  const dias=PLAN.filter(p=>p.q===q);
+  // Recolectar IDs de items del inventario que se usan en esos días
+  const usados=new Set();
+  dias.forEach((p,idx)=>{
+    const fi=p.fi||[0,1,2,3,null];
+    const vi=p.vi||[0,1];
+    // Frutas usadas este día
+    [fi[0],fi[1],fi[2],fi[3],fi[4]].forEach(i=>{
+      if(i===null||i===undefined)return;
+      const fname=frutas[i%frutas.length];
+      if(!fname)return;
+      // Buscar en inventario por nombre
+      const inv=loadInv();
+      const item=inv.find(x=>x.name===fname||x.name.startsWith(fname.split(' ')[0]));
+      if(item)usados.add(item.id);
+    });
+    // Verduras usadas este día
+    [vi[0],vi[1]].forEach(i=>{
+      if(i===null||i===undefined)return;
+      const vname=verduras[i%verduras.length];
+      if(!vname)return;
+      const inv=loadInv();
+      const item=inv.find(x=>x.name===vname||x.name.startsWith(vname.split(' ')[0]));
+      if(item)usados.add(item.id);
+    });
+  });
+  return usados;
+}
+
+// ── Suma de ingredientes reales por quincena ──────────────────────────
+// Parsea "180g", "2 unidades", "½ unidad" etc. y suma las cantidades
+function parseQty(qtyStr){
+  if(!qtyStr) return {num:0, unit:''};
+  const s=qtyStr.toString().trim();
+  // Fracciones comunes
+  let num=0, unit='';
+  const fracMap={'½':0.5,'¼':0.25,'¾':0.75,'⅓':0.33,'⅔':0.66};
+  // Match número (incluye fracciones unicode)
+  let m=s.match(/^([\d.,]+)\s*(.*)$/);
+  if(m){
+    num=parseFloat(m[1].replace(',','.'))||0;
+    unit=m[2].trim();
+  } else {
+    // Empieza con fracción unicode
+    const f=s[0];
+    if(fracMap[f]){num=fracMap[f];unit=s.slice(1).trim();}
+    else {unit=s;} // "Al gusto", "1 pizca"
+  }
+  // Normalizar unidad
+  unit=unit.replace(/^de\s+/,'').split(/[\s(]/)[0].toLowerCase();
+  return {num,unit};
+}
+
+// Calcula los ingredientes totales consumidos en una quincena
+function calcConsumoQuincena(q){
+  const t=getT(curMonth);
+  const qDias=PLAN.filter(p=>p.q===q);
+  const consumo={}; // nombre normalizado -> {num, unit, nombreOriginal}
+
+  qDias.forEach(p=>{
+    const fi=p.fi||[0,1,2,3,null];
+    const vi=p.vi||[0,1];
+    // Cada comida del día
+    const comidas=[
+      {key:p.d,  fIdx:fi[0], vIdx:null},
+      {key:p.m1, fIdx:fi[1], vIdx:null},
+      {key:p.a,  fIdx:fi[2], vIdx:vi[0]},
+      {key:p.m2, fIdx:fi[3], vIdx:null},
+      {key:p.c,  fIdx:fi[4], vIdx:vi[1]},
+    ];
+    comidas.forEach(c=>{
+      const r=REC[c.key];
+      if(!r||!r.i)return;
+      const fruta=c.fIdx!==null&&c.fIdx!==undefined&&t.f[c.fIdx%t.f.length]?t.f[c.fIdx%t.f.length].n:null;
+      const verdura=c.vIdx!==null&&c.vIdx!==undefined&&t.v[c.vIdx%t.v.length]?t.v[c.vIdx%t.v.length]:null;
+      const fArr=fruta?[fruta]:t.f.map(x=>x.n);
+      const vArr=verdura?[verdura]:t.v;
+      let ings;
+      try{ings=r.i(fArr,vArr);}catch(e){return;}
+      ings.forEach(([nombre,qty])=>{
+        // Limpiar nombre (quitar "fresca", "fresco", etc.)
+        const nombreLimpio=nombre.replace(/\s+(fresca|fresco|crudo|cruda|en hojuelas|del día anterior)\b/gi,'').trim();
+        const parsed=parseQty(qty);
+        if(parsed.num<=0)return; // "Al gusto" no suma
+        const clave=nombreLimpio.toLowerCase();
+        if(!consumo[clave]){
+          consumo[clave]={num:0, unit:parsed.unit, nombre:nombreLimpio};
+        }
+        // Sumar solo si la unidad coincide (o tomar la primera)
+        if(consumo[clave].unit===parsed.unit){
+          consumo[clave].num+=parsed.num;
+        } else if(!consumo[clave].unit){
+          consumo[clave].unit=parsed.unit;
+          consumo[clave].num+=parsed.num;
+        } else {
+          consumo[clave].num+=parsed.num; // sumar de todos modos
+        }
+      });
+    });
+  });
+  return consumo;
+}
+
 function buildMercado(){
+  try{
   const inv=loadInv();
   const t=getT(curMonth);
   const container=document.getElementById('ctab-mercado');
   container.innerHTML='';
 
-  // Season note
+  const tipEl=document.createElement('div');
+  tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.5rem;display:flex;gap:6px;align-items:center;';
+  tipEl.innerHTML='<span>💡</span><span>Cada quincena muestra las <strong>cantidades exactas</strong> que consumen sus recetas. Compra justo lo necesario.</span>';
+  container.appendChild(tipEl);
+
   const snote=document.createElement('div');
   snote.className='season-note';
-  snote.innerHTML=`🍃 <strong>Frutas de ${MN[curMonth]}:</strong> ${t.f.slice(0,5).map(x=>x.n).join(', ')} · <strong>Verduras:</strong> ${t.v.slice(0,5).join(', ')}`;
-  // Tip instrucción
-  const tipEl=document.createElement('div');
-  tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.75rem;display:flex;gap:6px;align-items:center;';
-  tipEl.innerHTML='<span>💡</span><span>Toca el <strong>badge de color</strong> de cualquier ítem para cambiar dónde comprarlo · Mantén presionado un filtro para renombrarlo</span>';
-  container.appendChild(tipEl);  
+  snote.innerHTML='🍃 <strong>Frutas de '+MN[curMonth]+':</strong> '+t.f.map(x=>x.n).join(', ')+' · <strong>Verduras:</strong> '+t.v.join(', ');
   container.appendChild(snote);
-
-  // Group needed items by category
-  const needed={}; // cat -> [{name, need}]
-  CAT_ORDER.forEach(cat=>needed[cat]=[]);
-
-  inv.forEach(item=>{
-    const n=needAmount(item);
-    if(n<=0)return; // has enough — SKIP
-    const cat=item.cat==='Aseo del hogar'?'Aseo':item.cat;
-    if(!needed[cat])needed[cat]=[];
-    const pct=item.cur/item.max;
-    needed[cat].push({id:item.id,name:item.name,need:formatNeed(item),have:item.cur,max:item.max,unit:item.unit,pct,status:statusOf(item)});
-  });
-
-  // Las frutas de temporada ya están sincronizadas en el inventario
-  // via syncFrutasInventario() — el loop principal las recoge automáticamente
-  // Solo agregar badge visual de cuáles son de temporada este mes
-  if(!needed['Frutas'])needed['Frutas']=[];
-  // Frutas con max=0 no aparecen (no son de temporada este mes) — lógica automática
-
-  // Check if anything needed at all
-  const totalNeeded=Object.values(needed).flat().length;
-  if(totalNeeded===0){
-    const empty=document.createElement('div');
-    empty.innerHTML=`<div class="mlist-empty">🎉 <strong>¡Stock completo!</strong><br>Tienes todo en inventario. No necesitas comprar nada por ahora.</div>`;
-    container.appendChild(empty);
-    return;
-  }
-
-  // Resumen
-  const allItems=Object.values(needed).flat();
-  const sumEl=document.createElement('div');
-  sumEl.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;';
-  sumEl.innerHTML=`
-    <div class="mercado-total" style="background:var(--vl);border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:var(--vd);font-weight:600">📋 ${totalNeeded} por comprar</div>
-    ${allItems.filter(i=>i.status==='out').length?`<div style="background:#FFE4E4;border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:#991B1B;font-weight:600">❌ ${allItems.filter(i=>i.status==='out').length} agotados</div>`:''}
-    ${allItems.filter(i=>i.status==='low').length?`<div style="background:var(--al);border-radius:var(--rsm);padding:6px 12px;font-size:12px;color:#633806;font-weight:600">⚠️ ${allItems.filter(i=>i.status==='low').length} bajos</div>`:''}`;
-  container.appendChild(sumEl);
 
   // Filtros de tienda
   const filtrosEl=document.createElement('div');
   filtrosEl.className='tienda-filtros';
-  filtrosEl.innerHTML=`
-    <button class=\"tienda-ftab${tiendaFilter==='todos'?' active':''}\" data-t=\"todos\" onclick=\"filterTienda('todos',this)\">🏪 Todas</button>
-    ${['super','mercado','asiatica','drogueria'].map(key=>{
-      const def=TIENDA_DEFAULTS[key];
-      const names=loadTiendaNames();
-      const label=names[key]||def.label;
-      const short=label.length>10?label.slice(0,10)+'…':label;
-      return `<button class="tienda-ftab${tiendaFilter===key?' active':''}" data-t="${key}"
-        onclick="filterTienda('${key}',this)"
-        oncontextmenu="renameTienda('${key}');return false;"
-        title="${label} — mantén presionado para renombrar">
-        ${def.emoji} ${short}
-      </button>`;
-    }).join('')}`;
+  filtrosEl.style.marginBottom='1rem';
+  const names=loadTiendaNames();
+  const activeTodas=tiendaFilter==='todos'?' active':'';
+  let fBtns=`<button class="tienda-ftab${activeTodas}" data-t="todos" onclick="filterTienda('todos',this)">🏪 Todas</button>`;
+  ['super','mercado','asiatica','drogueria'].forEach(key=>{
+    const def=TIENDA_DEFAULTS[key];
+    const label=names[key]||def.label;
+    const short=label.length>9?label.slice(0,9)+'…':label;
+    const activeKey=tiendaFilter===key?' active':'';
+    fBtns+=`<button class="tienda-ftab${activeKey}" data-t="${key}"
+      onclick="filterTienda('${key}',this)"
+      oncontextmenu="renameTienda('${key}');return false;"
+      title="${label}">${def.emoji} ${short}</button>`;
+  });
+  filtrosEl.innerHTML=fBtns;
   container.appendChild(filtrosEl);
 
-  // Categorías desplegables
-  CAT_ORDER.forEach(cat=>{
-    const items=needed[cat];
-    if(!items||items.length===0)return;
-    const emoji=CAT_EMOJI[cat]||'📦';
+  // QUINCENAS — cada una con su consumo real
+  [1,2].forEach(function(q){
+    const qDias=PLAN.filter(p=>p.q===q);
+    const qLabel=q===1?'🟢 Quincena 1 — Días 1 al 15':'🟡 Quincena 2 — Días 16 al 30';
+    const qSub=q===1
+      ?(qDias.filter(p=>p.t==='gym').length+' días gym · '+qDias.filter(p=>p.t==='mov').length+' movilidad')
+      :(qDias.filter(p=>p.t==='gym').length+' días gym · '+qDias.filter(p=>p.t==='rest').length+' descanso');
+
+    // Calcular consumo real de la quincena
+    const consumo=calcConsumoQuincena(q);
+
+    // Agrupar por categoría según el item del inventario
+    const needed={};
+    CAT_ORDER.forEach(cat=>needed[cat]=[]);
+
+    Object.values(consumo).forEach(c=>{
+      if(c.num<=0)return;
+      // Buscar el item del inventario que coincide
+      let invItem=inv.find(x=>x.name.toLowerCase()===c.nombre.toLowerCase());
+      if(!invItem){
+        invItem=inv.find(x=>{
+          const xn=x.name.toLowerCase();
+          const cn=c.nombre.toLowerCase();
+          return xn.includes(cn.split(' ')[0])||cn.includes(xn.split(' ')[0]);
+        });
+      }
+      const cat=invItem?(invItem.cat==='Aseo del hogar'?'Aseo':invItem.cat):'Despensa';
+      if(!needed[cat])needed[cat]=[];
+      // Cantidad redondeada
+      const cantidad=Math.ceil(c.num*10)/10;
+      const cantidadStr=Number.isInteger(cantidad)?cantidad:cantidad.toFixed(1);
+      needed[cat].push({
+        id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
+        name:c.nombre,
+        need:cantidadStr+(c.unit?' '+c.unit:''),
+        invItem:invItem
+      });
+    });
+
+    const qItems=Object.values(needed).flat();
+    if(qItems.length===0)return;
+
+    const qBlock=document.createElement('div');
+    qBlock.className='q-block';
+
+    const qHead=document.createElement('div');
+    qHead.className='q-label '+(q===1?'q1':'q2');
+    qHead.innerHTML='<div style="flex:1"><div>'+qLabel+'</div><div class="q-label-sub">'+qSub+' · '+qItems.length+' ingredientes</div></div>';
+    qBlock.appendChild(qHead);
+
+    // Nota: cantidades calculadas de las recetas
+    const noteEl=document.createElement('div');
+    noteEl.style.cssText='font-size:11px;color:var(--mu);margin-bottom:.75rem;padding:6px 10px;background:var(--bg);border-radius:var(--rsm);';
+    noteEl.innerHTML='📐 Cantidades sumadas de las '+qDias.length+' días de recetas de esta quincena';
+    qBlock.appendChild(noteEl);
+
+    CAT_ORDER.forEach(function(cat){
+      const items=needed[cat];
+      if(!items||items.length===0)return;
+      const emoji=CAT_EMOJI[cat]||'📦';
+      const card=document.createElement('div');
+      card.className='mlist-card mlist-cat';
+      card.style.marginBottom='6px';
+
+      const header=document.createElement('div');
+      header.className='mcat-header';
+      header.onclick=function(){toggleMcat(header);};
+      header.innerHTML='<div style="display:flex;align-items:center;gap:8px"><span>'+emoji+' <strong>'+cat+'</strong></span><span style="font-size:11px;color:var(--mu)">'+items.length+' ingrediente'+(items.length>1?'s':'')+'</span></div><span class="mcat-chevron">▾</span>';
+      card.appendChild(header);
+
+      const body=document.createElement('div');
+      body.className='mcat-body';
+      items.forEach(function(item){
+        const tienda=item.invItem?getTienda(item.invItem):'cualquiera';
+        const tInfo=TIENDA_LABEL[tienda]||TIENDA_LABEL.cualquiera;
+        const iid=item.id.replace(/'/g,"\\'");
+        const iname=item.name.replace(/'/g,"\\'");
+        const row=document.createElement('div');
+        row.className='mlist-item '+tInfo.border;
+        row.dataset.tienda=tienda;
+        const popupCall=item.invItem?`onclick="showTiendaPopup('${iid}','${iname}',this,event)"`:'';
+        const cbCall=item.invItem?`onchange="markBought('${iid}',this)"`:'';
+        row.innerHTML=`<input type="checkbox" class="mcb" ${cbCall}>
+          <span class="mlist-name">🟡 ${item.name}
+            <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" ${popupCall}>${tInfo.label} ✎</span>
+          </span>
+          <div class="mlist-right"><span class="mlist-need ok">${item.need}</span></div>`;
+        body.appendChild(row);
+      });
+      card.appendChild(body);
+      qBlock.appendChild(card);
+    });
+
+    container.appendChild(qBlock);
+  });
+
+  // Aseo del hogar (no depende de recetas) — bloque aparte
+  const aseoItems=inv.filter(i=>(i.cat==='Aseo'||i.cat==='Mascotas')&&needAmount(i)>0);
+  if(aseoItems.length>0){
+    const aBlock=document.createElement('div');
+    aBlock.className='q-block';
+    const aHead=document.createElement('div');
+    aHead.className='q-label';
+    aHead.style.cssText='background:#F1EFE8;color:#5F5E5A;';
+    aHead.innerHTML='<div style="flex:1"><div>🧴 Aseo y hogar</div><div class="q-label-sub">'+aseoItems.length+' productos · según inventario</div></div>';
+    aBlock.appendChild(aHead);
+
     const card=document.createElement('div');
     card.className='mlist-card mlist-cat';
-    card.style.marginBottom='8px';
-    card.style.overflow='hidden';
-
     const header=document.createElement('div');
     header.className='mcat-header';
-    header.onclick=()=>toggleMcat(header);
-    header.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
-        <span>${emoji} <strong>${cat}</strong></span>
-        <span style="font-size:11px;color:var(--mu)">${items.length} producto${items.length>1?'s':''}</span>
-      </div>
-      <span class="mcat-chevron">▾</span>`;
+    header.onclick=function(){toggleMcat(header);};
+    header.innerHTML='<div style="display:flex;align-items:center;gap:8px"><span>🧴 <strong>Aseo</strong></span><span style="font-size:11px;color:var(--mu)">'+aseoItems.length+' productos</span></div><span class="mcat-chevron">▾</span>';
     card.appendChild(header);
-
     const body=document.createElement('div');
     body.className='mcat-body';
-
-    items.forEach(item=>{
+    aseoItems.forEach(function(item){
       const tienda=getTienda(item);
       const tInfo=TIENDA_LABEL[tienda]||TIENDA_LABEL.cualquiera;
-      const statusCls=item.status==='out'?'crit':item.status==='low'?'warn':'ok';
-      const icon=item.status==='out'?'❌':item.status==='low'?'⚠️':'🟡';
+      const statusCls=item.cur===0?'crit':'warn';
+      const icon=item.cur===0?'❌':'⚠️';
+      const iid=item.id.replace(/'/g,"\\'");
+      const iname=item.name.replace(/'/g,"\\'");
       const row=document.createElement('div');
-      row.className=`mlist-item ${tInfo.border}`;
+      row.className='mlist-item '+tInfo.border;
       row.dataset.tienda=tienda;
-      row.innerHTML=`
-        <input type="checkbox" class="mcb" onchange="markBought('${item.id}',this)">
-        <span class="mlist-name">
-          ${icon} ${item.name}
-          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" 
-            onclick="showTiendaPopup('${item.id}','${item.name}',this,event)" 
-            title="Toca para cambiar tienda">
-            ${tInfo.label} ✎
-          </span>
+      row.innerHTML=`<input type="checkbox" class="mcb" onchange="markBought('${iid}',this)">
+        <span class="mlist-name">${icon} ${item.name}
+          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" onclick="showTiendaPopup('${iid}','${iname}',this,event)">${tInfo.label} ✎</span>
         </span>
-        <div class="mlist-right">
-          <span class="mlist-need ${statusCls}">Comprar: ${item.need}</span>
-        </div>`;
+        <div class="mlist-right"><span class="mlist-need ${statusCls}">Comprar: ${formatNeed(item)}</span></div>`;
       body.appendChild(row);
     });
     card.appendChild(body);
-    container.appendChild(card);
-  });
-
-  // Aplicar filtro activo si hay uno
-  if(tiendaFilter!=='todos'){
-    setTimeout(()=>filterTienda(tiendaFilter,document.querySelector(`.tienda-ftab[data-t="${tiendaFilter}"]`)),0);
+    aBlock.appendChild(card);
+    container.appendChild(aBlock);
   }
+
+  if(tiendaFilter!=='todos'){
+    setTimeout(function(){filterTienda(tiendaFilter,document.querySelector('.tienda-ftab[data-t="'+tiendaFilter+'"]'));},0);
+  }
+  }catch(e){console.error("buildMercado error:",e);}
 }
 
 // ═══════════════ INVENTARIO UI ═══════════════
@@ -1429,13 +1599,29 @@ function renderItem(item){
     </div>
     <div class="inv-actions">
       <button class="qbtn" onclick="adj('${item.id}',-1)">−</button>
-      <span class="qnum">${item.cur}</span>
+      <input type="number" class="qty-input" id="qi-${item.id}" value="${item.cur}" min="0" max="${item.max}"
+        onchange="adjDirect('${item.id}',this.value)"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        title="Edita el número directamente">
       <button class="qbtn" onclick="adj('${item.id}',+1)">+</button>
+      <span style="font-size:11px;color:var(--mu);margin-left:2px">/ ${item.max} ${item.unit}</span>
       <button class="iact" onclick="restock('${item.id}')">🔄 Llenar</button>
-      <button class="iact" onclick="editItem('${item.id}')">✏️ Editar</button>
+      <button class="iact" onclick="editItem('${item.id}')">✏️ Max</button>
       <button class="iact del" onclick="delItem('${item.id}')">🗑</button>
     </div>`;
   return div;
+}
+
+function adjDirect(id, rawVal){
+  const val=parseInt(rawVal);
+  if(isNaN(val)||val<0)return;
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);if(!item)return;
+  item.cur=Math.min(val,item.max);
+  saveInv(inv);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  refreshAll();
+  showToast(`✅ ${item.name}: ${item.cur} / ${item.max} ${item.unit}`);
 }
 
 function adj(id,d){
@@ -1851,6 +2037,7 @@ const PLAN=[
 const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
 function buildCal(){
+  try{
   const ct=document.getElementById('cal-container');ct.innerHTML='';
   const t=getT(curMonth),f=t.f.map(x=>x.n),v=t.v;
   const wks=[{s:1,e:7,n:`Semana 1 — Días 1–7 · Q1 · ${MN[curMonth]}`},{s:8,e:15,n:'Semana 2 — Días 8–15 · Q1'},{s:16,e:22,n:'Semana 3 — Días 16–22 · Q2'},{s:23,e:30,n:'Semana 4 — Días 23–30 · Q2'}];
@@ -1885,8 +2072,8 @@ function buildCal(){
     ct.appendChild(g);
     if(wi<3){const d=document.createElement('div');d.className='wkd';ct.appendChild(d);}
   });
+  }catch(e){console.error("buildCal error:",e);}
 }
-
 function openRWithIngredients(k, fruta, verdura){
   const r=REC[k];if(!r)return;
   // Construir arrays de ingredientes con la fruta/verdura específica
@@ -1961,7 +2148,7 @@ function buildRecetas(){
     const h=document.createElement('div');h.style.cssText='font-family:"DM Serif Display",serif;font-size:17px;margin:1.25rem 0 .6rem;';h.textContent=gn;c.appendChild(h);
     items.forEach(([k,r])=>{
       const t=getT(curMonth);
-      const name=rName(k,t.f,t.v);
+      const name=rName(k,t.f[0]?t.f[0].n:null,t.v[0]||null);
       const card=document.createElement('div');card.className='rec-idx-card';
       card.innerHTML=`<div class="rec-idx-inner" onclick="openR('${k}')"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">${name}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="rpill">⏱ ${r.min} min</span><span class="rpill">🔥 ${r.kcal} kcal</span><span class="rpill">💪 ${r.prot}g</span></div></div><div style="color:var(--v);font-size:11px;white-space:nowrap;padding-top:4px">Ver →</div></div>`;
       c.appendChild(card);
@@ -2894,14 +3081,20 @@ window.addEventListener('appinstalled',()=>{
 try{
   ['inv_v1','inv_v2','inv_v3','aseo_shopping_v2','hogar_inv_v2'].forEach(k=>localStorage.removeItem(k));
 }catch(e){}
-buildMonthSel();
-syncFrutasInventario();
-buildCal();
-buildRecetas();
-buildEjercicio();
-buildHormonal();
-buildMercado();
-buildConserva();
+// INIT robusto — cada función en su propio try/catch
+const _initFns=[
+  ['buildMonthSel',buildMonthSel],
+  ['syncFrutasInventario',syncFrutasInventario],
+  ['buildCal',buildCal],
+  ['buildRecetas',buildRecetas],
+  ['buildEjercicio',buildEjercicio],
+  ['buildHormonal',buildHormonal],
+  ['buildMercado',buildMercado],
+  ['buildConserva',buildConserva],
+];
+_initFns.forEach(([name,fn])=>{
+  try{fn();}catch(e){console.error(name+' INIT error:',e);}
+});
 </script>
 
 <!-- ══ PANEL DE CUENTA ══ -->
