@@ -839,6 +839,21 @@ const TEMP={
 };
 const MN=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let curMonth=new Date().getMonth()+1;
+// Día actual del plan (1-30) — lo que ya pasó se descuenta de la lista
+let diaActual=(function(){
+  try{
+    const s=localStorage.getItem('dia_actual_v1');
+    if(s)return parseInt(s);
+  }catch(e){}
+  // Por defecto usar el día del mes real (máximo 30)
+  return Math.min(new Date().getDate(),30);
+})();
+function setDiaActual(d){
+  diaActual=Math.max(1,Math.min(30,parseInt(d)||1));
+  try{localStorage.setItem('dia_actual_v1',diaActual);}catch(e){}
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  buildMercado();
+}
 function getT(m){return TEMP[m]||TEMP[1];}
 
 // ═══════════════ INVENTARIO ═══════════════
@@ -1318,9 +1333,17 @@ function parseQty(qtyStr){
 }
 
 // Calcula los ingredientes totales consumidos en una quincena
-function calcConsumoQuincena(q){
+function calcConsumoQuincena(q, soloRestantes){
   const t=getT(curMonth);
-  const qDias=PLAN.filter(p=>p.q===q);
+  // Filtrar días de la quincena. PLAN tiene índice 0-29 = día 1-30
+  const qDias=[];
+  PLAN.forEach((p,idx)=>{
+    if(p.q!==q)return;
+    const numDia=idx+1; // día 1-30
+    // Si soloRestantes: solo incluir días que NO han pasado (>= diaActual)
+    if(soloRestantes && numDia < diaActual) return;
+    qDias.push(p);
+  });
   const consumo={}; // nombre normalizado -> {num, unit, nombreOriginal}
 
   qDias.forEach(p=>{
@@ -1376,8 +1399,25 @@ function buildMercado(){
 
   const tipEl=document.createElement('div');
   tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.5rem;display:flex;gap:6px;align-items:center;';
-  tipEl.innerHTML='<span>💡</span><span>Cada quincena muestra las <strong>cantidades exactas</strong> que consumen sus recetas. Compra justo lo necesario.</span>';
+  tipEl.innerHTML='<span>💡</span><span>La lista descuenta los días ya consumidos. Solo muestra lo que <strong>falta comprar desde hoy</strong>.</span>';
   container.appendChild(tipEl);
+
+  // Selector de día actual
+  const diaSelector=document.createElement('div');
+  diaSelector.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);padding:10px 14px;margin-bottom:.75rem;';
+  diaSelector.innerHTML=`
+    <span style="font-size:13px;font-weight:600;">📅 Día actual del plan:</span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button onclick="setDiaActual(diaActual-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--br);background:var(--bg);font-size:15px;cursor:pointer;font-weight:700;">−</button>
+      <input type="number" id="dia-actual-input" value="${diaActual}" min="1" max="30"
+        onchange="setDiaActual(this.value)"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        style="width:50px;text-align:center;border:1px solid var(--br);border-radius:8px;font-size:15px;font-weight:700;padding:4px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);">
+      <button onclick="setDiaActual(diaActual+1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--br);background:var(--bg);font-size:15px;cursor:pointer;font-weight:700;">+</button>
+      <span style="font-size:11px;color:var(--mu);">de 30</span>
+    </div>
+    <span style="font-size:11px;color:var(--v);font-weight:600;">Quedan ${31-diaActual} días</span>`;
+  container.appendChild(diaSelector);
 
   const snote=document.createElement('div');
   snote.className='season-note';
@@ -1408,12 +1448,17 @@ function buildMercado(){
   [1,2].forEach(function(q){
     const qDias=PLAN.filter(p=>p.q===q);
     const qLabel=q===1?'🟢 Quincena 1 — Días 1 al 15':'🟡 Quincena 2 — Días 16 al 30';
-    const qSub=q===1
-      ?(qDias.filter(p=>p.t==='gym').length+' días gym · '+qDias.filter(p=>p.t==='mov').length+' movilidad')
-      :(qDias.filter(p=>p.t==='gym').length+' días gym · '+qDias.filter(p=>p.t==='rest').length+' descanso');
+    // Días restantes de esta quincena
+    const rangoIni=q===1?1:16;
+    const rangoFin=q===1?15:30;
+    const diasRestantes=Math.max(0, rangoFin - Math.max(diaActual-1, rangoIni-1));
+    const yaComprado = diaActual > rangoFin;
+    const qSub = yaComprado
+      ? '✅ Quincena completada'
+      : (diasRestantes + ' días restantes de esta quincena');
 
     // Calcular consumo real de la quincena
-    const consumo=calcConsumoQuincena(q);
+    const consumo=calcConsumoQuincena(q, true); // solo días restantes
 
     // Agrupar por categoría según el item del inventario
     const needed={};
@@ -1444,15 +1489,26 @@ function buildMercado(){
     });
 
     const qItems=Object.values(needed).flat();
-    if(qItems.length===0)return;
 
     const qBlock=document.createElement('div');
     qBlock.className='q-block';
 
     const qHead=document.createElement('div');
     qHead.className='q-label '+(q===1?'q1':'q2');
-    qHead.innerHTML='<div style="flex:1"><div>'+qLabel+'</div><div class="q-label-sub">'+qSub+' · '+qItems.length+' ingredientes</div></div>';
+    qHead.innerHTML='<div style="flex:1"><div>'+qLabel+'</div><div class="q-label-sub">'+qSub+(qItems.length?(' · '+qItems.length+' ingredientes'):'')+'</div></div>';
     qBlock.appendChild(qHead);
+
+    // Si la quincena ya pasó completa o no quedan ingredientes
+    if(qItems.length===0){
+      const doneEl=document.createElement('div');
+      doneEl.style.cssText='text-align:center;padding:1rem;font-size:12px;color:var(--mu);background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);';
+      doneEl.innerHTML=yaComprado
+        ?'✅ Ya pasaron todos los días de esta quincena — nada por comprar'
+        :'🎉 Nada más por comprar en esta quincena';
+      qBlock.appendChild(doneEl);
+      container.appendChild(qBlock);
+      return;
+    }
 
     // Nota: cantidades calculadas de las recetas
     const noteEl=document.createElement('div');
@@ -3335,7 +3391,7 @@ async function sbUploadAll() {
   if (!sbClient || !sbUser) return;
   setSyncStatus('loading');
   try {
-    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1','dia_actual_v1'];
     let count = 0;
     for (const key of keys) {
       const val = localStorage.getItem(key);
@@ -3369,7 +3425,7 @@ const _origSaveInv = typeof saveInv !== 'undefined' ? saveInv : null;
 // Hook into localStorage saves
 const _origSetItem = localStorage.setItem.bind(localStorage);
 // Guarda todas las claves relevantes en Supabase
-const SB_KEYS = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+const SB_KEYS = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1','dia_actual_v1'];
 function sbPatchSave() {
   if (!sbClient || !sbUser) return;
   SB_KEYS.forEach(key => {
@@ -3402,7 +3458,7 @@ async function forceSyncAll() {
   setSyncStatus('loading');
   try {
     // Primero subir local
-    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1'];
+    const keys = ['inv_v4','tienda_names_v1','item_tienda_v1','ej_checks_v1','conserva_sel_v1','dia_actual_v1'];
     for (const key of keys) {
       const val = localStorage.getItem(key);
       if (val) await sbSave(key, val);
