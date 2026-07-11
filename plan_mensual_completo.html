@@ -1334,6 +1334,79 @@ function parseQty(qtyStr){
 }
 
 // Calcula los ingredientes totales consumidos en una quincena
+// Tabla de normalización — unifica ingredientes redundantes bajo un nombre canónico
+const NORM_INGREDIENTES={
+  // Huevos
+  'huevos':'Huevos','huevos enteros':'Huevos','huevo entero':'Huevos','huevo':'Huevos',
+  'claras de huevo':'Claras de huevo','claras':'Claras de huevo',
+  // Aceites
+  'aceite de oliva':'Aceite de oliva','aceite de sésamo':'Aceite de sésamo',
+  // Arroces
+  'arroz blanco':'Arroz blanco','arroz blanco (crudo)':'Arroz blanco','arroz cocido del día anterior':'Arroz blanco',
+  'arroz integral':'Arroz integral','arroz integral (crudo)':'Arroz integral','arroz integral cocido':'Arroz integral',
+  'arroz para sushi':'Arroz para sushi','arroz para sushi (crudo)':'Arroz para sushi','arroz sushi cocido':'Arroz para sushi',
+  // Avena
+  'avena en hojuelas':'Avena en hojuelas','avena en hojuelas (granola)':'Avena en hojuelas',
+  'avena en hojuelas (triturada)':'Avena en hojuelas','avena tostada (granola)':'Avena en hojuelas',
+  'avena':'Avena en hojuelas',
+  // Leche y lácteos
+  'leche entera':'Leche entera','yogur griego natural':'Yogur griego natural','yogur griego':'Yogur griego natural',
+  'queso campesino':'Queso campesino','mozzarella fresca':'Mozzarella fresca','mozzarella':'Mozzarella fresca',
+  'queso parmesano rallado':'Queso parmesano','queso parmesano':'Queso parmesano',
+  // Proteínas
+  'pechuga de pollo sin piel':'Pechuga de pollo','pechuga de pollo en tiras':'Pechuga de pollo',
+  'pechuga de pollo en cubos':'Pechuga de pollo','pechuga desmenuzada cocida':'Pechuga de pollo',
+  'pechuga de pollo':'Pechuga de pollo','pechuga':'Pechuga de pollo',
+  'muslo de pollo sin piel':'Muslo/Pierna de pollo','muslo de pollo':'Muslo/Pierna de pollo',
+  'carne de res magra':'Carne de res magra','carne de res magra (lomo)':'Carne de res magra',
+  'carne de res magra (bola negra)':'Carne de res magra','filete de salmón':'Salmón','salmón fresco':'Salmón',
+  'salmón':'Salmón','filete de tilapia':'Tilapia','tilapia':'Tilapia',
+  'atún en agua (lata)':'Atún en agua','atún en agua':'Atún en agua',
+  'camarones limpios pelados':'Camarones','camarones':'Camarones',
+  // Panes
+  'pan integral':'Pan integral','pan baguette':'Pan baguette','arepa blanca':'Arepa blanca','arepa':'Arepa blanca',
+  'galletas integrales':'Galletas integrales',
+  // Frutos secos
+  'almendras crudas':'Almendras','almendras laminadas':'Almendras','almendras':'Almendras',
+  'maní tostado sin sal':'Maní','maní tostado':'Maní','nueces de castilla':'Nueces','nueces':'Nueces',
+  // Especias / condimentos
+  'miel de abejas':'Miel de abejas','miel':'Miel de abejas',
+  'salsa soya baja en sodio':'Salsa soya','salsa soya':'Salsa soya','salsa soya + limón':'Salsa soya',
+  'vinagre de arroz':'Vinagre de arroz','sésamo tostado':'Sésamo tostado',
+  'jengibre fresco':'Jengibre fresco','jengibre fresco rallado':'Jengibre fresco','jengibre fresco (rallado)':'Jengibre fresco',
+  'semillas de chía':'Chía','chía':'Chía','canela en polvo':'Canela','canela':'Canela',
+  // Otros
+  'plátano maduro':'Plátano maduro','plátano verde':'Plátano verde','plátano verde (patacón)':'Plátano verde',
+  'papa pastusa':'Papa','papa criolla':'Papa','papa cocida pequeña':'Papa','papa':'Papa',
+  'fríjoles negros cocidos':'Fríjoles negros','fríjoles negros secos':'Fríjoles negros',
+  'ajo':'Ajo','cebolla larga':'Cebolla larga','cebolla cabezona':'Cebolla cabezona',
+  'tomate chonto':'Tomate chonto','aguacate hass':'Aguacate','aguacate':'Aguacate',
+  'edamame pelado congelado':'Edamame','edamame':'Edamame',
+  'fideos de arroz':'Fideos de arroz','fideos de arroz (secos)':'Fideos de arroz',
+  'fideos ramen (sin sobre)':'Fideos ramen','pasta integral':'Pasta integral',
+  'hoja de nori':'Nori','hojas de nori':'Nori','sriracha':'Sriracha',
+  'polvo de hornear':'Polvo de hornear','vinagre blanco':'Vinagre blanco',
+  'café con leche':'Café','café con leche entera':'Café','café molido':'Café',
+  'caldo de pollo bajo en sodio':'Caldo de pollo','cebollín':'Cebollín','cilantro fresco':'Cilantro',
+  'zanahoria':'Zanahoria','zanahoria rallada':'Zanahoria','zanahoria en juliana':'Zanahoria',
+  'pepino cohombro':'Pepino','repollo morado rallado':'Repollo morado','repollo morado':'Repollo morado',
+  'espinaca fresca':'Espinaca','espinaca':'Espinaca','mazorca':'Mazorca','yuca':'Yuca',
+};
+
+function normalizarIngrediente(nombre){
+  // Quitar descriptores de estado
+  let limpio=nombre.replace(/\s+(fresca|fresco|crudo|cruda|del día anterior|cocido|cocida|cocidos|cocidas)\b/gi,'').trim();
+  const clave=limpio.toLowerCase();
+  // Buscar en tabla de normalización
+  if(NORM_INGREDIENTES[clave])return NORM_INGREDIENTES[clave];
+  // Buscar coincidencia parcial (primera palabra)
+  const primeraPalabra=clave.split(' ')[0];
+  for(const [k,v] of Object.entries(NORM_INGREDIENTES)){
+    if(k.split(' ')[0]===primeraPalabra && primeraPalabra.length>3)return v;
+  }
+  return limpio; // sin normalizar, devolver limpio
+}
+
 function calcConsumoQuincena(q, soloRestantes){
   const t=getT(curMonth);
   // Filtrar días de la quincena. PLAN tiene índice 0-29 = día 1-30
@@ -1368,13 +1441,13 @@ function calcConsumoQuincena(q, soloRestantes){
       let ings;
       try{ings=r.i(fArr,vArr);}catch(e){return;}
       ings.forEach(([nombre,qty])=>{
-        // Limpiar nombre (quitar "fresca", "fresco", etc.)
-        const nombreLimpio=nombre.replace(/\s+(fresca|fresco|crudo|cruda|en hojuelas|del día anterior)\b/gi,'').trim();
+        // Normalizar nombre para unificar ingredientes redundantes
+        const nombreCanonico=normalizarIngrediente(nombre);
         const parsed=parseQty(qty);
         if(parsed.num<=0)return; // "Al gusto" no suma
-        const clave=nombreLimpio.toLowerCase();
+        const clave=nombreCanonico.toLowerCase();
         if(!consumo[clave]){
-          consumo[clave]={num:0, unit:parsed.unit, nombre:nombreLimpio};
+          consumo[clave]={num:0, unit:parsed.unit, nombre:nombreCanonico};
         }
         // Sumar solo si la unidad coincide (o tomar la primera)
         if(consumo[clave].unit===parsed.unit){
@@ -1383,7 +1456,8 @@ function calcConsumoQuincena(q, soloRestantes){
           consumo[clave].unit=parsed.unit;
           consumo[clave].num+=parsed.num;
         } else {
-          consumo[clave].num+=parsed.num; // sumar de todos modos
+          // Unidades distintas del mismo ingrediente — sumar de todos modos
+          consumo[clave].num+=parsed.num;
         }
       });
     });
@@ -1400,7 +1474,7 @@ function buildMercado(){
 
   const tipEl=document.createElement('div');
   tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.5rem;display:flex;gap:6px;align-items:center;';
-  tipEl.innerHTML='<span>💡</span><span>La lista descuenta los días ya consumidos. Solo muestra lo que <strong>falta comprar desde hoy</strong>.</span>';
+  tipEl.innerHTML='<span>💡</span><span>Comprar = lo que consumen las recetas <strong>desde hoy</strong> menos lo que <strong>ya tienes en inventario</strong>.</span>';
   container.appendChild(tipEl);
 
   // Selector de día actual
@@ -1478,13 +1552,44 @@ function buildMercado(){
       }
       const cat=invItem?(invItem.cat==='Aseo del hogar'?'Aseo':invItem.cat):'Despensa';
       if(!needed[cat])needed[cat]=[];
-      // Cantidad redondeada
-      const cantidad=Math.ceil(c.num*10)/10;
+
+      // ── RESTAR lo que ya tienes en inventario ──
+      // Convertir el stock del inventario a la misma unidad del consumo
+      let stockDisponible=0;
+      if(invItem){
+        // Si las unidades coinciden, restar directo
+        const invUnit=(invItem.unit||'').toLowerCase();
+        const consUnit=(c.unit||'').toLowerCase();
+        // Normalizar unidades equivalentes
+        const mismaUnidad = invUnit===consUnit ||
+          (invUnit.startsWith(consUnit.slice(0,3)) && consUnit.length>=2) ||
+          (consUnit.startsWith(invUnit.slice(0,3)) && invUnit.length>=2);
+        if(mismaUnidad){
+          stockDisponible=invItem.cur;
+        }
+        // Si el consumo es en gramos y el inventario también → resta directa
+        // (ya cubierto arriba)
+      }
+
+      // Cantidad neta a comprar = consumo restante − stock disponible
+      const netoComprar = Math.max(0, c.num - stockDisponible);
+
+      // Si ya tienes suficiente stock, no aparece en la lista
+      if(netoComprar<=0)return;
+
+      const cantidad=Math.ceil(netoComprar*10)/10;
       const cantidadStr=Number.isInteger(cantidad)?cantidad:cantidad.toFixed(1);
+
+      // Texto con detalle: cuánto necesitas vs cuánto tienes
+      const tieneTxt = (invItem && stockDisponible>0)
+        ? ' (necesitas '+(Number.isInteger(c.num)?c.num:c.num.toFixed(1))+', tienes '+stockDisponible+')'
+        : '';
+
       needed[cat].push({
         id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
         name:c.nombre,
         need:cantidadStr+(c.unit?' '+c.unit:''),
+        detalle:tieneTxt,
         invItem:invItem
       });
     });
@@ -1543,11 +1648,12 @@ function buildMercado(){
         row.dataset.tienda=tienda;
         const popupCall=item.invItem?`onclick="showTiendaPopup('${iid}','${iname}',this,event)"`:'';
         const cbCall=item.invItem?`onchange="markBought('${iid}',this)"`:'';
+        const detalleTxt=item.detalle?`<div style="font-size:10px;color:var(--mu);">${item.detalle}</div>`:'';
         row.innerHTML=`<input type="checkbox" class="mcb" ${cbCall}>
           <span class="mlist-name">🟡 ${item.name}
             <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" ${popupCall}>${tInfo.label} ✎</span>
           </span>
-          <div class="mlist-right"><span class="mlist-need ok">${item.need}</span></div>`;
+          <div class="mlist-right" style="text-align:right"><span class="mlist-need ok">Comprar: ${item.need}</span>${detalleTxt}</div>`;
         body.appendChild(row);
       });
       card.appendChild(body);
