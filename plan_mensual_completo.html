@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>Mi Plan Mensual</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -505,7 +505,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .q-label-sub{font-size:11px;font-weight:400;opacity:.8;}
 .q-empty{text-align:center;padding:1rem;font-size:12px;color:var(--mu);background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);}
 /* Campo numérico editable inventario */
-.qty-input{width:44px;text-align:center;border:1px solid var(--br);border-radius:6px;font-size:13px;font-weight:700;padding:2px 4px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);}
+.qty-input{width:48px;text-align:center;border:1px solid var(--br);border-radius:6px;font-size:16px;font-weight:700;padding:3px 4px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);-webkit-appearance:none;margin:0;}
+.qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .qty-input:focus{outline:none;border-color:var(--v);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;}
 #tienda-popup{animation:popIn .15s ease;}
@@ -1656,12 +1657,14 @@ function renderItem(item){
     <div class="inv-actions">
       <button class="qbtn" onclick="adj('${item.id}',-1)">−</button>
       <input type="number" class="qty-input" id="qi-${item.id}" value="${item.cur}" min="0" max="${item.max}"
-        onchange="adjDirect('${item.id}',this.value)"
+        inputmode="numeric" pattern="[0-9]*"
+        onblur="adjDirect('${item.id}',this.value)"
         onkeydown="if(event.key==='Enter')this.blur()"
         title="Edita el número directamente">
       <button class="qbtn" onclick="adj('${item.id}',+1)">+</button>
       <span style="font-size:11px;color:var(--mu);margin-left:2px">/ ${item.max} ${item.unit}</span>
       <button class="iact" onclick="restock('${item.id}')">🔄 Llenar</button>
+      <button class="iact" onclick="vaciarItem('${item.id}')">0️⃣ Vaciar</button>
       <button class="iact" onclick="editItem('${item.id}')">✏️ Max</button>
       <button class="iact del" onclick="delItem('${item.id}')">🗑</button>
     </div>`;
@@ -1673,11 +1676,58 @@ function adjDirect(id, rawVal){
   if(isNaN(val)||val<0)return;
   const inv=loadInv();
   const item=inv.find(i=>i.id===id);if(!item)return;
-  item.cur=Math.min(val,item.max);
+  const nuevoVal=Math.min(val,item.max);
+  if(nuevoVal===item.cur)return; // no cambió, no hacer nada
+  item.cur=nuevoVal;
   saveInv(inv);
   if(typeof sbPatchSave==='function')sbPatchSave();
-  refreshAll();
+
+  // Actualizar SOLO este ítem en el DOM (sin reconstruir todo → no hay salto)
+  updateInvItemDOM(item);
+  // Actualizar resumen y lista de mercado en segundo plano
+  updateInvSummary();
   showToast(`✅ ${item.name}: ${item.cur} / ${item.max} ${item.unit}`);
+}
+
+// Actualiza solo el DOM de un ítem sin reconstruir la lista completa
+function updateInvItemDOM(item){
+  const el=document.getElementById('ii-'+item.id);
+  if(!el){buildInventario();return;}
+  const s=statusOf(item);
+  const pct=item.max>0?Math.min(100,Math.round(item.cur/item.max*100)):0;
+  const barCls=s==='out'?'bar-out':s==='low'?'bar-low':'bar-ok';
+  const sbCls=s==='ok'?'sb-ok':s==='low'?'sb-low':'sb-out';
+  const sLabel=s==='ok'?'✅ Completo':s==='low'?'⚠️ Bajo':'❌ Agotado';
+  const need=needAmount(item);
+  // Actualizar clase de estado del contenedor
+  el.className='inv-item '+s;
+  // Actualizar badge de estado
+  const badge=el.querySelector('.inv-sbadge');
+  if(badge){badge.className='inv-sbadge '+sbCls;badge.textContent=sLabel;}
+  // Actualizar barra
+  const bar=el.querySelector('.bar-fill');
+  if(bar){bar.className='bar-fill '+barCls;bar.style.width=pct+'%';}
+  // Actualizar fracción
+  const frac=el.querySelector('.stock-frac');
+  if(frac){
+    frac.style.color=s==='out'?'#EF4444':s==='low'?'#EF9F27':'var(--v)';
+    frac.innerHTML=item.cur+' / '+item.max+' '+item.unit+(need>0?'<span style="color:#EF4444;font-size:10px;display:block">Falta: '+need+' '+item.unit+'</span>':'');
+  }
+  // Actualizar número junto a botones +/−
+  const qnum=el.querySelector('.qty-input');
+  if(qnum)qnum.value=item.cur;
+}
+
+// Actualiza solo el resumen de arriba sin tocar la lista
+function updateInvSummary(){
+  const inv=loadInv();
+  const ok=inv.filter(i=>statusOf(i)==='ok').length;
+  const low=inv.filter(i=>statusOf(i)==='low').length;
+  const out=inv.filter(i=>statusOf(i)==='out').length;
+  const sum=document.getElementById('inv-summary');
+  if(sum){
+    sum.innerHTML=`<div class="ist ist-ok">✅ ${ok} completos</div>${low?`<div class="ist ist-low">⚠️ ${low} bajos</div>`:''}${out?`<div class="ist ist-out">❌ ${out} agotados</div>`:''}<div class="ist ist-all">📦 ${inv.length} total</div>`;
+  }
 }
 
 function adj(id,d){
@@ -1725,6 +1775,19 @@ function filterInv(f,btn){
 function refreshAll(){
   buildInventario();
   buildMercado();
+}
+
+// Vaciar la cantidad de UN solo ítem (poner cur=0)
+function vaciarItem(id){
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);if(!item)return;
+  item.cur=0;
+  saveInv(inv);
+  if(typeof sbPatchSave==='function')sbPatchSave();
+  buildInventario();
+  buildMercado();
+  buildConserva();
+  showToast('0️⃣ '+item.name+' vaciado');
 }
 
 function showAddModal(){document.getElementById('addOverlay').classList.add('open');document.getElementById('addName').focus();}
@@ -3300,6 +3363,12 @@ function sbInit() {
 function showLock() {
   const el = document.getElementById('lockScreen');
   el.style.display = 'flex';
+  // Si es archivo local, avisar de inmediato
+  if (typeof esArchivoLocal === 'function' && esArchivoLocal()) {
+    setTimeout(() => {
+      sbShowMsg('⚠️ Archivo local detectado. Súbelo a GitHub Pages y ábrelo desde su URL para que funcione el login y la sincronización.', '#EF9F27');
+    }, 300);
+  }
   setTimeout(() => {
     const em = document.getElementById('sb-email');
     if (em) em.focus();
@@ -3315,17 +3384,57 @@ function sbShowMsg(txt, color) {
   if (el) { el.textContent = txt; el.style.color = color || '#EF4444'; }
 }
 
+function esArchivoLocal(){
+  const p = window.location.protocol;
+  return p === 'file:' || p === 'content:' || p === 'null' || p === '';
+}
+
 async function sbLogin() {
   const email = document.getElementById('sb-email').value.trim();
   const pass = document.getElementById('sb-pass').value;
   if (!email || !pass) { sbShowMsg('Completa email y contraseña.'); return; }
+
+  // Detectar si se abre como archivo local
+  if (esArchivoLocal()) {
+    sbShowMsg('⚠️ Estás abriendo el archivo local. La sincronización solo funciona desde una URL (GitHub Pages/Netlify). Sube el archivo y ábrelo desde su enlace https://', '#EF9F27');
+    return;
+  }
+
   const btn = document.getElementById('sb-login-btn');
   btn.textContent = 'Entrando...'; btn.disabled = true;
   sbShowMsg('');
-  const result = await sbClient.auth.signInWithPassword({ email, password: pass });
-  if (result.error) {
-    sbShowMsg('Error: ' + result.error.message);
+  try {
+    const result = await sbClient.auth.signInWithPassword({ email, password: pass });
+    if (result.error) {
+      sbShowMsg('Error: ' + result.error.message);
+      btn.textContent = 'Entrar'; btn.disabled = false;
+    }
+  } catch(e) {
+    // Failed to fetch en HTTPS = proyecto Supabase pausado o key incompatible
+    if (esArchivoLocal()) {
+      sbShowMsg('⚠️ Debes abrir la app desde una URL https:// (GitHub Pages), no como archivo local.', '#EF9F27');
+    } else {
+      sbShowMsg('❌ No conecta con Supabase. Posibles causas: (1) proyecto pausado en supabase.com — reactívalo, (2) revisa tu internet. Detalle: ' + e.message, '#EF4444');
+      // Diagnóstico automático
+      diagnosticarSupabase();
+    }
     btn.textContent = 'Entrar'; btn.disabled = false;
+  }
+}
+
+// Prueba directa de conexión a Supabase para diagnosticar
+async function diagnosticarSupabase(){
+  try {
+    const resp = await fetch(SB_URL + '/auth/v1/health', {
+      headers: { 'apikey': SB_KEY }
+    });
+    if (resp.ok) {
+      sbShowMsg('✅ Supabase responde. El problema puede ser la contraseña o que la cuenta no existe. Prueba "Crear cuenta nueva".', '#EF9F27');
+    } else {
+      sbShowMsg('⚠️ Supabase respondió con error ' + resp.status + '. Revisa que el proyecto esté activo.', '#EF9F27');
+    }
+  } catch(e2) {
+    sbShowMsg('❌ Supabase NO responde. El proyecto está pausado (reactívalo en supabase.com) o la URL/key son incorrectas.', '#EF4444');
   }
 }
 
@@ -3333,10 +3442,18 @@ async function sbRegister() {
   const email = document.getElementById('sb-email').value.trim();
   const pass = document.getElementById('sb-pass').value;
   if (!email || !pass) { sbShowMsg('Completa email y contraseña.'); return; }
+  if (esArchivoLocal()) {
+    sbShowMsg('⚠️ Abre la app desde su URL https:// para crear cuenta. Como archivo local no funciona.', '#EF9F27');
+    return;
+  }
   sbShowMsg('Creando cuenta...', '#EF9F27');
-  const result = await sbClient.auth.signUp({ email, password: pass });
-  if (result.error) sbShowMsg('Error: ' + result.error.message);
-  else sbShowMsg('¡Cuenta creada! Revisa tu email para verificar.', '#1D9E75');
+  try {
+    const result = await sbClient.auth.signUp({ email, password: pass });
+    if (result.error) sbShowMsg('Error: ' + result.error.message);
+    else sbShowMsg('¡Cuenta creada! Revisa tu email para verificar.', '#1D9E75');
+  } catch(e) {
+    sbShowMsg('❌ No se pudo conectar: ' + e.message);
+  }
 }
 
 async function sbLogout() {
