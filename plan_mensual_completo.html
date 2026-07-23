@@ -376,14 +376,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .mlist-item:last-child{border-bottom:none;}
 .mlist-item.bought{opacity:.4;text-decoration:line-through;}
 /* Checkbox compra */
-.mcb{width:17px;height:17px;accent-color:var(--v);cursor:pointer;flex-shrink:0;}
+.mcb{width:16px;height:16px;accent-color:var(--ink);cursor:pointer;flex-shrink:0;}
 /* Nombre y badge tienda */
 .mlist-name{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .mlist-right{display:flex;align-items:center;gap:8px;white-space:nowrap;}
-.mlist-need{font-size:12px;font-weight:600;}
-.mlist-need.ok{color:var(--v);}
+.mlist-need{font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+.mlist-need.ok{color:var(--tx);}
 .mlist-need.warn{color:var(--am);}
-.mlist-need.crit{color:#EF4444;}
+.mlist-need.crit{color:var(--danger);}
 /* Badge de tienda */
 .tienda-badge{font-size:9px;font-weight:500;padding:4px 10px;border-radius:var(--pill);white-space:nowrap;letter-spacing:.04em;}
 .tb-super{background:var(--vl);color:var(--vd);}
@@ -407,7 +407,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .mcat-body:not(.open){display:none;}
 .mlist-card{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);overflow:hidden;margin-bottom:8px;}
 .mlist-empty{text-align:center;padding:1.5rem;font-size:13px;color:var(--mu);}
-.season-note{font-size:12px;background:var(--vl);color:var(--vd);padding:8px 12px;border-radius:var(--rsm);margin-bottom:.75rem;}
+.season-note{font-size:12px;background:var(--vl);color:var(--vd);padding:16px 20px;border-radius:var(--rad);margin-bottom:1rem;line-height:1.8;letter-spacing:.01em;}
 .mlist-name{flex:1;}
 .mlist-need{font-size:12px;font-weight:600;color:var(--v);white-space:nowrap;margin-left:8px;}
 .mlist-need.warn{color:var(--am);}
@@ -605,20 +605,19 @@ if('serviceWorker' in navigator){
     <label>📅 Mes:</label>
     <div class="mchips" id="monthChips"></div>
   </div>
-  <div class="sbnr" id="seasonBanner"></div>
 </div>
 
 <div class="nav-wrap">
   <nav class="nav">
-    <button class="nbtn active" onclick="showSec('cronograma',this)">📅 Cronograma</button>
-    <button class="nbtn" onclick="showSec('recetas',this)">👩‍🍳 Recetas</button>
-    <button class="nbtn" onclick="showSec('ejercicio',this)">🏋️ Ejercicio</button>
-    <button class="nbtn" onclick="showSec('compras',this)">🛒 Compras</button>
-    <button class="nbtn" onclick="showSec('hormonal',this)">💚 Hormonal</button>
-    <button class="nbtn" onclick="showSec('conserva',this)">🧊 Conservación</button>
-    <button class="nbtn" id="pwa-install-btn" onclick="installPWA()" title="Instalar en pantalla principal" style="display:none;margin-left:auto;color:var(--v);font-weight:600;">📲 Instalar</button>
-    <button class="nbtn" onclick="toggleCuentaPanel()" id="btn-cuenta" title="Mi cuenta" style="color:var(--v);font-weight:600;">👤 Cuenta</button>
-    <button class="nbtn" onclick="sbLogout()" title="Cerrar sesión" style="color:#6B7280;">🔐 Salir</button>
+    <button class="nbtn active" onclick="showSec('cronograma',this)">Cronograma</button>
+    <button class="nbtn" onclick="showSec('compras',this)">Compras</button>
+    <button class="nbtn" onclick="showSec('conserva',this)">Conservación</button>
+    <button class="nbtn" onclick="showSec('hormonal',this)">Hormonal</button>
+    <button class="nbtn" onclick="showSec('recetas',this)">Recetas</button>
+    <button class="nbtn" onclick="showSec('ejercicio',this)">Ejercicio</button>
+    <button class="nbtn" id="pwa-install-btn" onclick="installPWA()" title="Instalar en pantalla principal" style="display:none;margin-left:auto;color:var(--v);font-weight:600;">Instalar</button>
+    <button class="nbtn" onclick="toggleCuentaPanel()" id="btn-cuenta" title="Mi cuenta" style="color:var(--v);font-weight:600;">Cuenta</button>
+    <button class="nbtn" onclick="sbLogout()" title="Cerrar sesión" style="color:#6B7280;">Salir</button>
   </nav>
 </div>
 
@@ -1211,7 +1210,7 @@ function formatNeed(item){
 
 // ═══════════════ LISTA DE MERCADO (dinámica) ═══════════════
 const CAT_ORDER=['Proteínas','Lácteos','Frutas','Verduras','Despensa','Especias','Aseo','Mascotas'];
-const CAT_EMOJI={'Proteínas':'🥩','Lácteos':'🥛','Frutas':'🍉','Verduras':'🥦','Despensa':'🍞','Especias':'🌶️','Aseo':'🧴','Mascotas':'🐾'};
+const CAT_EMOJI={'Proteínas':'','Lácteos':'','Frutas':'','Verduras':'','Despensa':'','Especias':'','Aseo':'','Mascotas':''};
 
 // Tienda por categoría/id de producto
 // ── Tiendas: nombres editables guardados en localStorage ──
@@ -1613,15 +1612,15 @@ function buildMercado(){
   container.innerHTML='';
 
   const tipEl=document.createElement('div');
-  tipEl.style.cssText='font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rsm);padding:7px 12px;margin-bottom:.5rem;display:flex;gap:6px;align-items:center;';
-  tipEl.innerHTML='<span>💡</span><span>Comprar = lo que consumen las recetas <strong>desde hoy</strong> menos lo que <strong>ya tienes en inventario</strong>.</span>';
+  tipEl.style.cssText='font-size:12px;color:var(--mu);padding:0 0 1.25rem;margin-bottom:0;line-height:1.7;letter-spacing:.01em;';
+  tipEl.innerHTML='Cantidades calculadas desde las recetas restantes, menos tu inventario actual.';
   container.appendChild(tipEl);
 
   // Selector de día actual
   const diaSelector=document.createElement('div');
-  diaSelector.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--br);border-radius:var(--rsm);padding:10px 14px;margin-bottom:.75rem;';
+  diaSelector.style.cssText='display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--card);border:1px solid var(--br);border-radius:var(--rad);padding:16px 20px;margin-bottom:1rem;';
   diaSelector.innerHTML=`
-    <span style="font-size:13px;font-weight:600;">📅 Día actual del plan:</span>
+    <span style="font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);">Día actual</span>
     <div style="display:flex;align-items:center;gap:6px;">
       <button onclick="setDiaActual(diaActual-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--br);background:var(--bg);font-size:15px;cursor:pointer;font-weight:700;">−</button>
       <input type="number" id="dia-actual-input" value="${diaActual}" min="1" max="30"
@@ -1636,7 +1635,7 @@ function buildMercado(){
 
   const snote=document.createElement('div');
   snote.className='season-note';
-  snote.innerHTML='🍃 <strong>Frutas de '+MN[curMonth]+':</strong> '+t.f.map(x=>x.n).join(', ')+' · <strong>Verduras:</strong> '+t.v.join(', ');
+  snote.innerHTML='<strong>Frutas de '+MN[curMonth]+'</strong> — '+t.f.map(x=>x.n).join(', ')+'<br><strong>Verduras</strong> — '+t.v.join(', ');
   container.appendChild(snote);
 
   // Filtros de tienda
@@ -1662,7 +1661,7 @@ function buildMercado(){
   // QUINCENAS — cada una con su consumo real
   [1,2].forEach(function(q){
     const qDias=PLAN.filter(p=>p.q===q);
-    const qLabel=q===1?'🟢 Quincena 1 — Días 1 al 15':'🟡 Quincena 2 — Días 16 al 30';
+    const qLabel=q===1?'Quincena 1 — Días 1 al 15':'Quincena 2 — Días 16 al 30';
     // Días restantes de esta quincena
     const rangoIni=q===1?1:16;
     const rangoFin=q===1?15:30;
@@ -1758,8 +1757,8 @@ function buildMercado(){
 
     // Nota: cantidades calculadas de las recetas
     const noteEl=document.createElement('div');
-    noteEl.style.cssText='font-size:11px;color:var(--mu);margin-bottom:.75rem;padding:6px 10px;background:var(--bg);border-radius:var(--rsm);';
-    noteEl.innerHTML='📐 Cantidades sumadas de las '+qDias.length+' días de recetas de esta quincena';
+    noteEl.style.cssText='font-size:10px;color:var(--mu);margin-bottom:1rem;letter-spacing:.06em;text-transform:uppercase;';
+    noteEl.innerHTML='Sumado de '+qDias.length+' días de recetas';
     qBlock.appendChild(noteEl);
 
     CAT_ORDER.forEach(function(cat){
@@ -1792,10 +1791,10 @@ function buildMercado(){
         const yaComprado=comprasChecks[item.id]===true;
         if(yaComprado) row.classList.add('bought');
         row.innerHTML=`<input type="checkbox" class="mcb" ${cbCall} ${yaComprado?'checked':''}>
-          <span class="mlist-name">🟡 ${item.name}
-            <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" ${popupCall}>${tInfo.label} ✎</span>
+          <span class="mlist-name">${item.name}
+            <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" ${popupCall}>${tInfo.label}</span>
           </span>
-          <div class="mlist-right" style="text-align:right"><span class="mlist-need ok">Comprar: ${item.need}</span>${detalleTxt}</div>`;
+          <div class="mlist-right" style="text-align:right"><span class="mlist-need ok">${item.need}</span>${detalleTxt}</div>`;
         body.appendChild(row);
       });
       card.appendChild(body);
@@ -1813,7 +1812,7 @@ function buildMercado(){
     const aHead=document.createElement('div');
     aHead.className='q-label';
     aHead.style.cssText='background:#F1EFE8;color:#5F5E5A;';
-    aHead.innerHTML='<div style="flex:1"><div>🧴 Aseo y hogar</div><div class="q-label-sub">'+aseoItems.length+' productos · según inventario</div></div>';
+    aHead.innerHTML='<div style="flex:1"><div>Aseo y hogar</div><div class="q-label-sub">'+aseoItems.length+' productos · según inventario</div></div>';
     aBlock.appendChild(aHead);
 
     const card=document.createElement('div');
@@ -1838,10 +1837,10 @@ function buildMercado(){
       const yaComp=comprasChecks[item.id]===true;
       if(yaComp) row.classList.add('bought');
       row.innerHTML=`<input type="checkbox" class="mcb" onchange="markBought('${iid}',this)" ${yaComp?'checked':''}>
-        <span class="mlist-name">${icon} ${item.name}
-          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" onclick="showTiendaPopup('${iid}','${iname}',this,event)">${tInfo.label} ✎</span>
+        <span class="mlist-name">${item.name}
+          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" onclick="showTiendaPopup('${iid}','${iname}',this,event)">${tInfo.label}</span>
         </span>
-        <div class="mlist-right"><span class="mlist-need ${statusCls}">Comprar: ${formatNeed(item)}</span></div>`;
+        <div class="mlist-right"><span class="mlist-need ${statusCls}">${formatNeed(item)}</span></div>`;
       body.appendChild(row);
     });
     card.appendChild(body);
@@ -2078,10 +2077,7 @@ function buildMonthSel(){
   });
   updateSeason();
 }
-function updateSeason(){
-  const t=getT(curMonth);
-  document.getElementById('seasonBanner').innerHTML=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${t.f.slice(0,4).map(x=>`<span class="sbadge sb-f">🍓 ${x.n}</span>`).join('')}${t.v.slice(0,4).map(x=>`<span class="sbadge sb-v">🥦 ${x}</span>`).join('')}</div>`;
-}
+function updateSeason(){ /* banner removido — las frutas se ven en cada sección */ }
 // Actualiza el max del inventario de frutas según el mes seleccionado
 function syncFrutasInventario(){
   const t=getT(curMonth);
@@ -2768,7 +2764,84 @@ function buildHormonal(){
   const g=document.createElement('div');g.className='hgrid';
   HORM.forEach(h=>{const card=document.createElement('div');card.className='hcard';card.innerHTML=`<h4>${h.t}</h4><p>${h.p}</p>`;g.appendChild(card);});
   c.appendChild(g);
-  c.innerHTML+=`<div style="background:var(--vl);border-radius:var(--rad);padding:1.1rem;margin-top:.5rem"><div style="font-weight:600;margin-bottom:7px;color:var(--vd)">💡 Estrategia anti-antojos</div><div style="font-size:12px;color:var(--vd);line-height:1.8">1. Come proteína primero — los antojos de dulce son frecuentemente déficit de proteína.<br>2. Las frutas de temporada con miel satisfacen el dulce con fibra y bajo índice glucémico.<br>3. Si el antojo es intenso: 2 cuadros de chocolate 85%+ con té de canela.<br>4. Bebe agua con limón antes de ceder — muchos antojos son realmente sed.</div></div>`;
+  // ── Guía de antojos ──────────────────────────────────────────────
+  const antojosSec=document.createElement('div');
+  antojosSec.style.cssText='margin-top:3rem;';
+  antojosSec.innerHTML=`
+    <h3 style="font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;margin-bottom:.5rem;letter-spacing:-.015em;">Antojos</h3>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:2rem;line-height:1.7;max-width:560px;">
+      Cada antojo tiene una raíz distinta. Identifica cuál es el tuyo y usa la alternativa que lo satisface de verdad.
+    </p>`;
+  c.appendChild(antojosSec);
+
+  const ANTOJOS=[
+    {
+      tipo:'Salado y crujiente',
+      ejemplos:'Papas de paquete, doritos, chicharrón, maní salado',
+      causa:'Suele ser deshidratación o déficit de sodio, muy común después de entrenar. También aparece con el estrés alto, cuando el cortisol pide sal.',
+      alternativas:[
+        'Garbanzos tostados al horno con sal y pimentón — 20 min a 200°C, quedan crujientes y aportan proteína y fibra',
+        'Chips de plátano verde al horno con sal marina — mismo crujido, sin aceite frito',
+        'Palomitas de maíz hechas en olla con un toque de aceite de oliva y sal',
+        'Chips de kale o col rizada al horno — 12 min a 170°C',
+        'Almendras o maní tostado sin sal con una pizca de sal marina agregada por ti (controlas la cantidad)',
+        'Pepino en rodajas con limón, sal y una pizca de ají en polvo'
+      ],
+      tip:'Toma un vaso grande de agua con una pizca de sal marina y limón antes de ceder. Si en 15 minutos el antojo se fue, era sed.'
+    },
+    {
+      tipo:'Dulce',
+      ejemplos:'Chocolatinas, galletas, helado, postres',
+      causa:'Casi siempre es déficit de proteína en la comida anterior, o azúcar en sangre inestable. En la fase lútea del ciclo se intensifica por la caída de serotonina.',
+      alternativas:[
+        'Yogur griego con fruta de temporada y canela — la proteína corta el antojo de raíz',
+        'Chocolate 85% o más — 2 cuadros con té de canela',
+        'Dátiles rellenos de mantequilla de maní — dulce real con fibra y grasa que estabiliza',
+        'Fruta congelada licuada con leche — textura de helado sin azúcar añadido',
+        'Batido de cacao en polvo con leche, banano y canela'
+      ],
+      tip:'Come proteína primero. Si tuviste un almuerzo bajo en proteína, el antojo de dulce a las 4 p.m. es predecible.'
+    },
+    {
+      tipo:'Graso y pesado',
+      ejemplos:'Pizza, hamburguesa, fritos, comida rápida',
+      causa:'Aparece con el cansancio extremo, poco sueño o restricción calórica prolongada. El cuerpo pide energía densa e inmediata.',
+      alternativas:[
+        'Aguacate con sal, limón y tostada integral — grasa saludable que sacia igual',
+        'Arepa con queso campesino derretido — el antojo de "queso derretido" resuelto',
+        'Huevos revueltos con queso y aguacate',
+        'Papa cocida con aceite de oliva, sal y orégano'
+      ],
+      tip:'Revisa si dormiste menos de 7 horas. La falta de sueño aumenta la grelina (hambre) y baja la leptina (saciedad).'
+    },
+    {
+      tipo:'Antojos nocturnos',
+      ejemplos:'Picar cualquier cosa después de las 9 p.m.',
+      causa:'Cena insuficiente en proteína o carbohidrato, o simplemente aburrimiento y hábito.',
+      alternativas:[
+        'Té de manzanilla o canela — señal de cierre del día',
+        'Un vaso de leche tibia con canela — el triptófano ayuda al sueño',
+        'Yogur griego pequeño si el hambre es real'
+      ],
+      tip:'Si cenaste completo y aún así tienes antojo, prueba lavarte los dientes. Corta el hábito en la mayoría de los casos.'
+    }
+  ];
+
+  ANTOJOS.forEach(a=>{
+    const card=document.createElement('div');
+    card.style.cssText='background:var(--card);border:1px solid var(--br);border-radius:var(--rad);padding:1.75rem;margin-bottom:10px;';
+    card.innerHTML=`
+      <div style="font-family:'DM Serif Display',serif;font-size:21px;font-weight:400;margin-bottom:6px;letter-spacing:-.01em;">${a.tipo}</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:1.25rem;letter-spacing:.02em;">${a.ejemplos}</div>
+      <div style="font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--mu);margin-bottom:.5rem;">Por qué pasa</div>
+      <p style="font-size:13px;color:var(--tx);line-height:1.7;margin-bottom:1.5rem;">${a.causa}</p>
+      <div style="font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--mu);margin-bottom:.75rem;">Qué comer en su lugar</div>
+      ${a.alternativas.map(alt=>`<div style="display:flex;gap:12px;font-size:13px;line-height:1.65;margin-bottom:9px;">
+        <span style="color:var(--mu);flex-shrink:0;">—</span><span>${alt}</span>
+      </div>`).join('')}
+      <div style="background:var(--vl);padding:14px 18px;font-size:12px;color:var(--vd);margin-top:1.5rem;line-height:1.65;border-radius:var(--rad);">${a.tip}</div>`;
+    c.appendChild(card);
+  });
 }
 
 // ═══════════════ NAV ═══════════════
@@ -3469,59 +3542,52 @@ try{ reconstruirTodo(); }catch(e){ console.error('reconstruirTodo error:',e); }
 </script>
 
 <!-- ══ PANEL DE CUENTA ══ -->
-<div id="cuenta-panel" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:250;background:rgba(0,0,0,.45);" onclick="if(event.target===this)toggleCuentaPanel()">
-  <div id="cuenta-drawer" style="position:absolute;top:50px;right:0;width:280px;height:calc(100vh - 50px);background:#111;color:#E0E0E0;padding:0;display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.4);overflow-y:auto;">
+<div id="cuenta-panel" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(28,26,23,.35);backdrop-filter:blur(3px);" onclick="if(event.target===this)toggleCuentaPanel()">
+  <div id="cuenta-drawer" style="position:absolute;top:0;right:0;bottom:0;width:340px;background:#F5F2EC;color:#1C1A17;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(28,26,23,.12);overflow-y:auto;">
 
     <!-- Header -->
-    <div style="padding:1.5rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">CUENTA</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
-        <span id="cuenta-email" style="font-size:14px;color:#E0E0E0;font-weight:500;">—</span>
-        <span style="font-size:11px;color:#1D9E75;font-weight:700;">✓</span>
+    <div style="padding:2.5rem 2rem 1.75rem;border-bottom:1px solid rgba(28,26,23,.10);">
+      <div style="font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#8A8378;margin-bottom:1.25rem;">Cuenta</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#4A5D3F;flex-shrink:0;"></div>
+        <span id="cuenta-email" style="font-size:14px;color:#1C1A17;font-weight:400;letter-spacing:.01em;">—</span>
       </div>
     </div>
 
-    <!-- Sync status -->
-    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.5rem;">SINCRONIZACIÓN</div>
-      <div id="sync-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6B7280;margin-bottom:.25rem;">
-        <span>☁️</span><span style="color:#6B7280">Sin sincronizar aún</span>
+    <!-- Estado -->
+    <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(28,26,23,.08);">
+      <div style="font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#8A8378;margin-bottom:.9rem;">Estado</div>
+      <div id="sync-status" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#1C1A17;">
+        <span>Sincronizado</span>
       </div>
-      <div id="sync-last" style="font-size:11px;color:#444;"></div>
+      <div id="sync-last" style="font-size:11px;color:#8A8378;margin-top:6px;letter-spacing:.02em;"></div>
     </div>
 
     <!-- Acciones -->
-    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">DATOS</div>
+    <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(28,26,23,.08);">
+      <div style="font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#8A8378;margin-bottom:1rem;">Datos</div>
 
-      <button onclick="sbLoadAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#EF9F27;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">
-        <span style="font-size:18px;">↓</span> Cargar desde nube
+      <button onclick="recargarDeNube()" style="display:block;width:100%;text-align:left;background:none;border:none;color:#1C1A17;font-size:14px;font-weight:400;padding:13px 0;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:1px solid rgba(28,26,23,.06);letter-spacing:.01em;transition:padding-left .2s;" onmouseover="this.style.paddingLeft='6px'" onmouseout="this.style.paddingLeft='0'">
+        Recargar desde la nube
       </button>
 
-      <button onclick="sbUploadAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#1D9E75;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">
-        <span style="font-size:18px;">↑</span> Subir datos locales
-      </button>
-
-      <button onclick="forceSyncAll()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#5DCAA5;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;">
-        <span style="font-size:18px;">⟳</span> Sincronizar ahora
+      <button onclick="guardarTodoEnNube()" style="display:block;width:100%;text-align:left;background:none;border:none;color:#1C1A17;font-size:14px;font-weight:400;padding:13px 0;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.01em;transition:padding-left .2s;" onmouseover="this.style.paddingLeft='6px'" onmouseout="this.style.paddingLeft='0'">
+        Guardar todo ahora
       </button>
     </div>
 
     <!-- Info -->
-    <div style="padding:.75rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7280;margin-bottom:.75rem;">DISPOSITIVO</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;">
-        Los datos se guardan aquí y en la nube.<br>
-        <span style="color:#444;">↓ Cargar</span> = trae datos de otro dispositivo<br>
-        <span style="color:#444;">↑ Subir</span> = envía este dispositivo a la nube
-      </div>
+    <div style="padding:1.5rem 2rem;">
+      <div style="font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#8A8378;margin-bottom:.9rem;">Sincronización</div>
+      <p style="font-size:12px;color:#8A8378;line-height:1.75;letter-spacing:.01em;">
+        Cada cambio se guarda automáticamente en la nube. Los datos son los mismos en todos tus dispositivos con esta cuenta.
+      </p>
     </div>
 
     <!-- Cerrar sesión -->
-    <div style="padding:.75rem 1.25rem;margin-top:auto;">
-      <button onclick="sbLogout()" style="display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#EF4444;font-size:15px;font-weight:500;padding:10px 0;cursor:pointer;font-family:inherit;">
-        <span style="font-size:18px;">✕</span> Cerrar sesión
+    <div style="padding:1.5rem 2rem 2.5rem;margin-top:auto;border-top:1px solid rgba(28,26,23,.08);">
+      <button onclick="sbLogout()" style="display:block;width:100%;text-align:left;background:none;border:none;color:#8B4444;font-size:14px;font-weight:400;padding:6px 0;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.01em;">
+        Cerrar sesión
       </button>
     </div>
 
