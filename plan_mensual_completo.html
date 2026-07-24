@@ -73,7 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .cal-day:hover{border-color:rgba(28,26,23,.22);}
 .cal-day.gym{border-left:3px solid var(--v);}.cal-day.mov{border-left:3px solid var(--am);}.cal-day.rest{border-left:3px solid #D3D1C7;}
 .cal-day.q1{background:#FDFFFE;}.cal-day.q2{background:#FFFDF8;}
-.dnum{font-family:'DM Serif Display',serif;font-size:17px;font-weight:400;margin-bottom:8px;line-height:1;}
+.dnum{font-family:'DM Serif Display',serif;font-size:17px;font-weight:400;line-height:1;}
 .q1 .dnum{color:var(--tx);}.q2 .dnum{color:var(--am);}
 .chip{display:block;font-size:9px;padding:4px 7px;border-radius:var(--rsm);margin-bottom:3px;cursor:pointer;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .18s;letter-spacing:.01em;}
 .chip:hover{transform:translateX(2px);}
@@ -82,10 +82,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .chip-m2{background:var(--pl);color:#7A5A50;}
 .chip-a{background:var(--bl);color:#40506B;}
 .chip-c{background:#EFE9E3;color:#6B5D52;}
-.dico{position:absolute;bottom:8px;right:8px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:var(--bg);letter-spacing:0;}
-.ico-g{background:var(--v);}.ico-m{background:var(--am);}.ico-r{background:#B8B2A6;}
+/* Etiqueta de tipo de entrenamiento */
+.cal-day-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;}
+.entreno-tag{
+  font-size:7.5px;font-weight:500;letter-spacing:.1em;
+  padding:3px 6px;border-radius:var(--pill);white-space:nowrap;
+  text-transform:uppercase;line-height:1;
+}
+.entreno-v{background:var(--vl);color:var(--vd);}
+.entreno-am{background:var(--al);color:var(--am);}
+.entreno-mu{background:rgba(28,26,23,.05);color:var(--mu);}
+/* Celdas vacías y extra */
+.cal-day-vacia{background:transparent;border:none;min-height:auto;}
+.cal-day-extra{background:transparent;border:1px dashed var(--br);}
+.dico{display:none;}
 .legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:2rem;padding:14px 18px;background:var(--card);border:1px solid var(--br);border-radius:var(--rad);}
-.li{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--mu);letter-spacing:.02em;}
+.li{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu);letter-spacing:.02em;}
+.legend{gap:14px 20px;}
 .ld{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .overlay{display:none;position:fixed;inset:0;background:rgba(28,26,23,.42);z-index:300;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(3px);}
 .overlay.open{display:flex;}
@@ -210,50 +223,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   .cal-day{
     min-height:auto;
     margin-bottom:8px;
-    border-radius:10px;
-    padding:10px 12px;
-    display:grid;
-    grid-template-columns:40px 1fr 1fr 1fr;
-    grid-template-rows:auto auto;
-    gap:4px 8px;
-    align-items:center;
+    border-radius:var(--rad);
+    padding:12px 14px;
+    display:block;
   }
-  .dnum{
-    grid-column:1;
-    grid-row:1/3;
-    font-size:18px;
-    font-weight:700;
-    text-align:center;
-    margin:0;
-    border-right:1px solid var(--br);
-    padding-right:8px;
-    align-self:center;
-  }
-  /* chips en fila horizontal */
-  .chip{
-    display:inline-flex;
-    font-size:9px;
-    padding:3px 6px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width:100%;
-    margin:1px;
-  }
-  .chip-d{grid-column:2;grid-row:1;}
-  .chip-m{grid-column:3;grid-row:1;}
-  .chip-a{grid-column:2;grid-row:2;}
-  .chip-m2{grid-column:3;grid-row:2;}
-  .chip-c{grid-column:4;grid-row:1/3;align-self:center;}
-  .dico{
-    position:static;
-    grid-column:4;
-    grid-row:1;
-    width:18px;height:18px;
-    font-size:9px;
-    justify-self:end;
-  }
-  .wkt{font-size:15px;}
+  .cal-day-vacia{display:none;}
+  .cal-day-top{margin-bottom:10px;}
+  .cal-day .chip{display:inline-block;margin:2px 3px 2px 0;font-size:9.5px;padding:4px 8px;max-width:none;}
+  .dnum{font-size:20px;}
+  .wkt{font-size:17px;}
 }
 
 /* ── CRONOGRAMA — TABLET: 7 col pero más compacto ── */
@@ -644,13 +622,13 @@ if('serviceWorker' in navigator){
 
 <div class="sec active" id="sec-cronograma">
   <h2 class="stitle">Cronograma mensual</h2>
-  <p class="ssub" id="cron-sub">5 comidas por día. Toca cualquier comida para ver la receta completa.</p>
+  <p class="ssub" id="cron-sub">Días reales del mes. Cada día muestra su entrenamiento y sus 5 comidas — toca cualquiera para ver la receta.</p>
   <div class="legend">
-    <div class="li"><div class="ld" style="background:var(--vl);border:1.5px solid var(--v)"></div>Q1 1–15</div>
-    <div class="li"><div class="ld" style="background:var(--al);border:1.5px solid var(--am)"></div>Q2 16–30</div>
-    <div class="li"><div class="ld" style="background:var(--v)"></div>Gym</div>
-    <div class="li"><div class="ld" style="background:var(--am)"></div>Movilidad</div>
-    <div class="li"><div class="ld" style="background:#B4B2A9"></div>Descanso</div>
+    <div class="li"><span class="entreno-tag entreno-v">PIERNA</span>Glúteos, cuádriceps, isquios</div>
+    <div class="li"><span class="entreno-tag entreno-v">ESPALDA</span>Espalda y bíceps</div>
+    <div class="li"><span class="entreno-tag entreno-v">TORSO</span>Pecho, hombros, tríceps</div>
+    <div class="li"><span class="entreno-tag entreno-am">MOV</span>Movilidad</div>
+    <div class="li"><span class="entreno-tag entreno-mu">DES</span>Descanso</div>
   </div>
   <div id="cal-container"></div>
 </div>
@@ -2501,20 +2479,90 @@ const PLAN=[
 ];
 const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
+// Etiqueta de entrenamiento por día del plan (1-30)
+// Basado en RUTINAS: gym=fuerza rotando, mov=movilidad, rest=descanso
+function tipoEntreno(numDia, tipoBase){
+  if(tipoBase==='mov') return {nombre:'Movilidad', corto:'MOV', color:'am'};
+  if(tipoBase==='rest') return {nombre:'Descanso', corto:'DES', color:'mu'};
+  // Días de gym: rotan según posición en la semana del plan
+  // Patrón: Lunes/Jueves = tren inferior, Martes = espalda, Viernes = pecho/hombros
+  const gymDays = PLAN.map((p,i)=>({idx:i+1, t:p.t})).filter(x=>x.t==='gym').map(x=>x.idx);
+  const posicion = gymDays.indexOf(numDia);
+  const rutinas = [
+    {nombre:'Glúteos y cuádriceps', corto:'PIERNA'},
+    {nombre:'Espalda y bíceps',      corto:'ESPALDA'},
+    {nombre:'Isquios y glúteos',     corto:'PIERNA'},
+    {nombre:'Pecho, hombros, tríceps', corto:'TORSO'},
+  ];
+  const r = rutinas[posicion % rutinas.length];
+  return {nombre:r.nombre, corto:r.corto, color:'v'};
+}
+
 function buildCal(){
   try{
   const ct=document.getElementById('cal-container');ct.innerHTML='';
-  const t=getT(curMonth),f=t.f.map(x=>x.n),v=t.v;
-  const wks=[{s:1,e:7,n:`Semana 1 — Días 1–7 · Q1 · ${MN[curMonth]}`},{s:8,e:15,n:'Semana 2 — Días 8–15 · Q1'},{s:16,e:22,n:'Semana 3 — Días 16–22 · Q2'},{s:23,e:30,n:'Semana 4 — Días 23–30 · Q2'}];
-  wks.forEach((wk,wi)=>{
-    const tt=document.createElement('div');tt.className='wkt';tt.textContent=wk.n;ct.appendChild(tt);
+  const t=getT(curMonth);
+
+  // ── Calendario real del mes ──────────────────────────────────
+  const anio = new Date().getFullYear();
+  const primerDia = new Date(anio, curMonth-1, 1);
+  // getDay(): 0=Dom, 1=Lun... Convertimos a 0=Lun ... 6=Dom
+  let offset = primerDia.getDay() - 1;
+  if(offset < 0) offset = 6;
+  const diasEnMes = new Date(anio, curMonth, 0).getDate();
+  const totalCeldas = offset + diasEnMes;
+  const numSemanas = Math.ceil(totalCeldas / 7);
+
+  // Cabecera del mes
+  const encabezado=document.createElement('div');
+  encabezado.style.cssText='margin-bottom:1.5rem;';
+  encabezado.innerHTML='<div style="font-family:\'DM Serif Display\',serif;font-size:26px;letter-spacing:-.01em;">'+MN[curMonth]+' '+anio+'</div>'+
+    '<div style="font-size:12px;color:var(--mu);margin-top:4px;letter-spacing:.02em;">'+diasEnMes+' días · el plan cubre los primeros 30</div>';
+  ct.appendChild(encabezado);
+
+  for(let sem=0; sem<numSemanas; sem++){
+    // Rango de días de esta semana
+    const primerNum = sem*7 - offset + 1;
+    const ultimoNum = Math.min(primerNum + 6, diasEnMes);
+    const inicioVisible = Math.max(primerNum, 1);
+    if(inicioVisible > diasEnMes) break;
+
+    // Título de la semana
+    const quincena = inicioVisible <= 15 ? 'Q1' : 'Q2';
+    const tt=document.createElement('div');
+    tt.className='wkt';
+    tt.textContent='Semana '+(sem+1)+' — '+inicioVisible+' al '+ultimoNum+' · '+quincena;
+    ct.appendChild(tt);
+
     const g=document.createElement('div');g.className='cal';
     DIAS.forEach(d=>{const h=document.createElement('div');h.className='cal-hd';h.textContent=d;g.appendChild(h);});
-    for(let dn=wk.s;dn<=wk.e;dn++){
-      const p=PLAN[dn-1];
+
+    for(let col=0; col<7; col++){
+      const numDia = sem*7 + col - offset + 1;
+
+      // Celda vacía antes del día 1 o después del último día
+      if(numDia < 1 || numDia > diasEnMes){
+        const vacia=document.createElement('div');
+        vacia.className='cal-day cal-day-vacia';
+        g.appendChild(vacia);
+        continue;
+      }
+
+      // Días 31 (sin plan asignado)
+      if(numDia > 30){
+        const extra=document.createElement('div');
+        extra.className='cal-day cal-day-extra';
+        extra.innerHTML='<div class="dnum" style="opacity:.35">'+numDia+'</div>'+
+          '<div style="font-size:9px;color:var(--mu);margin-top:8px;line-height:1.5;">Día libre<br>Repite el que prefieras</div>';
+        g.appendChild(extra);
+        continue;
+      }
+
+      const p=PLAN[numDia-1];
+      const entreno=tipoEntreno(numDia, p.t);
       const dc=document.createElement('div');
-      dc.className=`cal-day ${p.q===1?'q1':'q2'} ${p.t==='gym'?'gym':p.t==='mov'?'mov':'rest'}`;
-      // Resolver frutas/verduras específicas del día
+      dc.className='cal-day '+(p.q===1?'q1':'q2')+' '+(p.t==='gym'?'gym':p.t==='mov'?'mov':'rest');
+
       const fi=p.fi||[0,1,2,3,null];
       const vi=p.vi||[0,1];
       const fd=resolveFruta(fi[0],t.f);
@@ -2524,19 +2572,22 @@ function buildCal(){
       const fc=resolveFruta(fi[4],t.f);
       const va=resolveVerdura(vi[0],t.v);
       const vc=resolveVerdura(vi[1],t.v);
-      const dni=dn-1;
-      dc.innerHTML=`<div class="dnum">${dn===30?'30 🎯':dn}</div>
-        <span class="chip chip-d"  onclick="openRDay(${dni},'d',event)">${rShort(p.d,fd,va)}</span>
-        <span class="chip chip-m"  onclick="openRDay(${dni},'m1',event)">${rShort(p.m1,fm1,va)}</span>
-        <span class="chip chip-a"  onclick="openRDay(${dni},'a',event)">${rShort(p.a,fa,va)}</span>
-        <span class="chip chip-m2" onclick="openRDay(${dni},'m2',event)">${rShort(p.m2,fm2,va)}</span>
-        <span class="chip chip-c"  onclick="openRDay(${dni},'c',event)">${rShort(p.c,fc,vc)}</span>
-        <div class="dico ${p.t==='gym'?'ico-g':p.t==='mov'?'ico-m':'ico-r'}">${p.t==='gym'?'G':p.t==='mov'?'M':'D'}</div>`;
+      const dni=numDia-1;
+
+      dc.innerHTML='<div class="cal-day-top">'+
+          '<span class="dnum">'+numDia+'</span>'+
+          '<span class="entreno-tag entreno-'+entreno.color+'" title="'+entreno.nombre+'">'+entreno.corto+'</span>'+
+        '</div>'+
+        '<span class="chip chip-d"  onclick="openRDay('+dni+',\'d\',event)">'+rShort(p.d,fd,va)+'</span>'+
+        '<span class="chip chip-m"  onclick="openRDay('+dni+',\'m1\',event)">'+rShort(p.m1,fm1,va)+'</span>'+
+        '<span class="chip chip-a"  onclick="openRDay('+dni+',\'a\',event)">'+rShort(p.a,fa,va)+'</span>'+
+        '<span class="chip chip-m2" onclick="openRDay('+dni+',\'m2\',event)">'+rShort(p.m2,fm2,va)+'</span>'+
+        '<span class="chip chip-c"  onclick="openRDay('+dni+',\'c\',event)">'+rShort(p.c,fc,vc)+'</span>';
       g.appendChild(dc);
     }
     ct.appendChild(g);
-    if(wi<3){const d=document.createElement('div');d.className='wkd';ct.appendChild(d);}
-  });
+    if(sem < numSemanas-1){const d=document.createElement('div');d.className='wkd';ct.appendChild(d);}
+  }
   }catch(e){console.error("buildCal error:",e);}
 }
 function openRWithIngredients(k, fruta, verdura){
