@@ -563,14 +563,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .toast.show{opacity:1;}
 </style>
 <link rel="manifest" id="pwa-manifest">
-<meta name="theme-color" content="#0F6E56">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSIjRjVGMkVDIi8+CjxjaXJjbGUgY3g9IjI1Ni4wIiBjeT0iMjU2LjAiIHI9IjEzMy4xMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUMxQTE3IiBzdHJva2Utd2lkdGg9IjE2LjM4NCIvPgo8cGF0aCBkPSJNIDI1Ni4wIDEyMi44OCBBIDEzMy4xMiAxMzMuMTIgMCAwIDEgMjU2LjAgMzg5LjEyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxQzFBMTciIHN0cm9rZS13aWR0aD0iMTYuMzg0Ii8+CjxwYXRoIGQ9Ik0gMjU2LjAgMTIyLjg4IEEgODIuNTM0NCAxMzMuMTIgMCAwIDAgMjU2LjAgMzg5LjEyIFoiIGZpbGw9IiMxQzFBMTciLz4KPC9zdmc+">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMTkyIDE5MiI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjVGMkVDIi8+CjxjaXJjbGUgY3g9Ijk2LjAiIGN5PSI5Ni4wIiByPSI0OS45MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUMxQTE3IiBzdHJva2Utd2lkdGg9IjYuMTQ0Ii8+CjxwYXRoIGQ9Ik0gOTYuMCA0Ni4wOCBBIDQ5LjkyIDQ5LjkyIDAgMCAxIDk2LjAgMTQ1LjkyMDAwMDAwMDAwMDAyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxQzFBMTciIHN0cm9rZS13aWR0aD0iNi4xNDQiLz4KPHBhdGggZD0iTSA5Ni4wIDQ2LjA4IEEgMzAuOTUwNDAwMDAwMDAwMDAyIDQ5LjkyIDAgMCAwIDk2LjAgMTQ1LjkyMDAwMDAwMDAwMDAyIFoiIGZpbGw9IiMxQzFBMTciLz4KPC9zdmc+">
+<meta name="theme-color" content="#F5F2EC">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Mi Plan Fitness">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mi Plan">
 <script>
 // Inyectar manifest dinámicamente (para funcionar como archivo local y hosted)
-const manifest={name:'Mi Plan Fitness',short_name:'Mi Plan',start_url:'.',display:'standalone',background_color:'#FAFAF8',theme_color:'#0F6E56',description:'Plan de nutrición y fitness personalizado',icons:[{src:'https://img.icons8.com/color/192/salad.png',sizes:'192x192',type:'image/png'},{src:'https://img.icons8.com/color/512/salad.png',sizes:'512x512',type:'image/png'}]};
+const icon192='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMTkyIDE5MiI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjRjVGMkVDIi8+CjxjaXJjbGUgY3g9Ijk2LjAiIGN5PSI5Ni4wIiByPSI0OS45MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUMxQTE3IiBzdHJva2Utd2lkdGg9IjYuMTQ0Ii8+CjxwYXRoIGQ9Ik0gOTYuMCA0Ni4wOCBBIDQ5LjkyIDQ5LjkyIDAgMCAxIDk2LjAgMTQ1LjkyMDAwMDAwMDAwMDAyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxQzFBMTciIHN0cm9rZS13aWR0aD0iNi4xNDQiLz4KPHBhdGggZD0iTSA5Ni4wIDQ2LjA4IEEgMzAuOTUwNDAwMDAwMDAwMDAyIDQ5LjkyIDAgMCAwIDk2LjAgMTQ1LjkyMDAwMDAwMDAwMDAyIFoiIGZpbGw9IiMxQzFBMTciLz4KPC9zdmc+';
+const icon512='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSIjRjVGMkVDIi8+CjxjaXJjbGUgY3g9IjI1Ni4wIiBjeT0iMjU2LjAiIHI9IjEzMy4xMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMUMxQTE3IiBzdHJva2Utd2lkdGg9IjE2LjM4NCIvPgo8cGF0aCBkPSJNIDI1Ni4wIDEyMi44OCBBIDEzMy4xMiAxMzMuMTIgMCAwIDEgMjU2LjAgMzg5LjEyIiBmaWxsPSJub25lIiBzdHJva2U9IiMxQzFBMTciIHN0cm9rZS13aWR0aD0iMTYuMzg0Ii8+CjxwYXRoIGQ9Ik0gMjU2LjAgMTIyLjg4IEEgODIuNTM0NCAxMzMuMTIgMCAwIDAgMjU2LjAgMzg5LjEyIFoiIGZpbGw9IiMxQzFBMTciLz4KPC9zdmc+';
+const manifest={name:'Mi Plan',short_name:'Mi Plan',start_url:'.',display:'standalone',background_color:'#F5F2EC',theme_color:'#F5F2EC',description:'Plan de nutrición y fitness',icons:[{src:icon192,sizes:'192x192',type:'image/svg+xml',purpose:'any'},{src:icon512,sizes:'512x512',type:'image/svg+xml',purpose:'any'}]};
 const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
 document.getElementById('pwa-manifest').href=URL.createObjectURL(blob);
 // Service Worker básico para offline
