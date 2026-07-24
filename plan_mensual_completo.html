@@ -92,6 +92,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .entreno-v{background:var(--vl);color:var(--vd);}
 .entreno-am{background:var(--al);color:var(--am);}
 .entreno-mu{background:rgba(28,26,23,.05);color:var(--mu);}
+.entreno-hora{font-size:8.5px;color:var(--mu);letter-spacing:.04em;margin-bottom:6px;margin-top:-4px;}
 /* Celdas vacías y extra */
 .cal-day-vacia{background:transparent;border:none;min-height:auto;}
 .cal-day-extra{background:transparent;border:1px dashed var(--br);}
@@ -622,13 +623,14 @@ if('serviceWorker' in navigator){
 
 <div class="sec active" id="sec-cronograma">
   <h2 class="stitle">Cronograma mensual</h2>
-  <p class="ssub" id="cron-sub">Días reales del mes. Cada día muestra su entrenamiento y sus 5 comidas — toca cualquiera para ver la receta.</p>
+  <p class="ssub" id="cron-sub">Días reales del mes con tu entrenamiento fijo por día de semana. Toca cualquier comida para ver la receta completa.</p>
   <div class="legend">
-    <div class="li"><span class="entreno-tag entreno-v">PIERNA</span>Glúteos, cuádriceps, isquios</div>
-    <div class="li"><span class="entreno-tag entreno-v">ESPALDA</span>Espalda y bíceps</div>
-    <div class="li"><span class="entreno-tag entreno-v">TORSO</span>Pecho, hombros, tríceps</div>
-    <div class="li"><span class="entreno-tag entreno-am">MOV</span>Movilidad</div>
-    <div class="li"><span class="entreno-tag entreno-mu">DES</span>Descanso</div>
+    <div class="li"><span class="entreno-tag entreno-v">B · PIERNA</span>Lunes · glúteos</div>
+    <div class="li"><span class="entreno-tag entreno-v">A · EMPUJE</span>Martes · pecho y hombro</div>
+    <div class="li"><span class="entreno-tag entreno-v">D · PIERNA</span>Jueves · cuádriceps</div>
+    <div class="li"><span class="entreno-tag entreno-v">C · TRACCIÓN</span>Viernes · espalda</div>
+    <div class="li"><span class="entreno-tag entreno-am">ACTIVO</span>Sábado</div>
+    <div class="li"><span class="entreno-tag entreno-mu">DESCANSO</span>Miércoles y domingo</div>
   </div>
   <div id="cal-container"></div>
 </div>
@@ -641,7 +643,7 @@ if('serviceWorker' in navigator){
 
 <div class="sec" id="sec-ejercicio">
   <h2 class="stitle">Plan de ejercicio mensual</h2>
-  <p class="ssub">4 semanas de progresión. Semanas 1–2: técnica. Semanas 3–4: volumen y carga.</p>
+  <p class="ssub">Cuatro días fijos: B y D de piernas, A de empuje, C de tracción. Toca cada ejercicio para ver la técnica completa, errores comunes y puntos de seguridad.</p>
   <div id="ejercicio-container"></div>
 </div>
 
@@ -2479,55 +2481,53 @@ const PLAN=[
 ];
 const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 
-// Etiqueta de entrenamiento por día del plan (1-30)
-// Basado en RUTINAS: gym=fuerza rotando, mov=movilidad, rest=descanso
-function tipoEntreno(numDia, tipoBase){
-  if(tipoBase==='mov') return {nombre:'Movilidad', corto:'MOV', color:'am'};
-  if(tipoBase==='rest') return {nombre:'Descanso', corto:'DES', color:'mu'};
-  // Días de gym: rotan según posición en la semana del plan
-  // Patrón: Lunes/Jueves = tren inferior, Martes = espalda, Viernes = pecho/hombros
-  const gymDays = PLAN.map((p,i)=>({idx:i+1, t:p.t})).filter(x=>x.t==='gym').map(x=>x.idx);
-  const posicion = gymDays.indexOf(numDia);
-  const rutinas = [
-    {nombre:'Glúteos y cuádriceps', corto:'PIERNA'},
-    {nombre:'Espalda y bíceps',      corto:'ESPALDA'},
-    {nombre:'Isquios y glúteos',     corto:'PIERNA'},
-    {nombre:'Pecho, hombros, tríceps', corto:'TORSO'},
-  ];
-  const r = rutinas[posicion % rutinas.length];
-  return {nombre:r.nombre, corto:r.corto, color:'v'};
+// ══════════════════════════════════════════════════════════════
+// ESTRUCTURA REAL DE ENTRENAMIENTO — días fijos de la semana
+// Lun: B Piernas · Mar: A Empuje · Mié: descanso
+// Jue: D Piernas · Vie: C Tracción · Sáb/Dom: descanso
+// ══════════════════════════════════════════════════════════════
+const ENTRENO_SEMANA = {
+  1: {id:'B', nombre:'Piernas · Glúteos',   corto:'B · PIERNA',  hora:'1:00–2:45 PM',  color:'v',  int:4},
+  2: {id:'A', nombre:'Empuje · Pecho, hombro, tríceps', corto:'A · EMPUJE', hora:'12:30–2:15 PM', color:'v', int:3},
+  3: {id:null, nombre:'Descanso · Yoga restaurativo', corto:'DESCANSO', hora:'', color:'mu', int:0},
+  4: {id:'D', nombre:'Piernas · Cuádriceps', corto:'D · PIERNA',  hora:'9:00–10:45 AM', color:'v',  int:5},
+  5: {id:'C', nombre:'Tracción · Espalda, bíceps', corto:'C · TRACCIÓN', hora:'3:00–4:45 PM', color:'v', int:3},
+  6: {id:null, nombre:'Descanso activo · Caminata', corto:'ACTIVO', hora:'', color:'am', int:1},
+  0: {id:null, nombre:'Descanso total', corto:'DESCANSO', hora:'', color:'mu', int:0},
+};
+
+// Devuelve el entrenamiento según el día real de la semana
+function entrenoDelDia(anio, mes, numDia){
+  const fecha = new Date(anio, mes-1, numDia);
+  const dow = fecha.getDay(); // 0=Dom, 1=Lun...
+  return ENTRENO_SEMANA[dow];
 }
 
 function buildCal(){
   try{
   const ct=document.getElementById('cal-container');ct.innerHTML='';
   const t=getT(curMonth);
-
-  // ── Calendario real del mes ──────────────────────────────────
   const anio = new Date().getFullYear();
   const primerDia = new Date(anio, curMonth-1, 1);
-  // getDay(): 0=Dom, 1=Lun... Convertimos a 0=Lun ... 6=Dom
   let offset = primerDia.getDay() - 1;
   if(offset < 0) offset = 6;
   const diasEnMes = new Date(anio, curMonth, 0).getDate();
   const totalCeldas = offset + diasEnMes;
   const numSemanas = Math.ceil(totalCeldas / 7);
 
-  // Cabecera del mes
+  // Encabezado del mes
   const encabezado=document.createElement('div');
   encabezado.style.cssText='margin-bottom:1.5rem;';
   encabezado.innerHTML='<div style="font-family:\'DM Serif Display\',serif;font-size:26px;letter-spacing:-.01em;">'+MN[curMonth]+' '+anio+'</div>'+
-    '<div style="font-size:12px;color:var(--mu);margin-top:4px;letter-spacing:.02em;">'+diasEnMes+' días · el plan cubre los primeros 30</div>';
+    '<div style="font-size:12px;color:var(--mu);margin-top:4px;letter-spacing:.02em;">'+diasEnMes+' días · entrenamiento fijo por día de semana</div>';
   ct.appendChild(encabezado);
 
   for(let sem=0; sem<numSemanas; sem++){
-    // Rango de días de esta semana
     const primerNum = sem*7 - offset + 1;
     const ultimoNum = Math.min(primerNum + 6, diasEnMes);
     const inicioVisible = Math.max(primerNum, 1);
     if(inicioVisible > diasEnMes) break;
 
-    // Título de la semana
     const quincena = inicioVisible <= 15 ? 'Q1' : 'Q2';
     const tt=document.createElement('div');
     tt.className='wkt';
@@ -2540,7 +2540,6 @@ function buildCal(){
     for(let col=0; col<7; col++){
       const numDia = sem*7 + col - offset + 1;
 
-      // Celda vacía antes del día 1 o después del último día
       if(numDia < 1 || numDia > diasEnMes){
         const vacia=document.createElement('div');
         vacia.className='cal-day cal-day-vacia';
@@ -2548,20 +2547,23 @@ function buildCal(){
         continue;
       }
 
-      // Días 31 (sin plan asignado)
+      const entreno = entrenoDelDia(anio, curMonth, numDia);
+
+      // Días más allá del 30 (plan cubre 30)
       if(numDia > 30){
         const extra=document.createElement('div');
         extra.className='cal-day cal-day-extra';
-        extra.innerHTML='<div class="dnum" style="opacity:.35">'+numDia+'</div>'+
-          '<div style="font-size:9px;color:var(--mu);margin-top:8px;line-height:1.5;">Día libre<br>Repite el que prefieras</div>';
+        extra.innerHTML='<div class="cal-day-top"><span class="dnum" style="opacity:.4">'+numDia+'</span>'+
+          '<span class="entreno-tag entreno-'+entreno.color+'">'+entreno.corto+'</span></div>'+
+          '<div style="font-size:9px;color:var(--mu);margin-top:8px;line-height:1.5;">Repite el menú<br>que prefieras</div>';
         g.appendChild(extra);
         continue;
       }
 
       const p=PLAN[numDia-1];
-      const entreno=tipoEntreno(numDia, p.t);
       const dc=document.createElement('div');
-      dc.className='cal-day '+(p.q===1?'q1':'q2')+' '+(p.t==='gym'?'gym':p.t==='mov'?'mov':'rest');
+      const clsEntreno = entreno.id ? 'gym' : (entreno.corto==='ACTIVO' ? 'mov' : 'rest');
+      dc.className='cal-day '+(numDia<=15?'q1':'q2')+' '+clsEntreno;
 
       const fi=p.fi||[0,1,2,3,null];
       const vi=p.vi||[0,1];
@@ -2574,10 +2576,12 @@ function buildCal(){
       const vc=resolveVerdura(vi[1],t.v);
       const dni=numDia-1;
 
+      const horaTxt = entreno.hora ? '<div class="entreno-hora">'+entreno.hora+'</div>' : '';
+
       dc.innerHTML='<div class="cal-day-top">'+
           '<span class="dnum">'+numDia+'</span>'+
           '<span class="entreno-tag entreno-'+entreno.color+'" title="'+entreno.nombre+'">'+entreno.corto+'</span>'+
-        '</div>'+
+        '</div>'+ horaTxt +
         '<span class="chip chip-d"  onclick="openRDay('+dni+',\'d\',event)">'+rShort(p.d,fd,va)+'</span>'+
         '<span class="chip chip-m"  onclick="openRDay('+dni+',\'m1\',event)">'+rShort(p.m1,fm1,va)+'</span>'+
         '<span class="chip chip-a"  onclick="openRDay('+dni+',\'a\',event)">'+rShort(p.a,fa,va)+'</span>'+
@@ -2678,100 +2682,140 @@ function buildRecetas(){
 // tarea: {nombre, desc, sets, tiempo, nivel, guia:[pasos]}
 const RUTINAS=[
   {
-    semana:'Semanas 1–2',
-    sub:'Técnica y base — aprende los movimientos con buena forma. El peso es secundario.',
+    semana:'Tu semana de entrenamiento',
+    sub:'Cuatro días fijos. Dos de piernas con énfasis en glúteo, uno de empuje y uno de tracción. Las primeras 2–3 semanas prioriza técnica sobre peso.',
     bloques:[
       {
-        id:'b1', emoji:'🦵', titulo:'Bloque 1 · Tren inferior', subtitulo:'Glúteos y cuádriceps — Lunes y Jueves',
-        rango:'0:00–1:00', tipo:'Fuerza',
+        id:'diaB', emoji:'🦵', titulo:'Lunes · B — Piernas', subtitulo:'Énfasis en glúteos · 1:00–2:45 PM',
+        rango:'40–50 min', tipo:'Alta',
+        nota:'Tu día clave. Descansa 90–120 seg en leg press y hip thrust en lugar de un minuto: rendirás más y podrás progresar en peso.',
         tareas:[
-          {id:'t1a',nombre:'Sentadilla con mancuernas',desc:'Pies al ancho de hombros, espalda recta, baja hasta 90°',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Coloca las mancuernas a los lados del cuerpo.','Pies al ancho de hombros o un poco más.','Baja controlado en 3 seg — rodillas sobre los pies.','Empuja desde los talones para subir.','Mantén el pecho arriba durante todo el movimiento.']},
-          {id:'t1b',nombre:'Hip thrust con barra',desc:'Apoya la espalda alta en el banco, barra sobre caderas',sets:'4×12',tiempo:'12 min',nivel:'Medio',guia:['Siéntate en el suelo apoyando la espalda alta en el banco.','Barra sobre la cadera — usa esponja para proteger.','Empuja desde los talones y contrae glúteo arriba.','En la parte alta, cadera paralela al suelo 1 seg.','Baja controlado sin tocar el suelo entre reps.']},
-          {id:'t1c',nombre:'Prensa de pierna',desc:'Planta completa del pie en la plataforma',sets:'3×12',tiempo:'10 min',nivel:'Fácil',guia:['Siéntate con la espalda pegada al respaldo.','Pies al ancho de hombros en la plataforma.','Baja hasta que las rodillas lleguen a 90°.','Empuja sin llegar a bloquear las rodillas al extender.']},
-          {id:'t1d',nombre:'Extensión de cuádriceps',desc:'Movimiento de aislamiento — contrae arriba 1 segundo',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Ajusta el acolchado para que quede sobre los tobillos.','Extiende completamente y contrae el cuádriceps 1 seg.','Baja en 2 seg de forma controlada.']},
-          {id:'t1e',nombre:'Gemelos de pie',desc:'Rango completo — sube hasta la punta, baja al talón',sets:'3×20',tiempo:'6 min',nivel:'Fácil',guia:['Párate con la punta del pie al borde de un escalón.','Sube lo más alto que puedas, contrae 1 seg.','Baja hasta que el talón quede por debajo del escalón.']},
-          {id:'t1f',nombre:'Caminata inclinada 10%',desc:'Cardio de baja intensidad post-entrenamiento',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Ajusta la cinta a 10% de inclinación.','Velocidad de caminata cómoda (5–6 km/h).','Mantén la postura erguida — no te apoyes en las barras.','Este cardio quema grasa sin afectar la recuperación muscular.']},
+          {id:'b00',nombre:'Cardio — Caminadora',desc:'10 min · calentamiento con inclinación ligera',sets:'10 min',tiempo:'10 min',nivel:'Fácil',
+           guia:['Ritmo activo con postura erguida, sin colgarte de las barras.','Inclinación de 2–4% activa el glúteo desde el inicio.','No lo saltes en día de piernas: es cuando más importa calentar rodillas y cadera.']},
+          {id:'b01',nombre:'Leg Press',desc:'Cuádriceps y glúteo · espalda apoyada, muy seguro',sets:'3 × 12–15',tiempo:'8 min',nivel:'Difícil',
+           guia:['Ajuste: respaldo a distancia que deje rodillas cerca de 90° sin que la cadera se enrolle.','Pies al ancho de caderas. Más altos y anchos = más glúteo.','Bajada: inhala 2–3 seg hasta 90° o un poco más.','Subida: exhala y empuja por los talones sin bloquear rodillas.','Error crítico: bajar tanto que la cadera se enrolla y la lumbar se despega.','Detente si sientes la espalda baja.']},
+          {id:'b02',nombre:'Hip Thrust — Elevación de cadera',desc:'El ejercicio más efectivo para glúteo',sets:'3 × 12–15',tiempo:'8 min',nivel:'Difícil',
+           guia:['Almohadilla sobre el hueso de la cadera, nunca sobre el abdomen.','Espalda alta apoyada en el borde del banco o respaldo.','Talones bajo las rodillas: al subir, las espinillas quedan verticales.','Barbilla metida y mirada al frente, nunca hacia atrás.','Sube hasta que torso y muslos formen línea recta, apretando fuerte arriba.','Pausa de 1–2 seg en el punto alto: marca una diferencia enorme.','Error común: hiperextender la lumbar en vez de apretar el glúteo.']},
+          {id:'b03',nombre:'Glúteo en Máquina',desc:'Patada de glúteo · aislamiento directo',sets:'3 × 12–15',tiempo:'7 min',nivel:'Medio',
+           guia:['Pecho cómodo sobre la almohadilla, cadera alineada al eje.','Empuja la plataforma atrás extendiendo la cadera, no arqueando la espalda.','Exhala y aprieta el glúteo medio segundo al extender.','Piensa en que el talón empuja la pared de atrás.','Detente si sientes la lumbar en vez del glúteo.']},
+          {id:'b04',nombre:'Femoral Acostado',desc:'Isquiotibiales · protege la rodilla',sets:'3 × 12–15',tiempo:'7 min',nivel:'Medio',
+           guia:['Rodillo justo sobre el talón, no encima del tendón de Aquiles.','Alinea tus rodillas con el pivote de la máquina.','La pelvis debe quedar pegada al banco en todo momento.','Flexiona llevando los talones hacia los glúteos.','Si la cadera se levanta, baja el peso.']},
+          {id:'b05',nombre:'Abductor — Abducción de cadera',desc:'Glúteo medio · forma redonda y estabilidad',sets:'3 × 12–15',tiempo:'7 min',nivel:'Fácil',
+           guia:['Almohadillas contra la parte externa de rodillas y muslos.','Inclinarte hacia adelante enfatiza glúteo mayor; recta enfatiza el medio.','Abre controlada hasta tu rango cómodo, pausa y aprieta.','Cierra lento resistiendo, sin dejar que las placas golpeen.']},
         ]
       },
       {
-        id:'b2', emoji:'💪', titulo:'Bloque 2 · Tren superior', subtitulo:'Espalda y bíceps — Martes',
-        rango:'0:00–0:55', tipo:'Fuerza',
+        id:'diaA', emoji:'💪', titulo:'Martes · A — Empuje', subtitulo:'Pecho, hombro, tríceps y abdomen · 12:30–2:15 PM',
+        rango:'50–60 min', tipo:'Moderada',
+        nota:'Si eliminas el tríceps duplicado, este día baja a 50–60 min. Usa cargas ligeras las primeras semanas y deja 3–4 repeticiones en reserva.',
         tareas:[
-          {id:'t2a',nombre:'Jalón al pecho con polea',desc:'Agarre amplio, codos hacia abajo y atrás',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Agarre un poco más ancho que los hombros.','Inclínate levemente hacia atrás — 15°.','Lleva la barra al pecho superior, codos van hacia atrás.','Controla la subida en 2 seg — no sueltes.']},
-          {id:'t2b',nombre:'Remo con mancuerna',desc:'Espalda plana, codo a 45° del cuerpo',sets:'3×12 c/lado',tiempo:'10 min',nivel:'Fácil',guia:['Apoya la rodilla y la mano del mismo lado en el banco.','La mancuerna cuelga del brazo extendido.','Sube el codo hacia el techo — no rotar el torso.','Baja controlado sintiendo el estiramiento de la espalda.']},
-          {id:'t2c',nombre:'Face pull en polea',desc:'Cuerda a nivel de cara, codos a 90°',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Coloca la cuerda al nivel de tu cara.','Tira hacia tu cara separando los extremos de la cuerda.','Codos a la altura de los hombros durante el movimiento.','Contrae los músculos de la espalda alta 1 seg.']},
-          {id:'t2d',nombre:'Curl de bíceps con mancuerna',desc:'Codos pegados al cuerpo, giro de muñeca al subir',sets:'3×12',tiempo:'8 min',nivel:'Fácil',guia:['De pie o sentada, codos pegados al torso.','Sube girando la palma hacia arriba al llegar arriba.','Contrae el bíceps 1 seg y baja en 2 seg.']},
-          {id:'t2e',nombre:'Plancha abdominal',desc:'Cuerpo recto de cabeza a talones, respira',sets:'3×30 seg',tiempo:'6 min',nivel:'Fácil',guia:['Apóyate en antebrazos y puntas de los pies.','Cuerpo completamente recto — sin hundir ni elevar la cadera.','Activa el core como si fueras a recibir un golpe.','Respira de forma controlada durante los 30 seg.']},
-          {id:'t2f',nombre:'Bicicleta estática moderada',desc:'Resistencia media, cadencia constante',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Ajusta el asiento a la altura de la cadera.','Resistencia a nivel 5–7 de 20.','Cadencia de 70–80 RPM constante.']},
+          {id:'a00',nombre:'Cardio — Caminadora',desc:'10 min · calentamiento general',sets:'10 min',tiempo:'10 min',nivel:'Fácil',
+           guia:['Ritmo cómodo pero activo: deberías poder hablar con esfuerzo ligero.','Postura erguida, sin apoyarte en las barras laterales.','Diez minutos bastan como calentamiento.']},
+          {id:'a01',nombre:'Chest Press',desc:'Pectoral mayor · empuje horizontal seguro',sets:'4 × 8–10',tiempo:'9 min',nivel:'Medio',
+           guia:['Asiento: los agarres deben quedar a la altura de la mitad del pecho, no de los hombros.','Hombros abajo y atrás, como guardándolos en los bolsillos traseros.','Empuja sin bloquear los codos del todo. Regresa lento hasta la línea del torso.','Ritmo: 1–2 seg al empujar, 2–3 al regresar. El control en la vuelta es donde más crece el músculo.','Imagina que juntas los codos hacia el centro, no que mueves las manos.','Si lo sientes solo en tríceps u hombros, baja el asiento.']},
+          {id:'a02',nombre:'Press de Hombro',desc:'Deltoides frontal y medio · mancuernas',sets:'4 × 12–15',tiempo:'9 min',nivel:'Medio',
+           guia:['Empieza con 2–4 kg por mano: el hombro es una articulación delicada.','Cadera neutra con glúteo y abdomen activos.','Sube en diagonal hasta casi juntar las mancuernas, sin bloquear codos.','Baja lento hasta la altura de las orejas.','Error más riesgoso: arquear la espalda baja. Si te cuesta, hazlo sentada con respaldo.']},
+          {id:'a03',nombre:'Elevaciones Laterales',desc:'Deltoides medio · amplitud del torso',sets:'4 × 8–10',tiempo:'9 min',nivel:'Fácil',
+           guia:['Peso ligero: 1.5–4 kg basta.','Codo en ligera flexión fija. Lidera el movimiento con el codo, no con la mano.','Sube solo hasta la altura de los hombros formando una T. No más arriba.','Imagina que vacías una botella de agua al subir.','Si los hombros se te suben hacia las orejas, el peso es demasiado.']},
+          {id:'a04',nombre:'Tríceps Press Agarre Cerrado',desc:'Tríceps · 4 series en lugar de 2 ejercicios',sets:'4 × 15–20',tiempo:'8 min',nivel:'Fácil',
+           guia:['Este ejercicio aparecía duplicado en tu rutina original: quédate con uno solo haciendo 4 series.','Codos pegados al costado del cuerpo durante todo el recorrido: esto es clave.','Extiende casi del todo sin bloquear con golpe.','Error común: abrir los codos hacia los lados pasa el trabajo al pecho.','Aprieta el tríceps medio segundo al final de cada extensión.']},
+          {id:'a05',nombre:'Abdomen en Máquina',desc:'Recto abdominal · flexión de columna',sets:'3 × 8–10',tiempo:'6 min',nivel:'Fácil',
+           guia:['El apoyo del pecho debe quedar sobre la parte alta del pecho o los hombros.','Flexiona enrollando la columna, acercando costillas a la cadera.','El movimiento es de la columna, no de la cadera.','Exhala con fuerza al contraer: sin exhalar se reduce mucho la contracción.','Si sientes la lumbar en vez del abdomen, detente.']},
+          {id:'a06',nombre:'Abdominal con Flexión de Cadera',desc:'Abdomen inferior',sets:'3 × 12–15',tiempo:'6 min',nivel:'Fácil',
+           guia:['Zona lumbar pegada al suelo: esto es lo más importante.','Lleva las rodillas al pecho enrollando ligeramente la pelvis.','Baja lento sin tocar el suelo, manteniendo la tensión.','Si te molesta la lumbar, reduce el rango.']},
         ]
       },
       {
-        id:'b3', emoji:'🧘', titulo:'Bloque 3 · Movilidad', subtitulo:'Descanso activo — Miércoles',
-        rango:'0:00–0:50', tipo:'Movilidad',
+        id:'diaMie', emoji:'🧘', titulo:'Miércoles · Descanso', subtitulo:'Yoga restaurativo · 15–20 min',
+        rango:'15–20 min', tipo:'Movilidad',
+        nota:'El objetivo no es esfuerzo sino bajar el sistema nervioso, que es cuando ocurre la recuperación real.',
         tareas:[
-          {id:'t3a',nombre:'Yoga cadera y espalda baja',desc:'Busca un video de 20 min en YouTube — "yoga cadera principiante"',sets:'1 sesión',tiempo:'20 min',nivel:'Fácil',guia:['Busca: "yoga cadera 20 minutos principiante" en YouTube.','Paloma, mariposa y torsión espinal son las poses clave.','Respira profundo en cada postura — mínimo 5 respiraciones.']},
-          {id:'t3b',nombre:'Stretching cadena posterior',desc:'Isquiotibiales, lumbares y glúteos',sets:'1 sesión',tiempo:'10 min',nivel:'Fácil',guia:['Flexión hacia adelante de pie — rodillas suaves 30 seg.','Estiramiento de isquiotibial sentada 30 seg c/pierna.','Postura del niño 30 seg para lumbar.','Paloma en el suelo 30 seg c/pierna.']},
-          {id:'t3c',nombre:'Foam roller — glúteos y espalda',desc:'Rueda lento buscando puntos de tensión',sets:'10 min',tiempo:'10 min',nivel:'Fácil',guia:['Glúteos: siéntate sobre el rodillo y rueda lento.','Cuando encuentres un punto tenso, para 20–30 seg.','Espalda alta: rodillo perpendicular, abre los brazos.','No rodar la zona lumbar — solo espalda alta.']},
-          {id:'t3d',nombre:'Caminata ligera',desc:'Al aire libre si es posible',sets:'20 min',tiempo:'20 min',nivel:'Fácil',guia:['Ritmo suave — no es cardio, es recuperación.','Aprovecha para escuchar algo que disfrutes.','Si puedes, descalza en pasto o tierra.']},
+          {id:'m01',nombre:'Respiración diafragmática',desc:'Una mano en el pecho, otra en el abdomen',sets:'2 min',tiempo:'2 min',nivel:'Fácil',
+           guia:['Tumbada, inhala 4 tiempos y exhala 6.','Solo debe moverse la mano del abdomen.','Esto activa el sistema parasimpático — el modo recuperación.']},
+          {id:'m02',nombre:'Gato y vaca lento',desc:'Sincroniza con la respiración',sets:'10 ciclos',tiempo:'2 min',nivel:'Fácil',
+           guia:['A cuatro apoyos, alterna encorvar y arquear la columna.','Sin prisa: el ritmo lo marca la respiración, no el movimiento.']},
+          {id:'m03',nombre:'Paloma con apoyo',desc:'La mejor postura para tu cadera',sets:'90 seg × lado',tiempo:'3 min',nivel:'Medio',
+           guia:['Una pierna doblada al frente, la otra extendida atrás.','Usa un cojín bajo el glúteo para no forzar.','Respira profundo, deja que la cadera ceda sola.']},
+          {id:'m04',nombre:'Guirnalda — sentadilla profunda',desc:'Transfiere directo a tu sentadilla en Smith',sets:'60–90 seg',tiempo:'90 seg',nivel:'Medio',
+           guia:['Sentadilla al fondo con los codos abriendo las rodillas.','Si no llegas, apóyate en algo firme.','Esta postura mejora directamente tu rango en el día D.']},
+          {id:'m05',nombre:'Torsión tumbada',desc:'Descarga la espalda',sets:'90 seg × lado',tiempo:'3 min',nivel:'Fácil',
+           guia:['Boca arriba, deja caer las rodillas a un lado.','Hombros pegados al suelo.','Respira hacia el costado que se estira.']},
+          {id:'m06',nombre:'Piernas en la pared',desc:'Cierre ideal de la sesión',sets:'3–5 min',tiempo:'5 min',nivel:'Fácil',
+           guia:['Tumbada con las piernas apoyadas verticalmente en la pared.','Descansa las piernas y baja pulsaciones.','Excelente después de dos días de piernas.']},
         ]
       },
       {
-        id:'b4', emoji:'🔥', titulo:'Bloque 4 · Pecho y hombros', subtitulo:'Tríceps incluidos — Viernes',
-        rango:'0:00–0:55', tipo:'Fuerza',
+        id:'diaD', emoji:'🔥', titulo:'Jueves · D — Piernas', subtitulo:'Énfasis en cuádriceps · 9:00–10:45 AM',
+        rango:'40–50 min', tipo:'Muy alta',
+        nota:'El día más exigente. La sentadilla en Smith abre la sesión: coloca siempre los topes de seguridad justo por debajo de tu punto más bajo antes de la primera serie.',
         tareas:[
-          {id:'t4a',nombre:'Press de pecho con mancuernas',desc:'Banco plano, codos a 45°, no bloquear codos',sets:'4×10',tiempo:'12 min',nivel:'Fácil',guia:['Acuéstate en el banco, pies apoyados en el suelo.','Mancuernas a la altura del pecho, codos a 45°.','Empuja hacia arriba y adentro — sin bloquear los codos.','Baja controlado hasta sentir el estiramiento del pecho.']},
-          {id:'t4b',nombre:'Elevaciones laterales',desc:'Codos ligeramente flexionados, sube hasta hombro',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['De pie, mancuernas a los lados del cuerpo.','Sube los brazos lateralmente hasta el nivel del hombro.','Codos ligeramente doblados durante todo el movimiento.','Baja en 2 seg — no dejes caer las mancuernas.']},
-          {id:'t4c',nombre:'Fondos en banco (tríceps)',desc:'Cuerpo cerca del banco, codos hacia atrás',sets:'3×12',tiempo:'8 min',nivel:'Medio',guia:['Manos en el borde del banco, dedos hacia adelante.','Baja doblando los codos hasta 90° — codos hacia atrás.','Empuja para subir extendiendo los codos completamente.','Si es muy difícil, dobla las rodillas.']},
-          {id:'t4d',nombre:'Press militar con mancuernas',desc:'Sentada, core activo, no arquear la espalda',sets:'3×10',tiempo:'10 min',nivel:'Medio',guia:['Sentada con la espalda recta, mancuernas a la altura de los hombros.','Empuja hacia arriba sin arquear la espalda lumbar.','Baja controlado hasta los hombros.']},
-          {id:'t4e',nombre:'Cruce en polea (pecho)',desc:'Pecho estirado en la apertura, codos suaves',sets:'3×15',tiempo:'8 min',nivel:'Fácil',guia:['Poleas arriba, agarre neutral.','Inclínate ligeramente hacia adelante.','Cruza los cables frente al pecho — imagina abrazar un árbol.','Siente el estiramiento al abrir controlado.']},
+          {id:'d00',nombre:'Cardio — Caminadora',desc:'10 min · prepara rodillas y cadera',sets:'10 min',tiempo:'10 min',nivel:'Fácil',
+           guia:['Especialmente importante antes del trabajo con barra.','Inclinación ligera para activar el glúteo.','Nunca saltes esto antes de una sentadilla.']},
+          {id:'d01',nombre:'Sentadilla en Smith',desc:'Cuádriceps y glúteo · barra guiada',sets:'3 × 8–10',tiempo:'9 min',nivel:'Difícil',
+           guia:['Topes de seguridad justo por debajo de tu punto más bajo. Siempre, aunque uses poco peso.','La barra descansa sobre el trapecio, nunca sobre el cuello.','Pies ligeramente adelantados respecto a la barra: esto activa más el glúteo.','Baja 2–3 seg hasta que los muslos queden paralelos, llevando la cadera atrás.','Sube empujando por los talones sin bloquear rodillas.','Piensa en sentarte en una silla que está detrás de ti.','Detente si la espalda se redondea o las rodillas se colapsan hacia adentro.']},
+          {id:'d02',nombre:'Hip Thrust — Elevación de cadera',desc:'Segunda vez en la semana: frecuencia correcta',sets:'3 × 8–10',tiempo:'8 min',nivel:'Difícil',
+           guia:['Mismo patrón que el lunes, con menos repeticiones y algo más de peso.','Pausa de 1–2 seg arriba apretando fuerte.','Mete las costillas para no arquear la lumbar.','Entrenar glúteo dos veces por semana es lo ideal para tu objetivo.']},
+          {id:'d03',nombre:'Extensión de Pierna',desc:'Cuádriceps en aislamiento',sets:'3 × 12–15',tiempo:'7 min',nivel:'Medio',
+           guia:['La parte de atrás de la rodilla justo en el borde del asiento, eje alineado con tu rodilla.','Rodillo sobre la parte baja de la espinilla.','Extiende sin bloquear de golpe, apretando el cuádriceps.','Pausa medio segundo arriba.','Si tienes molestias de rodilla, controla el rango y evita el peso excesivo.']},
+          {id:'d04',nombre:'Máquina de Femoral',desc:'Isquiotibiales sentada',sets:'3 × 8–10',tiempo:'7 min',nivel:'Medio',
+           guia:['Rodilla alineada con el eje de la máquina.','Almohadilla del muslo bien ajustada para fijarlos.','Flexiona llevando los talones hacia el asiento.','Vuelve lento sin extender de golpe.']},
+          {id:'d05',nombre:'Aductora — Máquina',desc:'Parte interna del muslo',sets:'3 × 8–10',tiempo:'7 min',nivel:'Fácil',
+           guia:['Misma máquina del abductor pero con almohadillas en la cara interna.','Regula la apertura inicial para no empezar con estiramiento excesivo de la ingle.','Cierra controlada, abre lento resistiendo.','Riesgo: tirón de ingle si la apertura es excesiva. Empieza con poco peso.']},
         ]
       },
       {
-        id:'b5', emoji:'🌅', titulo:'Bloque 5 · Descanso activo', subtitulo:'Sábado — movimiento sin esfuerzo',
-        rango:'0:00–0:45', tipo:'Descanso',
+        id:'diaC', emoji:'🏋️', titulo:'Viernes · C — Tracción', subtitulo:'Espalda, dorsal, bíceps y abdomen · 3:00–4:45 PM',
+        rango:'55–70 min', tipo:'Moderada',
+        nota:'Los ejercicios de tracción son los que más mejoran la postura. Prioriza sentir la espalda trabajar antes que el peso: baja los hombros y junta los omóplatos antes de doblar los codos.',
         tareas:[
-          {id:'t5a',nombre:'Yoga o pilates suave',desc:'Opcional — escucha tu cuerpo',sets:'30–45 min',tiempo:'45 min',nivel:'Fácil',guia:['Busca en YouTube: "yoga suave 30 min" o "pilates principiante".','No fuerces ningún movimiento — es recuperación.']},
-          {id:'t5b',nombre:'Actividad recreativa libre',desc:'Bailar, caminar, nadar — lo que disfrutes',sets:'Lo que quieras',tiempo:'Libre',nivel:'Fácil',guia:['Este día no tiene objetivo de rendimiento.','Muévete por placer, no por obligación.']},
+          {id:'c00',nombre:'Cardio — Caminadora',desc:'10 min · calentamiento general',sets:'10 min',tiempo:'10 min',nivel:'Fácil',
+           guia:['Ritmo activo con postura erguida.','Diez minutos son suficientes.']},
+          {id:'c01',nombre:'Jalón al Pecho con Polea',desc:'Dorsal ancho · espalda en V',sets:'4 × 12–15',tiempo:'9 min',nivel:'Medio',
+           guia:['Rodillo firme sobre los muslos para que no te levantes al jalar.','Agarre algo más ancho que los hombros, palmas al frente.','Inicia bajando los hombros y omóplatos ANTES de doblar los codos.','Lleva la barra a la parte alta del pecho, codos hacia abajo y atrás.','NUNCA jales detrás de la nuca: riesgo real de hombro y cuello.','Piensa en llevar los codos al bolsillo trasero.']},
+          {id:'c02',nombre:'Remo en Máquina Agarre Neutro',desc:'Engrosa la espalda y mejora la postura',sets:'3 × 12–15',tiempo:'7 min',nivel:'Medio',
+           guia:['Los mangos a la altura del abdomen o pecho bajo.','Usa el apoyo de pecho si la máquina lo tiene.','Inicia juntando los omóplatos, como si sostuvieras un lápiz entre ellos.','Codos pegados al cuerpo y hacia atrás.','Pausa apretando la espalda al final de cada remo.']},
+          {id:'c03',nombre:'Pull Over con Polea Alta',desc:'Aísla el dorsal sin bíceps',sets:'3 × 12–15',tiempo:'7 min',nivel:'Medio',
+           guia:['De pie, un paso atrás de la polea, inclinada ligeramente desde la cadera.','El codo mantiene el MISMO ángulo durante todo el movimiento.','Empuja la barra en arco hacia los muslos usando el dorsal.','Error: doblar y estirar los codos lo convierte en extensión de tríceps.','Siente el estiramiento en el costado.']},
+          {id:'c04',nombre:'Curl con Mancuernas',desc:'Bíceps braquial',sets:'4 × 12–15',tiempo:'8 min',nivel:'Fácil',
+           guia:['Codos pegados al costado como bisagras fijas.','Sube contrayendo el bíceps sin mover los codos hacia adelante.','Baja muy lento hasta extender casi del todo: la fase de bajada es donde más se gana.','Sin balanceo del cuerpo.']},
+          {id:'c05',nombre:'Abdominal Bicicleta',desc:'Oblicuos y abdomen dinámico',sets:'3 × 8–10',tiempo:'6 min',nivel:'Fácil',
+           guia:['Lumbar pegada al suelo.','Manos detrás de la cabeza SIN tirar del cuello, codos abiertos.','Gira desde el torso, nunca desde el cuello.','La lentitud vale más que la velocidad aquí.']},
+          {id:'c06',nombre:'Crunch con Pulso',desc:'Tiempo bajo tensión',sets:'3 × 8–10',tiempo:'6 min',nivel:'Fácil',
+           guia:['Eleva el tronco encorvando, acercando costillas a la cadera.','En la posición alta, pulsos pequeños manteniendo la contracción.','Exhala en cada pulso con el abdomen apretado.','Barbilla a un puño de distancia del pecho.']},
+          {id:'c07',nombre:'Plancha en Codos',desc:'Core completo · isométrico',sets:'3 × 20–40 seg',tiempo:'5 min',nivel:'Fácil',
+           guia:['Codos justo bajo los hombros, cuerpo en línea recta.','Aprieta el abdomen como si fueras a recibir un golpe, y también el glúteo.','Respira de forma continua: no aguantes el aire.','Si la cadera se hunde, acorta el tiempo.','Veinte segundos perfectos valen más que sesenta con la cadera caída.']},
         ]
       },
       {
-        id:'b6', emoji:'🍳', titulo:'Bloque 6 · Descanso total + Meal prep', subtitulo:'Domingo — recuperación y cocina',
-        rango:'0:00–1:30', tipo:'Descanso',
+        id:'diaSab', emoji:'🚶', titulo:'Sábado · Descanso activo', subtitulo:'Caminata suave y foam roller',
+        rango:'30–40 min', tipo:'Movilidad',
+        nota:'Rueda lento, 30–60 seg por zona. Nunca sobre la lumbar, rodillas ni articulaciones.',
         tareas:[
-          {id:'t6a',nombre:'Pollo al horno en cantidad',desc:'Base proteica de la semana — hornea 600g',sets:'1 vez',tiempo:'35 min',nivel:'Fácil',guia:['Precalienta el horno a 190°C.','Sazona la pechuga con ajo, sal, pimienta y romero.','Hornea en papel aluminio 25–28 min.','Deja enfriar y guarda en recipientes separados.']},
-          {id:'t6b',nombre:'Arroz blanco e integral',desc:'Cocina porciones para 5 días',sets:'1 vez',tiempo:'25 min',nivel:'Fácil',guia:['Arroz blanco: 2 tazas arroz + 4 agua, 18 min tapado.','Arroz integral: 2 tazas + 5 agua, 40 min tapado.','Guarda en nevera en recipientes herméticos hasta 5 días.']},
-          {id:'t6c',nombre:'Verduras limpias y cortadas',desc:'Zanahoria, brócoli, pepino — listos para usar',sets:'1 vez',tiempo:'20 min',nivel:'Fácil',guia:['Lava todo con desinfectante de verduras.','Corta zanahoria en juliana, brócoli en floretes, pepino en rodajas.','Guarda en recipientes con un papel absorbente debajo.','Duran 4–5 días en nevera listos para usar.']},
-          {id:'t6d',nombre:'Sin entrenamiento',desc:'Recuperación muscular completa',sets:'—',tiempo:'Todo el día',nivel:'Fácil',guia:['El descanso es parte del entrenamiento.','El músculo crece durante el reposo, no durante el ejercicio.','Duerme mínimo 7–8 horas esta noche.']},
-        ]
-      },
-    ]
-  },
-  {
-    semana:'Semanas 3–4',
-    sub:'Progresión de carga — +1–2 kg en principales · +1 serie en compuestos · RPE 7–8.',
-    bloques:[
-      {
-        id:'b7', emoji:'🦵', titulo:'Bloque 1 · Glúteos — Volumen', subtitulo:'Más carga y volumen — Lunes y Jueves',
-        rango:'0:00–1:05', tipo:'Fuerza',
-        tareas:[
-          {id:'t7a',nombre:'Hip thrust con barra (+1 serie)',desc:'Agrega 2–5 kg respecto a la semana 2',sets:'5×10',tiempo:'15 min',nivel:'Medio',guia:['Misma técnica de las semanas 1–2.','Agrega peso si las últimas 2 reps aún se sienten controladas.','5 series en lugar de 4 — el volumen extra hace la diferencia.']},
-          {id:'t7b',nombre:'Sentadilla sumo con mancuerna',desc:'Pies más abiertos, punta de pies hacia afuera',sets:'4×12',tiempo:'12 min',nivel:'Medio',guia:['Pies más anchos que los hombros, puntas 45° hacia afuera.','Mancuerna sostenida con las dos manos frente al cuerpo.','Rodillas siguen la dirección de los pies al bajar.','Activa el glúteo y los aductores al subir.']},
-          {id:'t7c',nombre:'Peso muerto rumano',desc:'Bisagra de cadera, espalda recta, siente el estiramiento',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['Barra o mancuernas frente a los muslos.','Bisagra desde la cadera — no doblar demasiado las rodillas.','Baja hasta sentir el estiramiento de los isquiotibiales.','Aprieta glúteos al volver a la posición inicial.']},
-          {id:'t7d',nombre:'Patada de glúteo en polea',desc:'Aislamiento directo — contrae arriba 2 seg',sets:'3×15 c/pierna',tiempo:'10 min',nivel:'Fácil',guia:['Coloca el tobillo en la polea baja.','Apóyate en la máquina, espalda recta.','Lleva la pierna hacia atrás sin arquear la lumbar.','Contrae el glúteo arriba 2 seg.']},
-          {id:'t7e',nombre:'Abducción de cadera sentada',desc:'Máquina — controla la vuelta, no dejes caer',sets:'3×20',tiempo:'8 min',nivel:'Fácil',guia:['Ajusta el asiento para que las almohadillas queden sobre las rodillas.','Abre lentamente hasta el rango máximo cómodo.','Cierra en 2 seg — sin dejar caer la resistencia.']},
-          {id:'t7f',nombre:'Caminata inclinada 12%',desc:'Un punto más de inclinación que las semanas 1–2',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Aumenta la inclinación de 10% a 12%.','Misma velocidad de caminata.','Si sientes que es muy fácil, aumenta 0.5 km/h.']},
+          {id:'s01',nombre:'Caminata suave',desc:'Al aire libre si es posible',sets:'20–30 min',tiempo:'30 min',nivel:'Fácil',
+           guia:['Ritmo suave — no es cardio, es recuperación.','Aprovecha para escuchar algo que disfrutes.']},
+          {id:'s02',nombre:'Foam roller — cuádriceps',desc:'Desde encima de la rodilla hasta la cadera',sets:'45 seg × lado',tiempo:'90 seg',nivel:'Fácil',
+           guia:['Boca abajo apoyada en antebrazos.','Cuando encuentres un punto sensible, quédate ahí respirando hasta que ceda.','Molestia tolerable, nunca dolor.']},
+          {id:'s03',nombre:'Foam roller — glúteo',desc:'Muy útil tras el día B',sets:'45 seg × lado',tiempo:'90 seg',nivel:'Fácil',
+           guia:['Sentada sobre el rodillo, cruza un tobillo sobre la rodilla contraria.','Rueda ese lado buscando puntos tensos.']},
+          {id:'s04',nombre:'Foam roller — banda lateral del muslo',desc:'Suele ser el punto más sensible',sets:'40 seg × lado',tiempo:'80 seg',nivel:'Medio',
+           guia:['De lado, rueda entre la cadera y arriba de la rodilla.','Ve con calma: esta zona suele doler más.']},
+          {id:'s05',nombre:'Foam roller — espalda alta',desc:'Solo zona media y alta',sets:'60 seg',tiempo:'60 seg',nivel:'Fácil',
+           guia:['Rodillo bajo los omóplatos, manos tras la cabeza.','NUNCA ruedes la zona lumbar.']},
         ]
       },
       {
-        id:'b8', emoji:'💪', titulo:'Bloque 2 · Espalda — Progresión', subtitulo:'Más carga — Martes',
-        rango:'0:00–0:55', tipo:'Fuerza',
+        id:'diaDom', emoji:'🌙', titulo:'Domingo · Descanso total', subtitulo:'Recuperación y meal prep',
+        rango:'1–1.5 h', tipo:'Descanso',
+        nota:'El músculo crece descansando. Duerme mínimo 7–8 horas esta noche.',
         tareas:[
-          {id:'t8a',nombre:'Jalón agarre cerrado',desc:'Agarre paralelo o supino — más énfasis en bíceps',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['Usa el agarre cerrado paralelo o con palmas hacia ti.','Lleva el agarre hacia el pecho inferior.','Codos van hacia las caderas — más activación de espalda baja.']},
-          {id:'t8b',nombre:'Remo barra o máquina',desc:'Más carga que con mancuerna — progresión real',sets:'4×10',tiempo:'12 min',nivel:'Medio',guia:['En remo barra: inclinación a 45°, barra hacia el ombligo.','En máquina: pecho apoyado, tira codos hacia atrás.','Agrega 2–4 kg respecto al remo con mancuerna.']},
-          {id:'t8c',nombre:'Pull-over con mancuerna',desc:'Estira la espalda completamente — movimiento nuevo',sets:'3×12',tiempo:'8 min',nivel:'Medio',guia:['Acuéstate perpendicular al banco — hombros en el banco.','Mancuerna con las dos manos sobre el pecho.','Baja la mancuerna hacia atrás de la cabeza en arco.','Sube por el mismo camino activando el dorsal.']},
-          {id:'t8d',nombre:'Curl martillo con mancuerna',desc:'Agarre neutro — trabaja braquial y antebrazo',sets:'3×12',tiempo:'8 min',nivel:'Fácil',guia:['Agarre neutro (pulgares hacia arriba) durante todo el movimiento.','Sube hasta que el antebrazo quede vertical.','Alterna brazos o haz los dos juntos.']},
-          {id:'t8e',nombre:'Plancha lateral',desc:'Caderas sin caer — progresión del core',sets:'3×25 seg c/lado',tiempo:'8 min',nivel:'Medio',guia:['Apóyate en el antebrazo y el lado del pie.','Caderas bien arriba — cuerpo en línea diagonal.','Si es muy difícil, apoya la rodilla de abajo.']},
-          {id:'t8f',nombre:'Bicicleta resistencia media',desc:'Resistencia más alta que semanas 1–2',sets:'15 min',tiempo:'15 min',nivel:'Fácil',guia:['Sube la resistencia 1–2 puntos más que la semana anterior.','Mantén la misma cadencia aunque cueste más.']},
+          {id:'do1',nombre:'Meal prep — pollo al horno',desc:'Base proteica de la semana',sets:'600g',tiempo:'35 min',nivel:'Fácil',
+           guia:['Precalienta a 190°C. Sazona con ajo, sal, pimienta y romero.','Hornea en papel aluminio 25–28 min.','Deja enfriar y guarda en recipientes separados.']},
+          {id:'do2',nombre:'Meal prep — arroces',desc:'Porciones para 5 días',sets:'2 tipos',tiempo:'40 min',nivel:'Fácil',
+           guia:['Arroz blanco: 2 tazas + 4 de agua, 18 min tapado.','Arroz integral: 2 tazas + 5 de agua, 40 min tapado.','El arroz refrigerado tiene menor índice glucémico que recién hecho.']},
+          {id:'do3',nombre:'Meal prep — verduras',desc:'Lavadas y cortadas',sets:'1 vez',tiempo:'20 min',nivel:'Fácil',
+           guia:['Lava con desinfectante de verduras.','Corta zanahoria en juliana, brócoli en floretes, pepino en rodajas.','Guarda con papel absorbente debajo: duran 4–5 días.']},
+          {id:'do4',nombre:'Yoga suave (opcional)',desc:'Solo si el cuerpo lo pide',sets:'15 min',tiempo:'15 min',nivel:'Fácil',
+           guia:['Postura del niño, torsión tumbada y piernas en la pared.','Sin exigencia: es un día de recuperación real.']},
         ]
       },
     ]
@@ -2819,6 +2863,14 @@ function buildEjercicio(){
 
       // BODY — tabla de tareas
       const body=document.createElement('div');body.className='ex-tabla-wrap';
+
+      // Nota del bloque
+      if(bloque.nota){
+        const notaEl=document.createElement('div');
+        notaEl.style.cssText='padding:16px 22px;background:var(--al);color:var(--am);font-size:12.5px;line-height:1.7;border-top:1px solid var(--br);';
+        notaEl.textContent=bloque.nota;
+        body.appendChild(notaEl);
+      }
 
       // Encabezados
       const thead=document.createElement('div');thead.className='ex-tabla-head';
