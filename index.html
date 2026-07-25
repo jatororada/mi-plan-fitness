@@ -632,6 +632,72 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
       }
     });
   }
+
+  // ── Instalación como app ──────────────────────────────────
+  // Se registra AQUÍ (temprano) para no perder el evento beforeinstallprompt
+  window._deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window._deferredPrompt = e;
+    // Mostrar el botón del menú si ya existe
+    const btn = document.getElementById("pwa-install-btn");
+    if (btn) btn.style.display = "flex";
+    // Barra flotante de instalación
+    mostrarBarraInstalar();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    window._deferredPrompt = null;
+    const btn = document.getElementById("pwa-install-btn");
+    if (btn) btn.style.display = "none";
+    const bar = document.getElementById("installBar");
+    if (bar) bar.remove();
+  });
+
+  function mostrarBarraInstalar(){
+    if (document.getElementById("installBar")) return;
+    const bar = document.createElement("div");
+    bar.id = "installBar";
+    bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,.2);font-family:'DM Sans',sans-serif;";
+    bar.innerHTML =
+      '<div style="flex:1"><div style="font-size:14px;font-weight:500;letter-spacing:.01em;">Instalar como app</div>'+
+      '<div style="font-size:11px;color:rgba(245,242,236,.65);margin-top:2px;">Añádela a tu pantalla de inicio</div></div>'+
+      '<button id="ib-install" style="background:#F5F2EC;color:#1C1A17;border:none;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Instalar</button>'+
+      '<button id="ib-close" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>';
+    document.body.appendChild(bar);
+    document.getElementById("ib-install").addEventListener("click", instalarApp);
+    document.getElementById("ib-close").addEventListener("click", ()=>bar.remove());
+  }
+
+  async function instalarApp(){
+    const dp = window._deferredPrompt;
+    if (!dp) {
+      alert("Para instalar: abre el menú del navegador (⋮) y elige 'Instalar aplicación' o 'Agregar a pantalla de inicio'.");
+      return;
+    }
+    dp.prompt();
+    await dp.userChoice;
+    window._deferredPrompt = null;
+    const bar = document.getElementById("installBar");
+    if (bar) bar.remove();
+  }
+  // Exponer para el botón del menú
+  window.installPWA = instalarApp;
+
+  // iOS: no dispara beforeinstallprompt → mostrar instrucciones
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    window.addEventListener("load", ()=>{
+      if (document.getElementById("installBar")) return;
+      const bar = document.createElement("div");
+      bar.id = "installBar";
+      bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'DM Sans',sans-serif;";
+      bar.innerHTML = '<div style="flex:1;font-size:12.5px;line-height:1.5;">Para instalar: toca <strong>Compartir</strong> y luego <strong>"Añadir a inicio"</strong></div>'+
+        '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;">&times;</button>';
+      document.body.appendChild(bar);
+    });
+  }
 })();
 </script>
 </head>
@@ -3749,32 +3815,6 @@ function clearConservaSelection(){
   saveConservaSelected();
   buildConserva();
 }
-
-// ═══════════════ PWA INSTALL ═══════════════
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  const btn=document.getElementById('pwa-install-btn');
-  if(btn)btn.style.display='flex';
-});
-async function installPWA(){
-  if(!deferredPrompt){
-    showToast('Abre el menú del navegador → "Agregar a pantalla principal"');
-    return;
-  }
-  deferredPrompt.prompt();
-  const result=await deferredPrompt.userChoice;
-  deferredPrompt=null;
-  const btn=document.getElementById('pwa-install-btn');
-  if(btn)btn.style.display='none';
-  if(result.outcome==='accepted')showToast('✅ ¡App instalada en tu pantalla principal!');
-}
-window.addEventListener('appinstalled',()=>{
-  const btn=document.getElementById('pwa-install-btn');
-  if(btn)btn.style.display='none';
-  showToast('✅ ¡App instalada correctamente!');
-});
 
 // ═══════════════ INIT ═══════════════
 // INIT robusto — cada función en su propio try/catch
