@@ -562,144 +562,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .toast.show{opacity:1;}
 </style>
-<link rel="manifest" id="pwa-manifest">
 <meta name="theme-color" content="#F5F2EC">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mi Plan">
-<script>
-(function(){
-  // ── Manifest con iconos PNG (requisito para instalar como app real) ──
-  const icon192 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADNklEQVR42u3dTU7rQBCFUdLyXhIp+19KJNgDo0iZM0BiAgLLxEnXrfON3wDaJ+X2zyOH2/X9RdrasAQCSAAJIAEkASSABJAAkgASQAJIAEkACSABJIAkgASQABJAAkgCSAAJIAEkASSABJAAkgASQAJIAEkACSABJIAEkASQABJAAkgCSACpQosl+Op4Oq/8l2+vF8v12aHz1z2tF8MTQHdGA1M7QHvT6ckoH9Aj3TSUlAzouXSaMMoEtI3Oj4f5jgojGS3N9TzyoB5P5zxDS0M6TzyKnz9hEqPRSs/b62WGgzfP5gygtYdkEjp5hpYOdGb+yaufzkawntmmTuQoGpF6StDJMDQi9WTfegCInhxDI2aha522YgyNGD1N7kcARE+UofI3Er1dCtD2z2WqnkJDaNDDUDigpEePeb941T2QrQ9ATl4JQ2jQw1Dry3gBZPwUHkImkBIBGT9VhpAJpB6A3PgBKOTC1bLUm0DGjwlk/GQuToEJZPyYQAJImh+QDVC5JZp9AtkAmUACSAJI4YC+bw9tgObfR5tAAkgACSABJAEkgASQAJIAEkACSABJcwP6/uzdG64rFwogmUACSEoDZBsEUNXtoR20U5gAEkC2QQDZBlmcyqcwQ8gEMoQyl6X2F84JIAH0qHHdeQhNe1o3gRQKyBAqcVVhAikXkCH0Mv1NjZJ/ZLOPoflviVU9hbktBFDOp7DzL17423qyh1CVj03tL5xLNVRo6Ja/jLcZAui/n8swQ7X2fCNjcWMMlbtiGDFLfDydqzOqeL05wha6rqGidytG3nJXNFT3Xlfhq7DfDRViVPpOae3L+N+XvgSj6vfZD7fre8DFy59QNh+n/QhmPKIJeR/oz4Mx2zSKecCX80LZmkMyCaOkx8Mhp7DNJ501owudXoA2H/W9n9dGvpeSCWjv/S86LQDNwCj+bbh8QE+R1OctykaAHsOo2wu47QDtganznxNpDWizJ3+ABiDdJ/+1WQAJIAEkgCSABJAAEkASQAJIAAkgCSABJIAEkASQABJAAkgASQAJIAEkgCSABJAAEkASQAJIAAkgCSABJIAEkACSABJAAkgASQAJIJXoA0G0SIpC9UGWAAAAAElFTkSuQmCC";
-  const icon512 = "data:image/png;base64,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";
-  const manifest = {
-    name: "Mi Plan de Nutrición y Fitness",
-    short_name: "Mi Plan",
-    description: "Plan mensual de nutrición y fitness personalizado",
-    start_url: ".",
-    scope: ".",
-    display: "standalone",
-    orientation: "portrait",
-    background_color: "#F5F2EC",
-    theme_color: "#F5F2EC",
-    icons: [
-      { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: icon512, sizes: "512x512", type: "image/png", purpose: "maskable" }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], {type: "application/manifest+json"});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("link");
-  link.rel = "manifest";
-  link.href = url;
-  document.head.appendChild(link);
 
-  // apple-touch-icon para iOS
-  const appleIcon = document.createElement("link");
-  appleIcon.rel = "apple-touch-icon";
-  appleIcon.href = icon192;
-  document.head.appendChild(appleIcon);
-
-  // ── Service Worker que cachea la página (requisito de instalación) ──
-  if ("serviceWorker" in navigator) {
-    const swCode = `
-      const CACHE = "miplan-v1";
-      self.addEventListener("install", e => { self.skipWaiting(); });
-      self.addEventListener("activate", e => { e.waitUntil(clients.claim()); });
-      self.addEventListener("fetch", e => {
-        e.respondWith(
-          caches.open(CACHE).then(cache =>
-            cache.match(e.request).then(hit =>
-              hit || fetch(e.request).then(res => {
-                if (e.request.method === "GET" && res.status === 200) {
-                  cache.put(e.request, res.clone());
-                }
-                return res;
-              }).catch(() => cache.match("./"))
-            )
-          )
-        );
-      });
-    `;
-    const swBlob = new Blob([swCode], {type: "text/javascript"});
-    const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl).catch(()=>{});
-    window.addEventListener("load", () => {
-      if (navigator.serviceWorker.controller) {
-        caches.open("miplan-v1").then(c => c.add(location.href).catch(()=>{}));
-      }
-    });
-  }
-
-  // ── Instalación como app ──────────────────────────────────
-  // Se registra AQUÍ (temprano) para no perder el evento beforeinstallprompt
-  window._deferredPrompt = null;
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    window._deferredPrompt = e;
-    // Mostrar el botón del menú si ya existe
-    const btn = document.getElementById("pwa-install-btn");
-    if (btn) btn.style.display = "flex";
-    // Barra flotante de instalación
-    mostrarBarraInstalar();
-  });
-
-  window.addEventListener("appinstalled", () => {
-    window._deferredPrompt = null;
-    const btn = document.getElementById("pwa-install-btn");
-    if (btn) btn.style.display = "none";
-    const bar = document.getElementById("installBar");
-    if (bar) bar.remove();
-  });
-
-  function mostrarBarraInstalar(){
-    if (document.getElementById("installBar")) return;
-    const bar = document.createElement("div");
-    bar.id = "installBar";
-    bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,.2);font-family:'DM Sans',sans-serif;";
-    bar.innerHTML =
-      '<div style="flex:1"><div style="font-size:14px;font-weight:500;letter-spacing:.01em;">Instalar como app</div>'+
-      '<div style="font-size:11px;color:rgba(245,242,236,.65);margin-top:2px;">Añádela a tu pantalla de inicio</div></div>'+
-      '<button id="ib-install" style="background:#F5F2EC;color:#1C1A17;border:none;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Instalar</button>'+
-      '<button id="ib-close" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>';
-    document.body.appendChild(bar);
-    document.getElementById("ib-install").addEventListener("click", instalarApp);
-    document.getElementById("ib-close").addEventListener("click", ()=>bar.remove());
-  }
-
-  async function instalarApp(){
-    const dp = window._deferredPrompt;
-    if (!dp) {
-      alert("Para instalar: abre el menú del navegador (⋮) y elige 'Instalar aplicación' o 'Agregar a pantalla de inicio'.");
-      return;
-    }
-    dp.prompt();
-    await dp.userChoice;
-    window._deferredPrompt = null;
-    const bar = document.getElementById("installBar");
-    if (bar) bar.remove();
-  }
-  // Exponer para el botón del menú
-  window.installPWA = instalarApp;
-
-  // iOS: no dispara beforeinstallprompt → mostrar instrucciones
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-  if (isIOS && !isStandalone) {
-    window.addEventListener("load", ()=>{
-      if (document.getElementById("installBar")) return;
-      const bar = document.createElement("div");
-      bar.id = "installBar";
-      bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'DM Sans',sans-serif;";
-      bar.innerHTML = '<div style="flex:1;font-size:12.5px;line-height:1.5;">Para instalar: toca <strong>Compartir</strong> y luego <strong>"Añadir a inicio"</strong></div>'+
-        '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;">&times;</button>';
-      document.body.appendChild(bar);
-    });
-  }
-})();
-</script>
 </head>
 <body>
 <div id="toast" class="toast"></div>
@@ -4157,5 +4025,137 @@ function hideLock() {
 sbInit();
 </script>
 
+<script>
+(function(){
+  // ── Manifest con iconos PNG (requisito para instalar como app real) ──
+  const icon192 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAADNklEQVR42u3dTU7rQBCFUdLyXhIp+19KJNgDo0iZM0BiAgLLxEnXrfON3wDaJ+X2zyOH2/X9RdrasAQCSAAJIAEkASSABJAAkgASQAJIAEkACSABJIAkgASQABJAAkgCSAAJIAEkASSABJAAkgASQAJIAEkACSABJIAEkASQABJAAkgCSACpQosl+Op4Oq/8l2+vF8v12aHz1z2tF8MTQHdGA1M7QHvT6ckoH9Aj3TSUlAzouXSaMMoEtI3Oj4f5jgojGS3N9TzyoB5P5zxDS0M6TzyKnz9hEqPRSs/b62WGgzfP5gygtYdkEjp5hpYOdGb+yaufzkawntmmTuQoGpF6StDJMDQi9WTfegCInhxDI2aha522YgyNGD1N7kcARE+UofI3Er1dCtD2z2WqnkJDaNDDUDigpEePeb941T2QrQ9ATl4JQ2jQw1Dry3gBZPwUHkImkBIBGT9VhpAJpB6A3PgBKOTC1bLUm0DGjwlk/GQuToEJZPyYQAJImh+QDVC5JZp9AtkAmUACSAJI4YC+bw9tgObfR5tAAkgACSABJAEkgASQAJIAEkACSABJcwP6/uzdG64rFwogmUACSEoDZBsEUNXtoR20U5gAEkC2QQDZBlmcyqcwQ8gEMoQyl6X2F84JIAH0qHHdeQhNe1o3gRQKyBAqcVVhAikXkCH0Mv1NjZJ/ZLOPoflviVU9hbktBFDOp7DzL17423qyh1CVj03tL5xLNVRo6Ja/jLcZAui/n8swQ7X2fCNjcWMMlbtiGDFLfDydqzOqeL05wha6rqGidytG3nJXNFT3Xlfhq7DfDRViVPpOae3L+N+XvgSj6vfZD7fre8DFy59QNh+n/QhmPKIJeR/oz4Mx2zSKecCX80LZmkMyCaOkx8Mhp7DNJ501owudXoA2H/W9n9dGvpeSCWjv/S86LQDNwCj+bbh8QE+R1OctykaAHsOo2wu47QDtganznxNpDWizJ3+ABiDdJ/+1WQAJIAEkgCSABJAAEkASQAJIAAkgCSABJIAEkASQABJAAkgASQAJIAEkgCSABJAAEkASQAJIAAkgCSABJIAEkACSABJAAkgASQAJIJXoA0G0SIpC9UGWAAAAAElFTkSuQmCC";
+  const icon512 = "data:image/png;base64,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";
+  const manifest = {
+    name: "Mi Plan de Nutrición y Fitness",
+    short_name: "Mi Plan",
+    description: "Plan mensual de nutrición y fitness personalizado",
+    start_url: ".",
+    scope: ".",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#F5F2EC",
+    theme_color: "#F5F2EC",
+    icons: [
+      { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: icon512, sizes: "512x512", type: "image/png", purpose: "maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type: "application/manifest+json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("link");
+  link.rel = "manifest";
+  link.href = url;
+  document.head.appendChild(link);
+
+  // apple-touch-icon para iOS
+  const appleIcon = document.createElement("link");
+  appleIcon.rel = "apple-touch-icon";
+  appleIcon.href = icon192;
+  document.head.appendChild(appleIcon);
+
+  // ── Service Worker que cachea la página (requisito de instalación) ──
+  if ("serviceWorker" in navigator) {
+    const swCode = `
+      const CACHE = "miplan-v1";
+      self.addEventListener("install", e => { self.skipWaiting(); });
+      self.addEventListener("activate", e => { e.waitUntil(clients.claim()); });
+      self.addEventListener("fetch", e => {
+        e.respondWith(
+          caches.open(CACHE).then(cache =>
+            cache.match(e.request).then(hit =>
+              hit || fetch(e.request).then(res => {
+                if (e.request.method === "GET" && res.status === 200) {
+                  cache.put(e.request, res.clone());
+                }
+                return res;
+              }).catch(() => cache.match("./"))
+            )
+          )
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], {type: "text/javascript"});
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+    window.addEventListener("load", () => {
+      if (navigator.serviceWorker.controller) {
+        caches.open("miplan-v1").then(c => c.add(location.href).catch(()=>{}));
+      }
+    });
+  }
+
+  // ── Instalación como app ──────────────────────────────────
+  // Se registra AQUÍ (temprano) para no perder el evento beforeinstallprompt
+  window._deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window._deferredPrompt = e;
+    // Mostrar el botón del menú si ya existe
+    const btn = document.getElementById("pwa-install-btn");
+    if (btn) btn.style.display = "flex";
+    // Barra flotante de instalación
+    mostrarBarraInstalar();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    window._deferredPrompt = null;
+    const btn = document.getElementById("pwa-install-btn");
+    if (btn) btn.style.display = "none";
+    const bar = document.getElementById("installBar");
+    if (bar) bar.remove();
+  });
+
+  function mostrarBarraInstalar(){
+    if (document.getElementById("installBar")) return;
+    const bar = document.createElement("div");
+    bar.id = "installBar";
+    bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,.2);font-family:'DM Sans',sans-serif;";
+    bar.innerHTML =
+      '<div style="flex:1"><div style="font-size:14px;font-weight:500;letter-spacing:.01em;">Instalar como app</div>'+
+      '<div style="font-size:11px;color:rgba(245,242,236,.65);margin-top:2px;">Añádela a tu pantalla de inicio</div></div>'+
+      '<button id="ib-install" style="background:#F5F2EC;color:#1C1A17;border:none;padding:10px 20px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Instalar</button>'+
+      '<button id="ib-close" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>';
+    document.body.appendChild(bar);
+    document.getElementById("ib-install").addEventListener("click", instalarApp);
+    document.getElementById("ib-close").addEventListener("click", ()=>bar.remove());
+  }
+
+  async function instalarApp(){
+    const dp = window._deferredPrompt;
+    if (!dp) {
+      alert("Para instalar: abre el menú del navegador (⋮) y elige 'Instalar aplicación' o 'Agregar a pantalla de inicio'.");
+      return;
+    }
+    dp.prompt();
+    await dp.userChoice;
+    window._deferredPrompt = null;
+    const bar = document.getElementById("installBar");
+    if (bar) bar.remove();
+  }
+  // Exponer para el botón del menú
+  window.installPWA = instalarApp;
+
+  // iOS: no dispara beforeinstallprompt → mostrar instrucciones
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    window.addEventListener("load", ()=>{
+      if (document.getElementById("installBar")) return;
+      const bar = document.createElement("div");
+      bar.id = "installBar";
+      bar.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:800;background:#1C1A17;color:#F5F2EC;padding:14px 18px;display:flex;align-items:center;gap:12px;font-family:'DM Sans',sans-serif;";
+      bar.innerHTML = '<div style="flex:1;font-size:12.5px;line-height:1.5;">Para instalar: toca <strong>Compartir</strong> y luego <strong>"Añadir a inicio"</strong></div>'+
+        '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(245,242,236,.6);font-size:22px;cursor:pointer;">&times;</button>';
+      document.body.appendChild(bar);
+    });
+  }
+})();
+</script>
 </body>
 </html>
