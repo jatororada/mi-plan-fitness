@@ -82,6 +82,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .chip-m2{background:var(--pl);color:#7A5A50;}
 .chip-a{background:var(--bl);color:#40506B;}
 .chip-c{background:#EFE9E3;color:#6B5D52;}
+.chip-portatil{outline:1.5px solid var(--am);outline-offset:-1.5px;font-weight:600;}
 /* Etiqueta de tipo de entrenamiento */
 .cal-day-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;}
 .entreno-tag{
@@ -984,6 +985,7 @@ const DEFAULT_INV=[
   {id:'c03',name:'Arroz para sushi',cat:'Despensa',cur:0,max:500,unit:'g'},
   {id:'c04',name:'Avena en hojuelas',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
   {id:'c05',name:'Harina de arepa',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
+  {id:'c06',name:'Tortilla integral',cat:'Despensa',cur:0,max:8,unit:'unidades'},
   {id:'c06',name:'Fettuccine / Pasta integral',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
   {id:'c07',name:'Fideos de arroz',cat:'Despensa',cur:0,max:200,unit:'g'},
   {id:'c08',name:'Fideos ramen (sin sobre)',cat:'Despensa',cur:0,max:200,unit:'g'},
@@ -1501,6 +1503,9 @@ const NORM_INGREDIENTES={
   'camarones limpios pelados':'Camarones','camarones':'Camarones',
   // Panes
   'pan integral':'Pan integral','pan baguette':'Pan baguette','arepa blanca':'Arepa blanca','arepa':'Arepa blanca',
+  'tortilla integral grande':'Tortilla integral','tortilla integral':'Tortilla integral',
+  'frijoles negros':'Fríjoles negros','fríjoles negros':'Fríjoles negros','fríjoles negros cocidos':'Fríjoles negros',
+  'tortilla integral (para llevar)':'Tortilla integral',
   'galletas integrales':'Galletas integrales',
   // Frutos secos
   'almendras crudas':'Almendras','almendras laminadas':'Almendras','almendras':'Almendras',
@@ -1556,14 +1561,22 @@ function calcConsumoQuincena(q, soloRestantes){
   });
   const consumo={}; // nombre normalizado -> {num, unit, nombreOriginal}
 
-  qDias.forEach(p=>{
+  const anio=new Date().getFullYear();
+  qDias.forEach((p,qi)=>{
     const fi=p.fi||[0,1,2,3,null];
     const vi=p.vi||[0,1];
+    // Índice real del día en el PLAN (1-30)
+    const numDiaReal=PLAN.indexOf(p)+1;
+    // ¿Es lunes o viernes? → almuerzo portátil
+    const dow=new Date(anio, curMonth-1, numDiaReal).getDay();
+    let keyAlmuerzo=p.a;
+    if(dow===1) keyAlmuerzo='tupper_pollo';
+    else if(dow===5) keyAlmuerzo='wrap_pollo';
     // Cada comida del día
     const comidas=[
       {key:p.d,  fIdx:fi[0], vIdx:null},
       {key:p.m1, fIdx:fi[1], vIdx:null},
-      {key:p.a,  fIdx:fi[2], vIdx:vi[0]},
+      {key:keyAlmuerzo, fIdx:fi[2], vIdx:vi[0]},
       {key:p.m2, fIdx:fi[3], vIdx:null},
       {key:p.c,  fIdx:fi[4], vIdx:vi[1]},
     ];
@@ -2298,7 +2311,17 @@ const REC={
     p:['Mezcla jugo de limón + ralladura + ajo + romero + aceite + sal. Cubre la pechuga y marina 10 min.','Corta la papa en gajos, condimenta con aceite y sal.','Hornea pechuga y papa a 190°C 28-30 min.','Prepara ensalada con la verdura de temporada con limón y sal.'],
     tip:'La ralladura de limón es más aromática que el jugo — úsala siempre que puedas.',
     s(f,v){return`Papa pastusa → papa criolla · ${v[0]} → ${v[1]||'espinaca'}`}},
-  sushi_salmon:{n:'Sushi bowl de salmón',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:430,prot:35,
+  tupper_pollo:{n:'Tupper de pollo, arroz y {{V0}} (para llevar)',t:'Almuerzo',cls:'chip-a',min:30,dif:'Fácil',kcal:620,prot:44,
+    i(f,v){return[['Pechuga de pollo sin piel','200g'],['Arroz integral','80g'],['Fríjoles negros cocidos','80g'],[v[0]+' en tiras','100g'],['Zanahoria rallada','50g'],['Aguacate hass','½ unidad'],['Limón','1 unidad'],['Aceite de oliva','10ml'],['Ajo, comino, sal','Al gusto']]},
+    p:['Cocina la pechuga a la plancha con ajo, comino y sal. Deja enfriar y corta en tiras.','Cocina el arroz integral y déjalo enfriar (así queda más suelto y aguanta mejor).','Arma el tupper por capas: arroz + fríjoles abajo, pollo en el centro, verdura y zanahoria a un lado.','El aguacate y el limón van APARTE en una bolsita — se agregan justo antes de comer para que no se oxiden.'],
+    tip:'Usa un tupper con compartimentos o pon el aguacate aparte. Aguanta 5-6 horas sin refrigeración a temperatura ambiente fresca; si hace mucho calor, lleva una bolsa térmica pequeña. Se come frío o tibio, no necesita microondas.',
+    s(f,v){return`Pollo → carne de res magra desmenuzada · ${v[0]} → ${v[1]||'espinaca'} · Fríjoles → garbanzos`}},
+  wrap_pollo:{n:'Wrap integral de pollo y {{V0}} (para llevar)',t:'Almuerzo',cls:'chip-a',min:20,dif:'Muy fácil',kcal:590,prot:42,
+    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Tortilla integral grande','1 unidad'],['Queso campesino','40g'],[v[0]+' en tiras','80g'],['Zanahoria rallada','40g'],['Aguacate hass','½ unidad'],['Yogur griego natural','30g'],['Limón','½ unidad'],['Mostaza, sal, pimienta','Al gusto']]},
+    p:['Cocina la pechuga a la plancha con sal y pimienta. Deja enfriar y corta en tiras finas.','Mezcla el yogur griego con mostaza, limón y una pizca de sal para la salsa.','Sobre la tortilla: unta la salsa, agrega pollo, queso, verdura, zanahoria y aguacate.','Enrolla firme envolviendo en papel aluminio o papel encerado. Corta por la mitad.'],
+    tip:'Envuélvelo bien apretado en papel aluminio: así se mantiene compacto y no se desarma. Aguanta 4-5 horas a temperatura ambiente fresca. Come sin necesidad de calentar ni cubiertos — ideal para el día de gym.',
+    s(f,v){return`Pollo → atún escurrido · ${v[0]} → lechuga · Tortilla → pan pita integral`}},
+    sushi_salmon:{n:'Sushi bowl de salmón',t:'Cena',cls:'chip-c',min:25,dif:'Fácil',kcal:430,prot:35,
     i(f,v){return[['Salmón fresco','150g'],['Arroz para sushi (crudo)','80g'],['Vinagre de arroz','15ml'],['Aguacate hass','½ unidad'],['Pepino cohombro','60g'],['Zanahoria rallada','40g'],['Salsa soya baja en sodio','15ml'],['Aceite de sésamo','5ml'],['Sésamo tostado','5g'],['Jengibre fresco rallado','3g'],['Hoja de nori','1 unidad']]},
     p:['Cocina el arroz sushi. Mezcla templado con vinagre, sal y 5g azúcar. Enfría 10 min.','Corta el salmón en cubos de 2cm. Marina con soya, sésamo y jengibre 10 min.','Corta aguacate en láminas, pepino en medias lunas, ralla zanahoria.','Bowl: arroz base, salmón, aguacate, pepino, zanahoria, nori en tiras. Sésamo encima.'],
     tip:'El arroz dura 2 días en nevera. El salmón marina máximo 30 min. Para recalentar: solo el arroz, salmón frío encima.',
@@ -2553,6 +2576,14 @@ function buildCal(){
       const clsEntreno = entreno.id ? 'gym' : (entreno.corto==='ACTIVO' ? 'mov' : 'rest');
       dc.className='cal-day '+(numDia<=15?'q1':'q2')+' '+clsEntreno;
 
+      // Día real de la semana para almuerzo portátil (Lun=1, Vie=5)
+      const dowReal = new Date(anio, curMonth-1, numDia).getDay();
+      const almuerzoPortatil = (dowReal===1 || dowReal===5);
+      // Alternar entre las dos opciones portátiles según el día
+      const claveAlmuerzo = almuerzoPortatil
+        ? (dowReal===1 ? 'tupper_pollo' : 'wrap_pollo')
+        : p.a;
+
       const fi=p.fi||[0,1,2,3,null];
       const vi=p.vi||[0,1];
       const fd=resolveFruta(fi[0],t.f);
@@ -2572,7 +2603,7 @@ function buildCal(){
         '</div>'+ horaTxt +
         '<span class="chip chip-d"  onclick="openRDay('+dni+',\'d\',event)">'+rShort(p.d,fd,va)+'</span>'+
         '<span class="chip chip-m"  onclick="openRDay('+dni+',\'m1\',event)">'+rShort(p.m1,fm1,va)+'</span>'+
-        '<span class="chip chip-a"  onclick="openRDay('+dni+',\'a\',event)">'+rShort(p.a,fa,va)+'</span>'+
+        '<span class="chip chip-a'+(almuerzoPortatil?' chip-portatil':'')+'"  onclick="openRDay('+dni+',\'a\',event)" title="'+(almuerzoPortatil?'Almuerzo para llevar':'')+'">'+(almuerzoPortatil?'🎒 ':'')+rShort(claveAlmuerzo,fa,va)+'</span>'+
         '<span class="chip chip-m2" onclick="openRDay('+dni+',\'m2\',event)">'+rShort(p.m2,fm2,va)+'</span>'+
         '<span class="chip chip-c"  onclick="openRDay('+dni+',\'c\',event)">'+rShort(p.c,fc,vc)+'</span>';
       g.appendChild(dc);
@@ -2624,7 +2655,6 @@ function openRDay(dayIdx, slot, ev){
   const fi=p.fi||[0,1,2,3,null];
   const vi=p.vi||[0,1];
 
-  // Resolver fruta y verdura según el slot
   const slotFiMap={d:0,m1:1,a:2,m2:3,c:4};
   const slotViMap={a:0,c:1};
   const fiIdx=fi[slotFiMap[slot]];
@@ -2632,7 +2662,16 @@ function openRDay(dayIdx, slot, ev){
   const fruta=resolveFruta(fiIdx,t.f);
   const verdura=resolveVerdura(viIdx,t.v);
 
-  const key=p[slot==='d'?'d':slot==='m1'?'m1':slot==='a'?'a':slot==='m2'?'m2':'c'];
+  let key=p[slot==='d'?'d':slot==='m1'?'m1':slot==='a'?'a':slot==='m2'?'m2':'c'];
+
+  // Almuerzo portátil en lunes y viernes
+  if(slot==='a'){
+    const anio=new Date().getFullYear();
+    const dow=new Date(anio, curMonth-1, dayIdx+1).getDay();
+    if(dow===1) key='tupper_pollo';
+    else if(dow===5) key='wrap_pollo';
+  }
+
   openRWithIngredients(key, fruta, verdura);
 }
 
