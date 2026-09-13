@@ -558,6 +558,54 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .qty-input{width:48px;text-align:center;border:1px solid var(--br);border-radius:6px;font-size:16px;font-weight:700;padding:3px 4px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);-webkit-appearance:none;margin:0;}
 .qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .qty-input:focus{outline:none;border-color:var(--v);}
+#scrollTopBtn{
+  position:fixed;bottom:24px;right:24px;z-index:700;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--ink);color:var(--bg);border:none;
+  font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 24px rgba(28,26,23,.22);
+  opacity:0;visibility:hidden;transform:translateY(10px);
+  transition:opacity .3s,transform .3s,visibility .3s;
+  font-family:'DM Sans',sans-serif;line-height:1;
+}
+#scrollTopBtn.visible{opacity:1;visibility:visible;transform:translateY(0);}
+#scrollTopBtn:hover{background:var(--ink-soft);}
+@media(max-width:600px){
+  #scrollTopBtn{bottom:20px;right:16px;width:42px;height:42px;}
+}
+.cal-day.cal-hoy{
+  border:1.5px solid var(--ink);
+  box-shadow:0 0 0 3px rgba(28,26,23,.06);
+  position:relative;
+}
+.hoy-badge{
+  display:inline-block;margin-left:7px;
+  font-size:8px;font-weight:600;letter-spacing:.12em;
+  background:var(--ink);color:var(--bg);
+  padding:2px 7px;border-radius:var(--pill);
+  vertical-align:middle;
+}
+.horario-panel{background:var(--card);border:1px solid var(--br);border-radius:var(--rad);margin-bottom:2rem;overflow:hidden;}
+.horario-panel summary{padding:16px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx);letter-spacing:.01em;user-select:none;list-style:none;display:flex;align-items:center;gap:8px;}
+.horario-panel summary::before{content:'▾';font-size:11px;color:var(--mu);transition:transform .2s;}
+.horario-panel[open] summary::before{transform:rotate(0);}
+.horario-panel:not([open]) summary::before{transform:rotate(-90deg);}
+.horario-panel summary::-webkit-details-marker{display:none;}
+.horario-body{padding:0 20px 20px;}
+.horario-intro{font-size:12.5px;color:var(--mu);line-height:1.7;margin-bottom:1.25rem;}
+.horario-tabla{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:1.25rem;}
+.horario-tabla th{text-align:left;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);padding:8px 6px;border-bottom:1px solid var(--br);}
+.horario-tabla td{padding:10px 6px;border-bottom:1px solid var(--br);color:var(--tx);vertical-align:top;}
+.horario-tabla .hd{font-weight:600;white-space:nowrap;}
+.horario-tabla .hnote{font-size:9px;color:var(--am);letter-spacing:.02em;}
+.horario-tips{display:flex;flex-direction:column;gap:8px;}
+.htip{font-size:12px;color:var(--tx);line-height:1.6;padding:12px 16px;background:var(--vl);border-radius:var(--rsm);}
+.htip strong{color:var(--vd);}
+@media(max-width:600px){
+  .horario-tabla{font-size:9.5px;}
+  .horario-tabla th,.horario-tabla td{padding:7px 3px;}
+}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:13px 24px;border-radius:var(--pill);font-size:12.5px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;letter-spacing:.02em;box-shadow:0 8px 32px rgba(28,26,23,.16);}
 #tienda-popup{animation:popIn .15s ease;}
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -572,6 +620,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 </head>
 <body>
 <div id="toast" class="toast"></div>
+<button id="scrollTopBtn" onclick="scrollToTop()" aria-label="Volver arriba" title="Volver arriba">↑</button>
 
 <div class="hdr">
   <div class="hc">
@@ -621,6 +670,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="li"><span class="entreno-tag entreno-am">ACTIVO</span>Sábado</div>
     <div class="li"><span class="entreno-tag entreno-mu">DESCANSO</span>Miércoles y domingo</div>
   </div>
+  <details class="horario-panel">
+    <summary>Ver horario de comidas según tu semana</summary>
+    <div class="horario-body">
+      <p class="horario-intro">Las horas cambian según tus clases, trabajo y entrenamiento. Esta es la distribución óptima para ganar masa sin acumular grasa: proteína repartida en las 5 comidas y más carbohidrato alrededor del entreno.</p>
+      <table class="horario-tabla">
+        <tr><th>Día</th><th>Desayuno</th><th>Merienda 1</th><th>Almuerzo</th><th>Merienda 2</th><th>Cena</th></tr>
+        <tr><td class="hd">Lun · B Piernas</td><td>5:30 AM</td><td>8:45 AM</td><td>11 AM–12 PM<br><span class="hnote">antes de entrenar</span></td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Mar · A Empuje</td><td>7:30 AM</td><td>11 AM</td><td>2:15–3:15 PM<br><span class="hnote">post-entreno</span></td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Mié · Descanso</td><td>7:30 AM</td><td>11 AM</td><td>1:30–2:30 PM</td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Jue · D Piernas</td><td>8 AM<br><span class="hnote">pre-entreno</span></td><td>11 AM</td><td>1:30–2:30 PM</td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Vie · C Tracción</td><td>5:30 AM</td><td>8:45 AM</td><td>1 PM<br><span class="hnote">para llevar</span></td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Sáb · Activo</td><td>8 AM</td><td>11 AM</td><td>1:30–2:30 PM</td><td>4:30 PM</td><td>7:30 PM</td></tr>
+        <tr><td class="hd">Dom · Descanso</td><td>8 AM</td><td>11 AM</td><td>1:30–2:30 PM<br><span class="hnote">+ meal prep</span></td><td>4:30 PM</td><td>7:30 PM</td></tr>
+      </table>
+      <div class="horario-tips">
+        <div class="htip"><strong>Lunes y viernes</strong> — almuerzo para llevar (tupper / wrap). Prepáralo la noche anterior o en la mañana.</div>
+        <div class="htip"><strong>Jueves</strong> — entrenas a las 9 AM. Desayuna a las 8 AM algo ligero y digerible (avena o yogur), no pesado.</div>
+        <div class="htip"><strong>Domingo</strong> — meal prep: cocina el pollo, los arroces y las lentejas de la semana. Deja listo el tupper del lunes.</div>
+        <div class="htip"><strong>Días de pierna (lun/jue)</strong> — más carbohidrato en la comida previa al entreno para rendir en leg press y sentadilla.</div>
+      </div>
+    </div>
+  </details>
   <div id="cal-container"></div>
 </div>
 
@@ -765,7 +836,7 @@ const TEMP={
       {n:'Papaya',        id:'f09', qty:1,  unit:'unidad'},
       {n:'Tomate de árbol',id:'f14',qty:6,  unit:'unidades'},
     ],
-    v:['Espinaca','Acelga','Brócoli','Zanahoria','Tomate chonto','Habichuela','Pimentón','Aguacate']
+    v:['Espinaca','Pimentón','Brócoli','Zanahoria','Tomate chonto','Habichuela','Repollo','Aguacate']
   },
   4:{
     f:[
@@ -778,7 +849,7 @@ const TEMP={
       {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
       {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
     ],
-    v:['Espinaca','Acelga','Brócoli','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
+    v:['Espinaca','Brócoli','Pimentón','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
   },
   5:{
     f:[
@@ -830,7 +901,7 @@ const TEMP={
       {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
       {n:'Banano',        id:'f02', qty:1,  unit:'racimo'},
     ],
-    v:['Espinaca','Acelga','Tomate chonto','Zanahoria','Brócoli','Habichuela','Repollo','Aguacate']
+    v:['Espinaca','Pimentón','Tomate chonto','Zanahoria','Brócoli','Habichuela','Repollo','Aguacate']
   },
   9:{
     f:[
@@ -843,7 +914,7 @@ const TEMP={
       {n:'Guayaba rosada',id:'f13', qty:300,unit:'g'},
       {n:'Maracuyá',      id:'f03', qty:8,  unit:'unidades'},
     ],
-    v:['Espinaca','Acelga','Brócoli','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
+    v:['Espinaca','Brócoli','Pimentón','Habichuela','Zanahoria','Tomate chonto','Repollo morado','Aguacate']
   },
   10:{
     f:[
@@ -856,7 +927,7 @@ const TEMP={
       {n:'Feijoa',        id:'f12', qty:6,  unit:'unidades'},
       {n:'Lulo',          id:'f07', qty:4,  unit:'unidades'},
     ],
-    v:['Espinaca','Acelga','Brócoli','Habichuela','Remolacha','Zanahoria','Tomate chonto','Aguacate']
+    v:['Espinaca','Brócoli','Pimentón','Habichuela','Remolacha','Zanahoria','Tomate chonto','Aguacate']
   },
   11:{
     f:[
@@ -911,12 +982,14 @@ const DEFAULT_INV=[
   {id:'p03',name:'Cadera de res (molida)',cat:'Proteínas',cur:511,max:700,unit:'g'},
   {id:'p04',name:'Murillo de res',cat:'Proteínas',cur:490,max:700,unit:'g'},
   {id:'p05',name:'Lomo de cerdo',cat:'Proteínas',cur:680,max:800,unit:'g'},
+  {id:'p12',name:'Carne de res magra',cat:'Proteínas',cur:0,max:700,unit:'g'},
   {id:'p06',name:'Salmón',cat:'Proteínas',cur:4,max:6,unit:'porciones'},
   {id:'p07',name:'Tilapia',cat:'Proteínas',cur:249,max:500,unit:'g'},
   {id:'p08',name:'Trucha',cat:'Proteínas',cur:114,max:400,unit:'g'},
   {id:'p09',name:'Atún en agua (latas)',cat:'Proteínas',cur:0,max:5,unit:'latas'},
   {id:'p10',name:'Camarones limpios',cat:'Proteínas',cur:0,max:400,unit:'g'},
   {id:'p11',name:'Huevos',cat:'Proteínas',cur:0,max:30,unit:'unidades'},
+  {id:'p13',name:'Clara de huevo líquida',cat:'Proteínas',cur:0,max:1,unit:'litros'},
   // ══════════════════════════════
   // LÁCTEOS
   // ══════════════════════════════
@@ -957,6 +1030,7 @@ const DEFAULT_INV=[
   {id:'v02',name:'Cebolla cabezona blanca',cat:'Verduras',cur:0,max:500,unit:'g'},
   {id:'v03',name:'Pimentón',cat:'Verduras',cur:1,max:3,unit:'unidades'},
   {id:'v04',name:'Brócoli',cat:'Verduras',cur:1,max:2,unit:'unidades'},
+  {id:'v24',name:'Edamame',cat:'Verduras',cur:0,max:300,unit:'g'},
   {id:'v05',name:'Yuca',cat:'Verduras',cur:1,max:3,unit:'unidades'},
   {id:'v06',name:'Tomate chonto',cat:'Verduras',cur:0,max:700,unit:'g'},
   {id:'v07',name:'Zanahoria',cat:'Verduras',cur:0,max:500,unit:'g'},
@@ -974,8 +1048,7 @@ const DEFAULT_INV=[
   {id:'v20',name:'Repollo morado',cat:'Verduras',cur:0,max:1,unit:'unidad'},
   {id:'v21',name:'Remolacha',cat:'Verduras',cur:0,max:400,unit:'g'},
   {id:'v22',name:'Ahuyama / Zapallo',cat:'Verduras',cur:0,max:500,unit:'g'},
-  {id:'v23',name:'Acelga',cat:'Verduras',cur:0,max:300,unit:'g'},
-  {id:'v24',name:'Cilantro fresco',cat:'Verduras',cur:0,max:2,unit:'manojos'},
+    {id:'v24',name:'Cilantro fresco',cat:'Verduras',cur:0,max:2,unit:'manojos'},
   {id:'v25',name:'Cebollín',cat:'Verduras',cur:0,max:1,unit:'manojo'},
   // ══════════════════════════════
   // CARBOHIDRATOS / DESPENSA
@@ -993,8 +1066,8 @@ const DEFAULT_INV=[
   {id:'c10',name:'Pan integral tajado',cat:'Despensa',cur:0,max:1,unit:'paquete'},
   {id:'c11',name:'Pan baguette',cat:'Despensa',cur:0,max:3,unit:'unidades'},
   {id:'c12',name:'Maicena',cat:'Despensa',cur:1,max:1,unit:'paquete'},
-  {id:'c13',name:'Fríjoles negros secos',cat:'Despensa',cur:0,max:500,unit:'g'},
-  {id:'c14',name:'Edamame congelado',cat:'Despensa',cur:0,max:300,unit:'g'},
+  {id:'c13',name:'Lentejas',cat:'Despensa',cur:0,max:500,unit:'g'},
+  
   {id:'c15',name:'Arveja congelada',cat:'Despensa',cur:0,max:300,unit:'g'},
   {id:'c16',name:'Café',cat:'Despensa',cur:1,max:1,unit:'paquete'},
   {id:'c17',name:'Cacao en polvo',cat:'Despensa',cur:1,max:1,unit:'unidad'},
@@ -1504,7 +1577,7 @@ const NORM_INGREDIENTES={
   // Panes
   'pan integral':'Pan integral','pan baguette':'Pan baguette','arepa blanca':'Arepa blanca','arepa':'Arepa blanca',
   'tortilla integral grande':'Tortilla integral','tortilla integral':'Tortilla integral',
-  'frijoles negros':'Fríjoles negros','fríjoles negros':'Fríjoles negros','fríjoles negros cocidos':'Fríjoles negros',
+  'lentejas':'Lentejas','lentejas cocidas':'Lentejas','lenteja':'Lentejas',
   'tortilla integral (para llevar)':'Tortilla integral',
   'galletas integrales':'Galletas integrales',
   // Frutos secos
@@ -1519,19 +1592,23 @@ const NORM_INGREDIENTES={
   // Otros
   'plátano maduro':'Plátano maduro','plátano verde':'Plátano verde','plátano verde (patacón)':'Plátano verde',
   'papa pastusa':'Papa','papa criolla':'Papa','papa cocida pequeña':'Papa','papa':'Papa',
-  'fríjoles negros cocidos':'Fríjoles negros','fríjoles negros secos':'Fríjoles negros',
   'ajo':'Ajo','cebolla larga':'Cebolla larga','cebolla cabezona':'Cebolla cabezona',
   'tomate chonto':'Tomate chonto','aguacate hass':'Aguacate','aguacate':'Aguacate',
-  'edamame pelado congelado':'Edamame','edamame':'Edamame',
+  'edamame':'Edamame',
   'fideos de arroz':'Fideos de arroz','fideos de arroz (secos)':'Fideos de arroz',
   'fideos ramen (sin sobre)':'Fideos ramen','pasta integral':'Pasta integral',
   'hoja de nori':'Nori','hojas de nori':'Nori','sriracha':'Sriracha',
   'polvo de hornear':'Polvo de hornear','vinagre blanco':'Vinagre blanco',
   'café con leche':'Café','café con leche entera':'Café','café molido':'Café',
-  'caldo de pollo bajo en sodio':'Caldo de pollo','cebollín':'Cebollín','cilantro fresco':'Cilantro',
+  'cebollín':'Cebollín','cilantro fresco':'Cilantro',
   'zanahoria':'Zanahoria','zanahoria rallada':'Zanahoria','zanahoria en juliana':'Zanahoria',
   'pepino cohombro':'Pepino','repollo morado rallado':'Repollo morado','repollo morado':'Repollo morado',
   'espinaca fresca':'Espinaca','espinaca':'Espinaca','mazorca':'Mazorca','yuca':'Yuca',
+  'habichuela':'Habichuela','habichuela en tiras':'Habichuela','habichuela rallada':'Habichuela',
+  'habichuela para ensalada':'Habichuela','habichuelas':'Habichuela',
+  // Preparaciones caseras (NO se compran)
+  'caldo de pollo casero':'Caldo de pollo casero','caldo de pollo':'Caldo de pollo casero',
+  'pimentón':'Pimentón','repollo':'Repollo',
 };
 
 function normalizarIngrediente(nombre){
@@ -1689,8 +1766,12 @@ function buildMercado(){
     const needed={};
     CAT_ORDER.forEach(cat=>needed[cat]=[]);
 
+    // Preparaciones caseras que NO se compran
+    const CASEROS=['caldo de pollo casero','caldo de pollo','hogao'];
     Object.values(consumo).forEach(c=>{
       if(c.num<=0)return;
+      // Saltar preparaciones caseras — no van a la lista de compras
+      if(CASEROS.includes(c.nombre.toLowerCase()))return;
       // Buscar el item del inventario que coincide
       let invItem=inv.find(x=>x.name.toLowerCase()===c.nombre.toLowerCase());
       if(!invItem){
@@ -1969,6 +2050,7 @@ function renderItem(item){
       <button class="qbtn" onclick="adj('${item.id}',-1)">−</button>
       <input type="number" class="qty-input" id="qi-${item.id}" value="${item.cur}" min="0" max="${item.max}"
         inputmode="numeric" pattern="[0-9]*"
+        oninput="adjDirectDebounced('${item.id}',this.value)"
         onblur="adjDirect('${item.id}',this.value)"
         onkeydown="if(event.key==='Enter')this.blur()"
         title="Edita el número directamente">
@@ -1982,6 +2064,13 @@ function renderItem(item){
   return div;
 }
 
+// Guardado con debounce mientras se escribe (800ms tras dejar de teclear)
+const _debounceTimers={};
+function adjDirectDebounced(id, rawVal){
+  clearTimeout(_debounceTimers[id]);
+  _debounceTimers[id]=setTimeout(()=>{ adjDirect(id, rawVal); }, 800);
+}
+
 function adjDirect(id, rawVal){
   const val=parseInt(rawVal);
   if(isNaN(val)||val<0)return;
@@ -1991,7 +2080,6 @@ function adjDirect(id, rawVal){
   if(nuevoVal===item.cur)return; // no cambió, no hacer nada
   item.cur=nuevoVal;
   saveInv(inv);
-  if(typeof sbPatchSave==='function')sbPatchSave();
 
   // Actualizar SOLO este ítem en el DOM (sin reconstruir todo → no hay salto)
   updateInvItemDOM(item);
@@ -2237,7 +2325,7 @@ const REC={
     tip:'La mezcla dura 2 días en nevera. En la mañana tienes los pancakes listos en 5 min.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Leche → yogur griego`}},
   calentado:{n:'Calentado andino con huevo',t:'Desayuno',cls:'chip-d',min:15,dif:'Muy fácil',kcal:500,prot:32,
-    i(f,v){return[['Arroz cocido del día anterior','120g'],['Fríjoles negros cocidos','80g'],['Huevos enteros','2 unidades'],['Arepa blanca','1 unidad'],['Aceite de oliva','5ml'],['Café con leche entera','250ml']]},
+    i(f,v){return[['Arroz cocido del día anterior','120g'],['Lentejas cocidas','80g'],['Huevos enteros','2 unidades'],['Arepa blanca','1 unidad'],['Aceite de oliva','5ml'],['Café con leche entera','250ml']]},
     p:['Calienta arroz y fríjoles en sartén con aceite 3 min hasta dorar.','Fríe los huevos al lado.','Calienta la arepa. Sirve todo junto con café.'],
     tip:'Cero desperdicio — usa sobrados. El arroz frío recalentado tiene menor índice glucémico.',
     s:'Fríjoles → lentejas · Arroz blanco → integral'},
@@ -2277,8 +2365,8 @@ const REC={
     tip:'Prepara 3 pechugas a la vez — duran 4 días en nevera. La fruta de temporada cambia el sabor completamente cada mes.',
     s(f,v){return`${f[0]} → ${f[1]||'naranja'} · Plátano → papa cocida`}},
   bandeja_paisa:{n:'Bandeja paisa fitness',t:'Almuerzo',cls:'chip-a',min:40,dif:'Medio',kcal:650,prot:45,
-    i(f,v){return[['Carne de res magra','150g'],['Fríjoles negros cocidos','100g'],['Arroz integral cocido','150g'],['Aguacate hass','½ unidad'],['Huevo entero','1 unidad'],['Plátano verde (patacón)','½ unidad'],['Hogao (tomate + cebolla)','50g'],['Ajo, comino, sal','Al gusto']]},
-    p:['Sazona la carne con ajo, sal, pimienta y comino. Sella 4 min por lado. Reposa 5 min.','Hogao: sofríe tomate y cebolla 8 min. Agrega a los fríjoles.','Patacón: corta plátano, fríe 3 min, aplana, fríe 2 min más.','Fríe el huevo. Sirve todo junto con aguacate en láminas.'],
+    i(f,v){return[['Carne de res magra','150g'],['Lentejas cocidas','100g'],['Arroz integral cocido','150g'],['Aguacate hass','½ unidad'],['Huevo entero','1 unidad'],['Plátano verde (patacón)','½ unidad'],['Tomate chonto','35g'],['Cebolla cabezona','15g'],['Ajo, comino, sal','Al gusto']]},
+    p:['Sazona la carne con ajo, sal, pimienta y comino. Sella 4 min por lado. Reposa 5 min.','Hogao: sofríe tomate y cebolla 8 min. Agrega a las lentejas.','Patacón: corta plátano, fríe 3 min, aplana, fríe 2 min más.','Fríe el huevo. Sirve todo junto con aguacate en láminas.'],
     tip:'Cocina 500g de fríjoles el domingo — rinden toda la semana. Son la mejor fuente de hierro hormonal.',
     s:'Carne res → pechuga · Arroz integral → blanco · Patacón → papa'},
   pollo_teriyaki:{n:'Pollo teriyaki con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:600,prot:40,
@@ -2312,7 +2400,7 @@ const REC={
     tip:'La ralladura de limón es más aromática que el jugo — úsala siempre que puedas.',
     s(f,v){return`Papa pastusa → papa criolla · ${v[0]} → ${v[1]||'espinaca'}`}},
   tupper_pollo:{n:'Tupper de pollo, arroz y {{V0}} (para llevar)',t:'Almuerzo',cls:'chip-a',min:30,dif:'Fácil',kcal:620,prot:44,
-    i(f,v){return[['Pechuga de pollo sin piel','200g'],['Arroz integral','80g'],['Fríjoles negros cocidos','80g'],[v[0]+' en tiras','100g'],['Zanahoria rallada','50g'],['Aguacate hass','½ unidad'],['Limón','1 unidad'],['Aceite de oliva','10ml'],['Ajo, comino, sal','Al gusto']]},
+    i(f,v){return[['Pechuga de pollo sin piel','200g'],['Arroz integral','80g'],['Lentejas cocidas','80g'],[v[0]+' en tiras','100g'],['Zanahoria rallada','50g'],['Aguacate hass','½ unidad'],['Limón','1 unidad'],['Aceite de oliva','10ml'],['Ajo, comino, sal','Al gusto']]},
     p:['Cocina la pechuga a la plancha con ajo, comino y sal. Deja enfriar y corta en tiras.','Cocina el arroz integral y déjalo enfriar (así queda más suelto y aguanta mejor).','Arma el tupper por capas: arroz + fríjoles abajo, pollo en el centro, verdura y zanahoria a un lado.','El aguacate y el limón van APARTE en una bolsita — se agregan justo antes de comer para que no se oxiden.'],
     tip:'Usa un tupper con compartimentos o pon el aguacate aparte. Aguanta 5-6 horas sin refrigeración a temperatura ambiente fresca; si hace mucho calor, lleva una bolsa térmica pequeña. Se come frío o tibio, no necesita microondas.',
     s(f,v){return`Pollo → carne de res magra desmenuzada · ${v[0]} → ${v[1]||'espinaca'} · Fríjoles → garbanzos`}},
@@ -2327,7 +2415,7 @@ const REC={
     tip:'El arroz dura 2 días en nevera. El salmón marina máximo 30 min. Para recalentar: solo el arroz, salmón frío encima.',
     s:'Salmón → camarones o atún · Aguacate → mango · Soya → ponzu'},
   poke_atun:{n:'Poke bowl de atún y {{V0}}',t:'Cena',cls:'chip-c',min:20,dif:'Muy fácil',kcal:420,prot:36,
-    i(f,v){return[['Atún en agua (lata)','170g'],['Arroz para sushi','80g'],['Edamame pelado congelado','60g'],[v[0]+' (rallada)','60g'],['Aguacate','½ unidad'],['Pepino cohombro','60g'],['Salsa soya + limón','20ml'],['Sésamo tostado','5g'],['Cebollín','10g']]},
+    i(f,v){return[['Atún en agua (lata)','170g'],['Arroz para sushi','80g'],['Edamame','60g'],[v[0]+' (rallada)','60g'],['Aguacate','½ unidad'],['Pepino cohombro','60g'],['Salsa soya + limón','20ml'],['Sésamo tostado','5g'],['Cebollín','10g']]},
     p:['Cocina el arroz sushi. Descongela el edamame en agua caliente 3 min.','Escurre bien el atún. Mezcla con un poco de salsa.','Prepara la verdura de temporada rallada.','Bowl: arroz, atún, edamame, verdura, aguacate y pepino. Salsa, sésamo y cebollín.'],
     tip:'El poke más rápido — el atún en lata no necesita preparación. Ten latas siempre para emergencias.',
     s(f,v){return`Atún → camarones cocidos · ${v[0]} → ${v[1]||'zanahoria'}`}},
@@ -2347,10 +2435,10 @@ const REC={
     tip:'El wok a fuego muy alto es el secreto — sin ese calor los vegetales se cuecen.',
     s(f,v){return`Fideos de arroz → pasta cocida · ${v[0]} → ${v[1]||'zanahoria'}`}},
   ramen:{n:'Ramen ligero de pollo con huevo',t:'Cena',cls:'chip-c',min:30,dif:'Fácil',kcal:420,prot:36,
-    i(f,v){return[['Caldo de pollo bajo en sodio','600ml'],['Pechuga desmenuzada cocida','130g'],['Fideos ramen (sin sobre)','60g'],['Huevo entero','1 unidad'],['Espinaca fresca','40g'],['Zanahoria en juliana','40g'],['Cebollín','10g'],['Salsa soya baja en sodio','10ml'],['Jengibre fresco','5g'],['Aceite de sésamo','3ml']]},
+    i(f,v){return[['Caldo de pollo casero','600ml'],['Pechuga desmenuzada cocida','130g'],['Fideos ramen (sin sobre)','60g'],['Huevo entero','1 unidad'],['Espinaca fresca','40g'],['Zanahoria en juliana','40g'],['Cebollín','10g'],['Salsa soya baja en sodio','10ml'],['Jengibre fresco','5g'],['Aceite de sésamo','3ml']]},
     p:['Huevo ramen: hierve agua, sumerge huevo 7 min exactos. Enfría en agua con hielo. Corta a la mitad.','Sofríe ajo y jengibre 2 min. Agrega caldo, soya y aceite de sésamo. Hierve.','Cocina fideos en el caldo 3-4 min. Agrega espinaca y zanahoria 1 min.','Sirve: fideos + pollo desmenuzado + huevo + cebollín.'],
     tip:'Congela cubos de caldo cuando cocines pollo. Transforma completamente el sabor del ramen.',
-    s:'Fideos ramen → de arroz · Espinaca → acelga · Huevo → más pollo'},
+    s:'Fideos ramen → de arroz · Espinaca → repollo · Huevo → más pollo'},
   yakitori:{n:'Bowl yakitori de pollo',t:'Cena',cls:'chip-c',min:30,dif:'Fácil',kcal:430,prot:38,
     i(f,v){return[['Pechuga de pollo en cubos','170g'],['Arroz sushi cocido','150g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10ml'],['Jengibre fresco rallado','5g'],['Ajo','1 diente'],['Repollo morado rallado','60g'],['Cebollín','15g'],['Sésamo tostado','5g']]},
     p:['Salsa yakitori: soya + miel + ajo + jengibre. Divide en dos mitades.','Marina el pollo en cubos 15 min.','Cocina en sartén 4 min por lado. Últimos 2 min glasea con la segunda mitad.','Sirve sobre arroz sushi con repollo morado, cebollín y sésamo.'],
@@ -2574,7 +2662,10 @@ function buildCal(){
       const p=PLAN[numDia-1];
       const dc=document.createElement('div');
       const clsEntreno = entreno.id ? 'gym' : (entreno.corto==='ACTIVO' ? 'mov' : 'rest');
-      dc.className='cal-day '+(numDia<=15?'q1':'q2')+' '+clsEntreno;
+      // ¿Es hoy? (solo si el mes visible es el mes actual)
+      const hoy = new Date();
+      const esHoy = (curMonth === hoy.getMonth()+1) && (numDia === hoy.getDate()) && (anio === hoy.getFullYear());
+      dc.className='cal-day '+(numDia<=15?'q1':'q2')+' '+clsEntreno+(esHoy?' cal-hoy':'');
 
       // Día real de la semana para almuerzo portátil (Lun=1, Vie=5)
       const dowReal = new Date(anio, curMonth-1, numDia).getDay();
@@ -2597,8 +2688,9 @@ function buildCal(){
 
       const horaTxt = entreno.hora ? '<div class="entreno-hora">'+entreno.hora+'</div>' : '';
 
+      const badgeHoy = esHoy ? '<span class="hoy-badge">HOY</span>' : '';
       dc.innerHTML='<div class="cal-day-top">'+
-          '<span class="dnum">'+numDia+'</span>'+
+          '<span class="dnum">'+numDia+badgeHoy+'</span>'+
           '<span class="entreno-tag entreno-'+entreno.color+'" title="'+entreno.nombre+'">'+entreno.corto+'</span>'+
         '</div>'+ horaTxt +
         '<span class="chip chip-d"  onclick="openRDay('+dni+',\'d\',event)">'+rShort(p.d,fd,va)+'</span>'+
@@ -3742,6 +3834,15 @@ function reconstruirTodo(){
 }
 
 // INIT inicial — solo el selector de mes, el resto espera a la sesión
+// ── Botón volver arriba ──
+function scrollToTop(){ window.scrollTo({top:0,behavior:'smooth'}); }
+window.addEventListener('scroll',function(){
+  const btn=document.getElementById('scrollTopBtn');
+  if(!btn)return;
+  if(window.scrollY>400) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+},{passive:true});
+
 try{ buildMonthSel(); }catch(e){ console.error('buildMonthSel error:',e); }
 try{ reconstruirTodo(); }catch(e){ console.error('reconstruirTodo error:',e); }
 </script>
