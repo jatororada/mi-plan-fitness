@@ -4042,7 +4042,13 @@ function showLock() {
 }
 
 function hideLock() {
-  document.getElementById('lockScreen').style.display = 'none';
+  const ls = document.getElementById('lockScreen');
+  if (ls) ls.style.display = 'none';
+  // Actualizar email en el panel de cuenta si aplica
+  if (sbUser) {
+    const emailEl = document.getElementById('cuenta-email');
+    if (emailEl) emailEl.textContent = sbUser.email || '—';
+  }
 }
 
 function sbShowMsg(txt, color) {
@@ -4190,16 +4196,6 @@ function toggleCuentaPanel() {
   }
 }
 
-// Auto-sync al hacer login
-const _origHideLock = hideLock;
-function hideLock() {
-  _origHideLock();
-  // Actualizar email en panel si ya está abierto
-  if (sbUser) {
-    const emailEl = document.getElementById('cuenta-email');
-    if (emailEl) emailEl.textContent = sbUser.email || '—';
-  }
-}
 
 // ── llamar sbInit al final, cuando todo está definido ──
 // Ejecutar sbInit cuando el DOM esté completamente listo
