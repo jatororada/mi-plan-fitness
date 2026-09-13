@@ -3972,21 +3972,29 @@ function sbInit() {
     _appInicializada = true;
     sbUser = session.user;
     hideLock();
-    const ok = await cargarEstadoDeNube();   // ← espera confirmación de la BD
-    if(ok){
-      refrescarDatosNube();                    // ← refresca inventario + compras con datos reales
-    } else {
-      // Si falla la carga, reintentar una vez tras breve espera
-      showToast('Reintentando cargar tus datos…');
-      await new Promise(r=>setTimeout(r,1200));
-      const ok2 = await cargarEstadoDeNube();
-      refrescarDatosNube();
-      if(!ok2) showToast('No se pudieron cargar los datos. Revisa tu conexión.');
-    }
+    // Carga automática con reintentos — igual que pulsar "Recargar desde la nube"
+    // pero al abrir la página, sin intervención del usuario.
+    await cargarConReintentos();
   }
 
-  // Refresca SOLO los módulos que dependen de la base de datos.
-  // El cronograma/recetas/ejercicio no dependen del inventario del usuario.
+  // Intenta cargar de la nube varias veces por si el token aún no está listo
+  async function cargarConReintentos(){
+    for(let intento=1; intento<=4; intento++){
+      const ok = await cargarEstadoDeNube();
+      if(ok){
+        refrescarDatosNube();
+        return true;
+      }
+      // Esperar un poco más en cada reintento
+      await new Promise(r=>setTimeout(r, 500*intento));
+    }
+    // Último recurso: reconstruir con lo que haya y avisar
+    refrescarDatosNube();
+    showToast('No se pudieron cargar los datos. Toca "Recargar desde la nube".');
+    return false;
+  }
+
+  // Refresca los módulos que dependen de la base de datos.
   function refrescarDatosNube(){
     try{ syncFrutasInventario(); }catch(e){ console.error('sync:',e); }
     try{ buildInventario(); }catch(e){ console.error('buildInventario:',e); }
@@ -4194,7 +4202,12 @@ function hideLock() {
 }
 
 // ── llamar sbInit al final, cuando todo está definido ──
-sbInit();
+// Ejecutar sbInit cuando el DOM esté completamente listo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', sbInit);
+} else {
+  sbInit();
+}
 </script>
 
 <script>
