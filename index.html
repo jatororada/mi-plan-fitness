@@ -3843,12 +3843,12 @@ window.addEventListener('scroll',function(){
   else btn.classList.remove('visible');
 },{passive:true});
 
-// INIT: solo el selector de mes al arrancar.
-// La UI de datos (inventario, compras, etc.) se construye SOLO cuando
-// cargarEstadoDeNube() confirma los datos reales de la base de datos.
-// Esto evita mostrar/persistir DEFAULT_INV por accidente.
+// INIT: construir toda la UI base de inmediato (cronograma, recetas,
+// ejercicio, hormonal, conservación). El inventario y la lista de compras
+// se RECONSTRUYEN cuando cargarEstadoDeNube() confirma los datos reales,
+// para que esos dos módulos siempre reflejen la base de datos.
 try{ buildMonthSel(); }catch(e){ console.error('buildMonthSel error:',e); }
-// NO llamar reconstruirTodo aquí — espera a la sesión (ver inicializarApp)
+try{ reconstruirTodo(); }catch(e){ console.error('reconstruirTodo error:',e); }
 </script>
 
 <!-- ══ PANEL DE CUENTA ══ -->
@@ -3974,15 +3974,26 @@ function sbInit() {
     hideLock();
     const ok = await cargarEstadoDeNube();   // ← espera confirmación de la BD
     if(ok){
-      reconstruirTodo();                       // ← solo reconstruye con datos reales
+      refrescarDatosNube();                    // ← refresca inventario + compras con datos reales
     } else {
       // Si falla la carga, reintentar una vez tras breve espera
       showToast('Reintentando cargar tus datos…');
       await new Promise(r=>setTimeout(r,1200));
       const ok2 = await cargarEstadoDeNube();
-      reconstruirTodo();
+      refrescarDatosNube();
       if(!ok2) showToast('No se pudieron cargar los datos. Revisa tu conexión.');
     }
+  }
+
+  // Refresca SOLO los módulos que dependen de la base de datos.
+  // El cronograma/recetas/ejercicio no dependen del inventario del usuario.
+  function refrescarDatosNube(){
+    try{ syncFrutasInventario(); }catch(e){ console.error('sync:',e); }
+    try{ buildInventario(); }catch(e){ console.error('buildInventario:',e); }
+    try{ buildMercado(); }catch(e){ console.error('buildMercado:',e); }
+    try{ buildConserva(); }catch(e){ console.error('buildConserva:',e); }
+    try{ buildEjercicio(); }catch(e){ console.error('buildEjercicio:',e); }
+    try{ buildCal(); }catch(e){ console.error('buildCal:',e); }
   }
 
   // Check active session (carga inicial al abrir/recargar la página)
