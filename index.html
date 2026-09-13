@@ -3964,60 +3964,49 @@ function sbInit() {
     }
   });
 
-  // Bandera para evitar doble inicialización (getSession + onAuthStateChange)
+  // Bandera para evitar doble inicialización
   let _appInicializada = false;
 
   async function inicializarApp(session){
-    if(_appInicializada) return; // ya se cargó, no repetir
+    if(_appInicializada) return;
     _appInicializada = true;
     sbUser = session.user;
     hideLock();
-    // Carga automática con reintentos — igual que pulsar "Recargar desde la nube"
-    // pero al abrir la página, sin intervención del usuario.
-    await cargarConReintentos();
-  }
-
-  // Intenta cargar de la nube varias veces por si el token aún no está listo
-  async function cargarConReintentos(){
-    for(let intento=1; intento<=4; intento++){
+    // Cargar datos de la nube automáticamente (misma lógica que el botón manual)
+    try{
       const ok = await cargarEstadoDeNube();
-      if(ok){
-        refrescarDatosNube();
-        return true;
+      // Reconstruir inventario y compras con los datos cargados
+      try{ syncFrutasInventario(); }catch(e){ console.error(e); }
+      try{ buildInventario(); }catch(e){ console.error(e); }
+      try{ buildMercado(); }catch(e){ console.error(e); }
+      try{ buildConserva(); }catch(e){ console.error(e); }
+      try{ buildEjercicio(); }catch(e){ console.error(e); }
+      try{ buildCal(); }catch(e){ console.error(e); }
+      if(!ok){
+        showToast('No se pudieron cargar los datos. Revisa tu conexión.');
       }
-      // Esperar un poco más en cada reintento
-      await new Promise(r=>setTimeout(r, 500*intento));
+    }catch(e){
+      console.error('Error en carga automática:', e);
+      showToast('Error al cargar. Toca "Recargar desde la nube".');
     }
-    // Último recurso: reconstruir con lo que haya y avisar
-    refrescarDatosNube();
-    showToast('No se pudieron cargar los datos. Toca "Recargar desde la nube".');
-    return false;
   }
 
-  // Refresca los módulos que dependen de la base de datos.
-  function refrescarDatosNube(){
-    try{ syncFrutasInventario(); }catch(e){ console.error('sync:',e); }
-    try{ buildInventario(); }catch(e){ console.error('buildInventario:',e); }
-    try{ buildMercado(); }catch(e){ console.error('buildMercado:',e); }
-    try{ buildConserva(); }catch(e){ console.error('buildConserva:',e); }
-    try{ buildEjercicio(); }catch(e){ console.error('buildEjercicio:',e); }
-    try{ buildCal(); }catch(e){ console.error('buildCal:',e); }
-  }
-
-  // Check active session (carga inicial al abrir/recargar la página)
-  sbClient.auth.getSession().then(async function(result) {
-    const session = result.data && result.data.session;
+  // Carga inicial al abrir/recargar la página
+  sbClient.auth.getSession().then(function(result) {
+    const session = result && result.data && result.data.session;
     if (session) {
-      await inicializarApp(session);
+      inicializarApp(session);
     } else {
       showLock();
     }
+  }).catch(function(e){
+    console.error('getSession error:', e);
+    showLock();
   });
 
-  sbClient.auth.onAuthStateChange(async function(event, session) {
+  sbClient.auth.onAuthStateChange(function(event, session) {
     if (event === 'SIGNED_IN' && session) {
-      // Solo inicializa si aún no se hizo (evita pisar cambios recientes)
-      await inicializarApp(session);
+      inicializarApp(session);
     } else if (event === 'SIGNED_OUT') {
       sbUser = null;
       _appInicializada = false;
