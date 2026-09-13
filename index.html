@@ -1438,10 +1438,10 @@ function markBought(id, el){
   const row = el.closest('.mlist-item');
   if(!row) return;
 
-  // Guardar estado del check
+  // Guardar estado del check → BD (con confirmación visual)
   const checks = loadComprasChecks();
   if(checked){ checks[id] = true; } else { delete checks[id]; }
-  saveComprasChecks(checks);
+  saveComprasChecks(checks); // guarda en Supabase; muestra indicador Guardando/Guardado
 
   if(checked){
     row.classList.add('bought');
@@ -3843,8 +3843,12 @@ window.addEventListener('scroll',function(){
   else btn.classList.remove('visible');
 },{passive:true});
 
+// INIT: solo el selector de mes al arrancar.
+// La UI de datos (inventario, compras, etc.) se construye SOLO cuando
+// cargarEstadoDeNube() confirma los datos reales de la base de datos.
+// Esto evita mostrar/persistir DEFAULT_INV por accidente.
 try{ buildMonthSel(); }catch(e){ console.error('buildMonthSel error:',e); }
-try{ reconstruirTodo(); }catch(e){ console.error('reconstruirTodo error:',e); }
+// NO llamar reconstruirTodo aquí — espera a la sesión (ver inicializarApp)
 </script>
 
 <!-- ══ PANEL DE CUENTA ══ -->
@@ -3960,14 +3964,32 @@ function sbInit() {
     }
   });
 
-  // Check active session
+  // Bandera para evitar doble inicialización (getSession + onAuthStateChange)
+  let _appInicializada = false;
+
+  async function inicializarApp(session){
+    if(_appInicializada) return; // ya se cargó, no repetir
+    _appInicializada = true;
+    sbUser = session.user;
+    hideLock();
+    const ok = await cargarEstadoDeNube();   // ← espera confirmación de la BD
+    if(ok){
+      reconstruirTodo();                       // ← solo reconstruye con datos reales
+    } else {
+      // Si falla la carga, reintentar una vez tras breve espera
+      showToast('Reintentando cargar tus datos…');
+      await new Promise(r=>setTimeout(r,1200));
+      const ok2 = await cargarEstadoDeNube();
+      reconstruirTodo();
+      if(!ok2) showToast('No se pudieron cargar los datos. Revisa tu conexión.');
+    }
+  }
+
+  // Check active session (carga inicial al abrir/recargar la página)
   sbClient.auth.getSession().then(async function(result) {
     const session = result.data && result.data.session;
     if (session) {
-      sbUser = session.user;
-      hideLock();
-      await cargarEstadoDeNube();
-      reconstruirTodo();
+      await inicializarApp(session);
     } else {
       showLock();
     }
@@ -3975,12 +3997,11 @@ function sbInit() {
 
   sbClient.auth.onAuthStateChange(async function(event, session) {
     if (event === 'SIGNED_IN' && session) {
-      sbUser = session.user;
-      hideLock();
-      await cargarEstadoDeNube();
-      reconstruirTodo();
+      // Solo inicializa si aún no se hizo (evita pisar cambios recientes)
+      await inicializarApp(session);
     } else if (event === 'SIGNED_OUT') {
       sbUser = null;
+      _appInicializada = false;
       showLock();
     }
   });
