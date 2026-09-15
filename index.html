@@ -733,7 +733,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <button class="ctab active" onclick="showCTab('mercado',this)">🛒 Lista de mercado</button>
     <button class="ctab" onclick="showCTab('inventario',this)">📦 Inventario</button>
   </div>
-  <input type="search" id="buscarMercado" class="buscar-input" placeholder="🔍 Buscar en la lista…" oninput="buscarEnLista('mercado', this.value)" autocomplete="off" style="display:block;">
+  <input type="search" id="buscarMercado" class="buscar-input" placeholder="🔍 Buscar en la lista de mercado…" oninput="buscarEnLista('mercado', this.value)" autocomplete="off">
   <div id="ctab-mercado"></div>
   <div id="ctab-inventario" style="display:none">
     <div class="inv-header">
@@ -2388,6 +2388,12 @@ async function saveNew(){
 function showCTab(tab,btn){
   document.getElementById('ctab-mercado').style.display=tab==='mercado'?'block':'none';
   document.getElementById('ctab-inventario').style.display=tab==='inventario'?'block':'none';
+  // La barra de búsqueda de mercado solo se ve en la pestaña de mercado
+  const barraMercado=document.getElementById('buscarMercado');
+  if(barraMercado){
+    barraMercado.style.display = tab==='mercado' ? 'block' : 'none';
+    if(tab!=='mercado') barraMercado.value=''; // limpiar al salir
+  }
   document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(tab==='inventario')buildInventario();
