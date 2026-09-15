@@ -788,6 +788,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   </div>
 </div>
 
+<!-- EDIT ITEM MODAL -->
+<div class="overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="add-modal">
+    <h3>Editar producto</h3>
+    <input type="hidden" id="editItemId">
+    <div class="fg"><label>Nombre</label><input type="text" id="editName"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Stock meta</label><input type="number" id="editMax" min="1"></div>
+      <div class="fg"><label>Unidad</label><input type="text" id="editUnit" placeholder="g, ml, latas, porciones…"></div>
+    </div>
+    <p style="font-size:11px;color:var(--mu);margin:-4px 0 4px;line-height:1.5;">Cambia la unidad (g, kg, ml, latas, porciones, unidades, atados…) y el stock máximo. El nombre debe coincidir con el que usan las recetas para que la lista de compras lo cruce bien.</p>
+    <div class="form-btns">
+      <button class="btn-sec" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-prim" onclick="saveEditItem()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- RECIPE MODAL -->
 <div class="overlay" id="recOv" onclick="if(event.target===this)closeRec()">
   <div class="modal" id="recBox">
@@ -2064,7 +2082,7 @@ function renderItem(item){
       <span style="font-size:11px;color:var(--mu);margin-left:2px">/ ${item.max} ${item.unit}</span>
       <button class="iact" onclick="restock('${item.id}')">🔄 Llenar</button>
       <button class="iact" onclick="vaciarItem('${item.id}')">0️⃣ Vaciar</button>
-      <button class="iact" onclick="editItem('${item.id}')">✏️ Max</button>
+      <button class="iact" onclick="editItem('${item.id}')">✏️ Editar</button>
       <button class="iact del" onclick="delItem('${item.id}')">🗑</button>
     </div>`;
   return div;
@@ -2157,11 +2175,41 @@ function restock(id){
 function editItem(id){
   const inv=loadInv();
   const item=inv.find(i=>i.id===id);if(!item)return;
-  const newMax=prompt(`Stock máximo de "${item.name}" (actual: ${item.max} ${item.unit}):`,item.max);
-  if(newMax===null||isNaN(parseInt(newMax))||parseInt(newMax)<1)return;
-  item.max=parseInt(newMax);
-  item.cur=Math.min(item.cur,item.max);
-  saveInv(inv);refreshAll();
+  // Abrir modal de edición prellenado con los valores actuales
+  document.getElementById('editItemId').value = item.id;
+  document.getElementById('editName').value = item.name;
+  document.getElementById('editMax').value = item.max;
+  document.getElementById('editUnit').value = item.unit;
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEditModal(){
+  document.getElementById('editOverlay').classList.remove('open');
+}
+
+async function saveEditItem(){
+  const id = document.getElementById('editItemId').value;
+  const inv = loadInv();
+  const item = inv.find(i=>i.id===id);
+  if(!item){ closeEditModal(); return; }
+
+  const nuevoNombre = document.getElementById('editName').value.trim();
+  const nuevoMax = parseInt(document.getElementById('editMax').value);
+  const nuevaUnidad = document.getElementById('editUnit').value.trim();
+
+  if(!nuevoNombre){ alert('El nombre no puede quedar vacío'); return; }
+  if(isNaN(nuevoMax) || nuevoMax < 1){ alert('El stock máximo debe ser al menos 1'); return; }
+  if(!nuevaUnidad){ alert('Escribe una unidad (g, ml, unidades, latas…)'); return; }
+
+  item.name = nuevoNombre;
+  item.max = nuevoMax;
+  item.unit = nuevaUnidad;
+  item.cur = Math.min(item.cur, item.max);
+
+  await saveInv(inv);   // guarda en la nube
+  closeEditModal();
+  refreshAll();
+  showToast(item.name + ' actualizado');
 }
 
 function delItem(id){
