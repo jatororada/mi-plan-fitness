@@ -606,6 +606,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   .horario-tabla{font-size:9.5px;}
   .horario-tabla th,.horario-tabla td{padding:7px 3px;}
 }
+.buscar-input{
+  width:100%;padding:12px 16px;margin-bottom:1rem;
+  border:1px solid var(--br);border-radius:var(--pill);
+  font-size:14px;font-family:'DM Sans',sans-serif;
+  background:var(--card);color:var(--tx);outline:none;
+  transition:border-color .2s;-webkit-appearance:none;
+}
+.buscar-input:focus{border-color:var(--ink);}
+.buscar-input::placeholder{color:var(--mu);}
+/* Resaltado del item encontrado */
+.item-resaltado{
+  animation:resaltar 2s ease;
+  border-radius:var(--rad);
+}
+@keyframes resaltar{
+  0%,100%{background:transparent;}
+  15%,60%{background:var(--vl);box-shadow:0 0 0 2px var(--v);}
+}
+.item-oculto-busqueda{display:none !important;}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:13px 24px;border-radius:var(--pill);font-size:12.5px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;letter-spacing:.02em;box-shadow:0 8px 32px rgba(28,26,23,.16);}
 #tienda-popup{animation:popIn .15s ease;}
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -714,6 +733,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <button class="ctab active" onclick="showCTab('mercado',this)">🛒 Lista de mercado</button>
     <button class="ctab" onclick="showCTab('inventario',this)">📦 Inventario</button>
   </div>
+  <input type="search" id="buscarMercado" class="buscar-input" placeholder="🔍 Buscar en la lista…" oninput="buscarEnLista('mercado', this.value)" autocomplete="off" style="display:block;">
   <div id="ctab-mercado"></div>
   <div id="ctab-inventario" style="display:none">
     <div class="inv-header">
@@ -724,6 +744,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
       <button onclick="showAddModal()" style="background:var(--v);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer">+ Agregar</button>
     </div>
     <div class="inv-summary" id="inv-summary"></div>
+    <input type="search" id="buscarInv" class="buscar-input" placeholder="🔍 Buscar producto…" oninput="buscarEnLista('inventario', this.value)" autocomplete="off">
     <div class="inv-ftabs">
       <button class="inv-ftab active" onclick="filterInv('all',this)">Todos</button>
       <button class="inv-ftab" onclick="filterInv('ok',this)">✅ Completo</button>
@@ -1001,7 +1022,7 @@ const DEFAULT_INV=[
   {id:'p04',name:'Murillo de res',cat:'Proteínas',cur:490,max:700,unit:'g'},
   {id:'p05',name:'Lomo de cerdo',cat:'Proteínas',cur:680,max:800,unit:'g'},
   
-  {id:'p06',name:'Salmón',cat:'Proteínas',cur:4,max:6,unit:'porciones'},
+  {id:'p06',name:'Salmón',cat:'Proteínas',cur:800,max:1200,unit:'g'},
   {id:'p07',name:'Tilapia',cat:'Proteínas',cur:249,max:500,unit:'g'},
   {id:'p08',name:'Trucha',cat:'Proteínas',cur:114,max:400,unit:'g'},
   {id:'p09',name:'Atún en agua (latas)',cat:'Proteínas',cur:0,max:5,unit:'latas'},
@@ -1013,8 +1034,8 @@ const DEFAULT_INV=[
   // ══════════════════════════════
   {id:'l01',name:'Queso campesino',cat:'Lácteos',cur:0,max:400,unit:'g'},
   {id:'l02',name:'Mozzarella fresca',cat:'Lácteos',cur:0,max:250,unit:'g'},
-  {id:'l03',name:'Leche entera',cat:'Lácteos',cur:0,max:4,unit:'litros'},
-  {id:'l04',name:'Yogur griego natural',cat:'Lácteos',cur:0,max:1,unit:'kg'},
+  {id:'l03',name:'Leche entera',cat:'Lácteos',cur:0,max:4000,unit:'ml'},
+  {id:'l04',name:'Yogur griego natural',cat:'Lácteos',cur:0,max:1000,unit:'g'},
   {id:'l05',name:'Queso parmesano rallado',cat:'Lácteos',cur:0,max:80,unit:'g'},
   // ══════════════════════════════
   // FRUTAS — todas las de las recetas + temporadas
@@ -1044,7 +1065,7 @@ const DEFAULT_INV=[
   // ══════════════════════════════
   // VERDURAS
   // ══════════════════════════════
-  {id:'v01',name:'Cebolla larga',cat:'Verduras',cur:1,max:2,unit:'atados'},
+  {id:'v01',name:'Cebolla larga',cat:'Verduras',cur:6,max:12,unit:'tallos'},
   {id:'v02',name:'Cebolla cabezona blanca',cat:'Verduras',cur:0,max:500,unit:'g'},
   {id:'v03',name:'Pimentón',cat:'Verduras',cur:1,max:3,unit:'unidades'},
   {id:'v04',name:'Brócoli',cat:'Verduras',cur:1,max:2,unit:'unidades'},
@@ -1054,7 +1075,7 @@ const DEFAULT_INV=[
   {id:'v07',name:'Zanahoria',cat:'Verduras',cur:0,max:500,unit:'g'},
   {id:'v08',name:'Espinaca fresca',cat:'Verduras',cur:0,max:400,unit:'g'},
   {id:'v09',name:'Pepino cohombro',cat:'Verduras',cur:0,max:4,unit:'unidades'},
-  {id:'v10',name:'Ajo',cat:'Verduras',cur:0,max:2,unit:'cabezas'},
+  {id:'v10',name:'Ajo',cat:'Verduras',cur:0,max:24,unit:'dientes'},
   {id:'v11',name:'Aguacate hass',cat:'Verduras',cur:0,max:6,unit:'unidades'},
   {id:'v12',name:'Papa pastusa',cat:'Verduras',cur:0,max:1,unit:'kg'},
   {id:'v13',name:'Papa sabanera',cat:'Verduras',cur:1,max:2,unit:'kg'},
@@ -1063,38 +1084,38 @@ const DEFAULT_INV=[
   {id:'v16',name:'Plátano verde',cat:'Verduras',cur:0,max:3,unit:'unidades'},
   {id:'v18',name:'Habichuela',cat:'Verduras',cur:0,max:300,unit:'g'},
   {id:'v19',name:'Zucchini / Calabacín',cat:'Verduras',cur:0,max:2,unit:'unidades'},
-  {id:'v20',name:'Repollo morado',cat:'Verduras',cur:0,max:1,unit:'unidad'},
+  {id:'v20',name:'Repollo morado',cat:'Verduras',cur:0,max:800,unit:'g'},
   {id:'v21',name:'Remolacha',cat:'Verduras',cur:0,max:400,unit:'g'},
   {id:'v22',name:'Ahuyama / Zapallo',cat:'Verduras',cur:0,max:500,unit:'g'},
     {id:'v24',name:'Cilantro fresco',cat:'Verduras',cur:0,max:2,unit:'manojos'},
-  {id:'v25',name:'Cebollín',cat:'Verduras',cur:0,max:1,unit:'manojo'},
+  {id:'v25',name:'Cebollín',cat:'Verduras',cur:0,max:100,unit:'g'},
   // ══════════════════════════════
   // CARBOHIDRATOS / DESPENSA
   // ══════════════════════════════
-  {id:'c01',name:'Arroz blanco',cat:'Despensa',cur:1,max:2,unit:'kg'},
-  {id:'c02',name:'Arroz integral',cat:'Despensa',cur:1,max:1,unit:'kg'},
+  {id:'c01',name:'Arroz blanco',cat:'Despensa',cur:1000,max:2000,unit:'g'},
+  {id:'c02',name:'Arroz integral',cat:'Despensa',cur:1000,max:1000,unit:'g'},
   {id:'c03',name:'Arroz para sushi',cat:'Despensa',cur:0,max:500,unit:'g'},
-  {id:'c04',name:'Avena en hojuelas',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
+  {id:'c04',name:'Avena en hojuelas',cat:'Despensa',cur:500,max:1000,unit:'g'},
   {id:'c05',name:'Harina de arepa',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
   {id:'c27',name:'Tortilla integral',cat:'Despensa',cur:0,max:8,unit:'unidades'},
   {id:'c06',name:'Fettuccine / Pasta integral',cat:'Despensa',cur:1,max:2,unit:'paquetes'},
   {id:'c07',name:'Fideos de arroz',cat:'Despensa',cur:0,max:200,unit:'g'},
   {id:'c08',name:'Fideos ramen (sin sobre)',cat:'Despensa',cur:0,max:200,unit:'g'},
-  {id:'c09',name:'Galletas integrales',cat:'Despensa',cur:0,max:1,unit:'paquete'},
+  {id:'c09',name:'Galletas integrales',cat:'Despensa',cur:0,max:20,unit:'unidades'},
   {id:'c10',name:'Pan integral tajado',cat:'Despensa',cur:0,max:1,unit:'paquete'},
-  {id:'c11',name:'Pan baguette',cat:'Despensa',cur:0,max:3,unit:'unidades'},
+  {id:'c11',name:'Pan baguette',cat:'Despensa',cur:0,max:600,unit:'g'},
   {id:'c12',name:'Maicena',cat:'Despensa',cur:1,max:1,unit:'paquete'},
   {id:'c13',name:'Lentejas',cat:'Despensa',cur:0,max:500,unit:'g'},
   
   {id:'c15',name:'Arveja congelada',cat:'Despensa',cur:0,max:300,unit:'g'},
-  {id:'c16',name:'Café',cat:'Despensa',cur:1,max:1,unit:'paquete'},
+  {id:'c16',name:'Café',cat:'Despensa',cur:500,max:500,unit:'g'},
   {id:'c17',name:'Cacao en polvo',cat:'Despensa',cur:1,max:1,unit:'unidad'},
   {id:'c18',name:'Panela',cat:'Despensa',cur:1,max:3,unit:'unidades'},
   {id:'c19',name:'Azúcar pulverizada',cat:'Despensa',cur:1,max:1,unit:'paquete'},
   {id:'c20',name:'Azúcar morena',cat:'Despensa',cur:1,max:1,unit:'paquete'},
   {id:'c21',name:'Azúcar blanca',cat:'Despensa',cur:1,max:1,unit:'paquete'},
   {id:'c22',name:'Gelatina sin sabor',cat:'Despensa',cur:1,max:3,unit:'sobres'},
-  {id:'c23',name:'Polvo de hornear',cat:'Despensa',cur:0,max:1,unit:'frasco'},
+  {id:'c23',name:'Polvo de hornear',cat:'Despensa',cur:0,max:100,unit:'g'},
   // ══════════════════════════════
   // ESPECIAS Y CONDIMENTOS — todos los de las recetas
   // ══════════════════════════════
@@ -1102,7 +1123,7 @@ const DEFAULT_INV=[
   {id:'s01',name:'Salsa soya baja en sodio',cat:'Especias',cur:0,max:250,unit:'ml'},
   {id:'s02',name:'Aceite de sésamo',cat:'Especias',cur:0,max:100,unit:'ml'},
   {id:'s03',name:'Vinagre de arroz',cat:'Especias',cur:0,max:250,unit:'ml'},
-  {id:'s04',name:'Sriracha',cat:'Especias',cur:0,max:1,unit:'botella'},
+  {id:'s04',name:'Sriracha',cat:'Especias',cur:0,max:200,unit:'ml'},
   {id:'s05',name:'Salsa teriyaki / ponzu',cat:'Especias',cur:0,max:1,unit:'frasco'},
   // Aceites y vinagres
   {id:'s06',name:'Aceite de oliva',cat:'Especias',cur:0,max:250,unit:'ml'},
@@ -1114,17 +1135,17 @@ const DEFAULT_INV=[
   {id:'c25',name:'Maní',cat:'Despensa',cur:0,max:200,unit:'g'},
   {id:'c26',name:'Nueces',cat:'Despensa',cur:0,max:150,unit:'g'},
   // Especias secas
-  {id:'s10',name:'Sal',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s10',name:'Sal',cat:'Especias',cur:500,max:500,unit:'g'},
   {id:'s11',name:'Pimienta negra',cat:'Especias',cur:1,max:1,unit:'frasco'},
   {id:'s12',name:'Comino',cat:'Especias',cur:1,max:1,unit:'frasco'},
   {id:'s13',name:'Canela en polvo',cat:'Especias',cur:1,max:1,unit:'frasco'},
   {id:'s14',name:'Orégano seco',cat:'Especias',cur:1,max:1,unit:'frasco'},
-  {id:'s15',name:'Romero seco',cat:'Especias',cur:1,max:1,unit:'frasco'},
+  {id:'s15',name:'Romero seco',cat:'Especias',cur:30,max:30,unit:'g'},
   {id:'s16',name:'Color / Cúrcuma',cat:'Especias',cur:1,max:1,unit:'frasco'},
   {id:'s17',name:'Ajo en polvo',cat:'Especias',cur:1,max:1,unit:'frasco'},
   {id:'s18',name:'Curry amarillo en pasta',cat:'Especias',cur:0,max:1,unit:'lata'},
   // Dulces y endulzantes
-  {id:'s19',name:'Miel de abejas',cat:'Especias',cur:0,max:1,unit:'frasco'},
+  {id:'s19',name:'Miel de abejas',cat:'Especias',cur:0,max:62500,unit:'g'},
   {id:'s20',name:'Panela (para cocina)',cat:'Especias',cur:0,max:2,unit:'unidades'},
   // Frescos
   {id:'s21',name:'Jengibre fresco',cat:'Especias',cur:0,max:100,unit:'g'},
@@ -1543,6 +1564,27 @@ function getIngredientesQuincena(q){
 
 // ── Suma de ingredientes reales por quincena ──────────────────────────
 // Parsea "180g", "2 unidades", "½ unidad" etc. y suma las cantidades
+// Normaliza unidades: singular/plural y abreviaciones = misma unidad
+function normalizarUnidad(u){
+  if(!u) return '';
+  u = u.toLowerCase().trim();
+  const map = {
+    'unidad':'unidades','unidades':'unidades','und':'unidades','u':'unidades',
+    'diente':'dientes','dientes':'dientes',
+    'tallo':'tallos','tallos':'tallos',
+    'gr':'g','gramo':'g','gramos':'g','g':'g',
+    'kilogramo':'kg','kg':'kg',
+    'mililitro':'ml','ml':'ml',
+    'litro':'l','litros':'l','l':'l',
+    'lata':'latas','latas':'latas',
+    'hoja':'hojas','hojas':'hojas',
+    'porcion':'porciones','porción':'porciones','porciones':'porciones',
+    'paquete':'paquetes','paquetes':'paquetes',
+    'frasco':'frascos','frascos':'frascos',
+  };
+  return map[u] || u;
+}
+
 function parseQty(qtyStr){
   if(!qtyStr) return {num:0, unit:''};
   const s=qtyStr.toString().trim();
@@ -1806,47 +1848,62 @@ function buildMercado(){
         });
       }
       const cat=invItem?(invItem.cat==='Aseo del hogar'?'Aseo':invItem.cat):'Despensa';
+      // Las especias tienen su propio bloque (no dependen de recetas) → saltar aquí
+      if(cat==='Especias') return;
       if(!needed[cat])needed[cat]=[];
 
       // ── RESTAR lo que ya tienes en inventario ──
-      // Convertir el stock del inventario a la misma unidad del consumo
       let stockDisponible=0;
+      let unidadesCompatibles=false;
       if(invItem){
-        // Si las unidades coinciden, restar directo
         const invUnit=(invItem.unit||'').toLowerCase();
         const consUnit=(c.unit||'').toLowerCase();
-        // Normalizar unidades equivalentes
-        const mismaUnidad = invUnit===consUnit ||
+        // Familias de unidad compatibles (peso con peso, volumen con volumen)
+        const familiaPeso=['g','kg','gr','gramos'];
+        const familiaVol=['ml','l','litro','litros'];
+        unidadesCompatibles = invUnit===consUnit ||
+          (familiaPeso.includes(invUnit)&&familiaPeso.includes(consUnit)) ||
+          (familiaVol.includes(invUnit)&&familiaVol.includes(consUnit)) ||
           (invUnit.startsWith(consUnit.slice(0,3)) && consUnit.length>=2) ||
           (consUnit.startsWith(invUnit.slice(0,3)) && invUnit.length>=2);
-        if(mismaUnidad){
-          stockDisponible=invItem.cur;
+        if(unidadesCompatibles){
+          // Convertir kg→g y l→ml para restar bien
+          let stock=invItem.cur;
+          if(invUnit==='kg'&&['g','gr','gramos'].includes(consUnit)) stock*=1000;
+          if(invUnit==='l'&&['ml'].includes(consUnit)) stock*=1000;
+          stockDisponible=stock;
         }
-        // Si el consumo es en gramos y el inventario también → resta directa
-        // (ya cubierto arriba)
       }
 
-      // Cantidad neta a comprar = consumo restante − stock disponible
-      const netoComprar = Math.max(0, c.num - stockDisponible);
-
-      // Si ya tienes suficiente stock, no aparece en la lista
-      if(netoComprar<=0)return;
-
-      const cantidad=Math.ceil(netoComprar*10)/10;
-      const cantidadStr=Number.isInteger(cantidad)?cantidad:cantidad.toFixed(1);
-
-      // Texto con detalle: cuánto necesitas vs cuánto tienes
-      const tieneTxt = (invItem && stockDisponible>0)
-        ? ' (necesitas '+(Number.isInteger(c.num)?c.num:c.num.toFixed(1))+', tienes '+stockDisponible+')'
-        : '';
-
-      needed[cat].push({
-        id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
-        name:c.nombre,
-        need:cantidadStr+(c.unit?' '+c.unit:''),
-        detalle:tieneTxt,
-        invItem:invItem
-      });
+      // CASO A: unidades compatibles → resta numérica normal
+      if(unidadesCompatibles){
+        const netoComprar = Math.max(0, c.num - stockDisponible);
+        if(netoComprar<=0) return; // ya tienes suficiente → no aparece
+        const cantidad=Math.ceil(netoComprar*10)/10;
+        const cantidadStr=Number.isInteger(cantidad)?cantidad:cantidad.toFixed(1);
+        const tieneTxt = stockDisponible>0
+          ? ' (necesitas '+(Number.isInteger(c.num)?c.num:c.num.toFixed(1))+', tienes '+stockDisponible+')'
+          : '';
+        needed[cat].push({
+          id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
+          name:c.nombre,
+          need:cantidadStr+(c.unit?' '+c.unit:''),
+          detalle:tieneTxt,
+          invItem:invItem
+        });
+      } else {
+        // CASO B: unidades NO compatibles (frasco vs g, unidad vs ml…)
+        // → tratar por PRESENCIA: si tiene stock, ya lo tiene y no aparece.
+        // Si está en 0, aparece para comprar (1 unidad del inventario).
+        if(invItem && invItem.cur>0) return; // ya lo tiene → no comprar
+        needed[cat].push({
+          id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
+          name:c.nombre,
+          need: invItem ? ('comprar '+(invItem.unit||'')) : c.unit,
+          detalle:'',
+          invItem:invItem
+        });
+      }
     });
 
     const qItems=Object.values(needed).flat();
@@ -1923,6 +1980,54 @@ function buildMercado(){
 
     container.appendChild(qBlock);
   });
+
+  // ── ESPECIAS Y CONDICIONES BASE (no dependen de recetas) ──
+  // Aparecen siempre las que estén agotadas (cur=0), sin importar el menú.
+  // Si están completas en inventario, NO aparecen.
+  const especiasItems = inv.filter(i => i.cat==='Especias' && i.cur===0);
+  if(especiasItems.length>0){
+    const eBlock=document.createElement('div');
+    eBlock.className='q-block';
+    const eHead=document.createElement('div');
+    eHead.className='q-label';
+    eHead.style.cssText='background:var(--al);color:var(--am);';
+    eHead.innerHTML='<div style="flex:1"><div>Especias y condimentos</div><div class="q-label-sub">'+especiasItems.length+' agotados · reponer</div></div>';
+    eBlock.appendChild(eHead);
+
+    const card=document.createElement('div');
+    card.className='mlist-card mlist-cat';
+    const header=document.createElement('div');
+    header.className='mcat-header';
+    header.onclick=function(){toggleMcat(header);};
+    header.innerHTML='<div style="display:flex;align-items:center;gap:12px">'+
+      '<span class="mcat-cat-emoji">🧂</span>'+
+      '<span class="mcat-cat-name">Especias</span>'+
+      '<span class="mcat-cat-count">'+especiasItems.length+' agotados</span>'+
+      '</div><span class="mcat-chevron">▾</span>';
+    card.appendChild(header);
+    const body=document.createElement('div');
+    body.className='mcat-body';
+    especiasItems.forEach(function(item){
+      const tienda=getTienda(item);
+      const tInfo=TIENDA_LABEL[tienda]||TIENDA_LABEL.cualquiera;
+      const iid=item.id.replace(/'/g,"\\'");
+      const iname=item.name.replace(/'/g,"\\'");
+      const row=document.createElement('div');
+      row.className='mlist-item '+tInfo.border;
+      row.dataset.tienda=tienda;
+      const yaComp=comprasChecks[item.id]===true;
+      if(yaComp) row.classList.add('bought');
+      row.innerHTML=`<input type="checkbox" class="mcb" onchange="markBought('${iid}',this)" ${yaComp?'checked':''}>
+        <span class="mlist-name">${item.name}
+          <span class="tienda-badge ${tInfo.cls}" style="cursor:pointer" onclick="showTiendaPopup('${iid}','${iname}',this,event)">${tInfo.label}</span>
+        </span>
+        <div class="mlist-right"><span class="mlist-need crit">comprar ${item.unit}</span></div>`;
+      body.appendChild(row);
+    });
+    card.appendChild(body);
+    eBlock.appendChild(card);
+    container.appendChild(eBlock);
+  }
 
   // Aseo del hogar (no depende de recetas) — bloque aparte
   const aseoItems=inv.filter(i=>(i.cat==='Aseo'||i.cat==='Mascotas')&&needAmount(i)>0);
@@ -2349,22 +2454,22 @@ function syncFrutasInventario(){
 // ═══════════════ RECETAS ═══════════════
 const REC={
   avena_fruta:{n:'Avena cremosa con {{F0}} y miel',t:'Desayuno',cls:'chip-d',min:15,dif:'Muy fácil',kcal:480,prot:32,
-    i(f,v){return[['Avena en hojuelas','60g'],['Leche entera','200ml'],[f[0]+' fresca','100g'],['Miel de abejas','10ml'],['Canela en polvo','1 pizca'],['Huevos enteros','2 unidades'],['Aceite de oliva','3ml']]},
+    i(f,v){return[['Avena en hojuelas','60g'],['Leche entera','200ml'],[f[0]+' fresca','100g'],['Miel de abejas','10g'],['Canela en polvo','1 pizca'],['Huevos enteros','2 unidades'],['Aceite de oliva','3ml']]},
     p:['Calienta la leche a fuego medio. Agrega la avena y revuelve 5-7 min hasta que espese. Agrega miel y canela.','Bate los huevos con sal. Cocínalos revueltos a fuego medio-bajo 2 min, retira cuando estén jugosos.','Pica la fruta en cubos medianos.','Sirve la avena en bowl. Coloca la fruta encima, huevos al lado, hilo de miel.'],
     tip:'Prepara avena doble el domingo y guarda en nevera. Al día siguiente calienta con un chorrito de leche. Ahorra 10 min en días de gym.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Miel → panela raspada`}},
   tostadas_huevo:{n:'Tostadas con queso campesino y huevo pochado',t:'Desayuno',cls:'chip-d',min:15,dif:'Fácil',kcal:460,prot:30,
-    i(f,v){return[['Pan integral','2 tajadas'],['Queso campesino','60g'],['Huevos enteros','2 unidades'],['Tomate chonto','1 unidad'],['Vinagre blanco','15ml'],['Sal, pimienta','Al gusto'],['Café con leche','250ml']]},
+    i(f,v){return[['Pan integral','2 tajadas'],['Queso campesino','60g'],['Huevos enteros','2 unidades'],['Tomate chonto','120g'],['Vinagre blanco','15ml'],['Sal, pimienta','Al gusto'],['Leche entera','200ml'],['Café','10g']]},
     p:['Tuesta el pan. Corta el queso y el tomate en rodajas.','Pochar: agua hirviendo + vinagre, crea remolino suave. Desliza los huevos. Cocina 3 min.','Seca los huevos en papel absorbente.','Arma: pan + queso + tomate + huevo pochado. Pimienta al gusto.'],
     tip:'El truco del pochado es el remolino — practica una vez y ya lo dominas para siempre.',
     s:'Queso campesino → mozzarella · Pan integral → arepa'},
   arepa_huevo:{n:'Arepa con huevo y aguacate',t:'Desayuno',cls:'chip-d',min:20,dif:'Muy fácil',kcal:490,prot:28,
-    i(f,v){return[['Arepa blanca','1 unidad (80g)'],['Huevos enteros','2 unidades'],['Aguacate hass','½ unidad'],['Tomate chonto','1 unidad'],['Limón','¼ unidad'],['Sal, pimienta','Al gusto'],['Café con leche','250ml']]},
+    i(f,v){return[['Arepa blanca','1 unidad (80g)'],['Huevos enteros','2 unidades'],['Aguacate hass','½ unidad'],['Tomate chonto','120g'],['Limón','¼ unidad'],['Sal, pimienta','Al gusto'],['Leche entera','200ml'],['Café','10g']]},
     p:['Calienta la arepa en sartén sin grasa 3 min por lado.','Aplasta el aguacate con tenedor. Condimenta con sal y limón.','Fríe los huevos a fuego medio-bajo. Tapa los últimos 30 seg.','Sirve la arepa con aguacate, huevos y tomate.'],
     tip:'100% colombiano. Arepa + huevos + aguacate = plan de tu nutricionista en 20 min.',
     s:'Aguacate → queso campesino · Arepa blanca → integral'},
   yogur_fruta:{n:'Yogur griego con granola y {{F0}}',t:'Desayuno',cls:'chip-d',min:5,dif:'Muy fácil',kcal:450,prot:24,
-    i(f,v){return[['Yogur griego natural','200g'],['Avena tostada (granola)','40g'],[f[0],'100g'],['Miel de abejas','8ml'],['Almendras crudas','15g']]},
+    i(f,v){return[['Yogur griego natural','200g'],['Avena tostada (granola)','40g'],[f[0],'100g'],['Miel de abejas','8g'],['Almendras crudas','15g']]},
     p:['Tuesta la avena en sartén seca 3 min. Agrega almendras los últimos 30 seg.','Prepara la fruta.','Bowl: yogur base, granola, fruta, miel y almendras.'],
     tip:'El yogur griego tiene 17g proteína por 200g y probióticos que regulan el estrógeno.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Granola → nueces`}},
@@ -2374,17 +2479,17 @@ const REC={
     tip:'Receta bogotana que cumple exactamente el plan de tu nutricionista. Perfecta en días fríos.',
     s:'Pan integral → arepa blanca · Cebolla larga → cabezona'},
   pancakes:{n:'Pancakes de avena con {{F0}}',t:'Desayuno',cls:'chip-d',min:20,dif:'Fácil',kcal:470,prot:26,
-    i(f,v){return[['Avena en hojuelas (triturada)','70g'],['Huevos enteros','2 unidades'],['Leche entera','80ml'],['Miel de abejas','8ml'],['Polvo de hornear','3g'],[f[0]+' fresca','150g']]},
+    i(f,v){return[['Avena en hojuelas (triturada)','70g'],['Huevos enteros','2 unidades'],['Leche entera','80ml'],['Miel de abejas','8g'],['Polvo de hornear','3g'],[f[0]+' fresca','150g']]},
     p:['Tritura la avena en licuadora 30 seg.','Mezcla avena + huevos + leche + miel + polvo de hornear. Reposa 2 min.','Cocina en sartén a fuego medio-bajo, ¼ de mezcla por pancake. 2-3 min, voltea 1 min.','Sirve con fruta fresca y hilo de miel.'],
     tip:'La mezcla dura 2 días en nevera. En la mañana tienes los pancakes listos en 5 min.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Leche → yogur griego`}},
   calentado:{n:'Calentado andino con huevo',t:'Desayuno',cls:'chip-d',min:15,dif:'Muy fácil',kcal:500,prot:32,
-    i(f,v){return[['Arroz cocido del día anterior','120g'],['Lentejas cocidas','80g'],['Huevos enteros','2 unidades'],['Arepa blanca','1 unidad'],['Aceite de oliva','5ml'],['Café con leche entera','250ml']]},
+    i(f,v){return[['Arroz cocido del día anterior','120g'],['Lentejas cocidas','80g'],['Huevos enteros','2 unidades'],['Arepa blanca','1 unidad'],['Aceite de oliva','5ml'],['Leche entera','200ml'],['Café','10g']]},
     p:['Calienta arroz y fríjoles en sartén con aceite 3 min hasta dorar.','Fríe los huevos al lado.','Calienta la arepa. Sirve todo junto con café.'],
     tip:'Cero desperdicio — usa sobrados. El arroz frío recalentado tiene menor índice glucémico.',
     s:'Fríjoles → lentejas · Arroz blanco → integral'},
   yogur_frutos:{n:'Yogur griego con {{F0}} y frutos secos',t:'Merienda',cls:'chip-m',min:5,dif:'Muy fácil',kcal:320,prot:18,
-    i(f,v){return[['Yogur griego natural','180g'],['Almendras crudas','20g'],['Maní tostado sin sal','15g'],[f[0]+' fresca','120g'],['Miel de abejas','5ml']]},
+    i(f,v){return[['Yogur griego natural','180g'],['Almendras crudas','20g'],['Maní tostado sin sal','15g'],[f[0]+' fresca','120g'],['Miel de abejas','5g']]},
     p:['Sirve el yogur.','Coloca frutos secos, fruta en cubos y miel encima.'],
     tip:'5 min, 18g proteína. Los probióticos regulan el estrógeno en el intestino.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Almendras → nueces`}},
@@ -2394,7 +2499,7 @@ const REC={
     tip:'La fruta ácida de temporada + mozzarella satisface el antojo de dulce con proteína.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Mozzarella → queso campesino`}},
   avena_merienda:{n:'Avena caliente con {{F0}} y almendras',t:'Merienda',cls:'chip-m',min:10,dif:'Muy fácil',kcal:300,prot:12,
-    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],[f[0]+' fresca','100g'],['Almendras laminadas','20g'],['Miel de abejas','5ml']]},
+    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],[f[0]+' fresca','100g'],['Almendras laminadas','20g'],['Miel de abejas','5g']]},
     p:['Cocina la avena en leche 5 min revolviendo.','Prepara la fruta.','Sirve la avena tibia con fruta y almendras encima.'],
     tip:'Avena + fruta de temporada mantiene el azúcar estable y evita antojos nocturnos.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Almendras → maní`}},
@@ -2409,12 +2514,12 @@ const REC={
     tip:'El jengibre es antiinflamatorio. Ideal post-entrenamiento.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Leche → de avena`}},
   overnight:{n:'Overnight oats con {{F0}} y chía',t:'Merienda',cls:'chip-m2',min:5,dif:'Muy fácil',kcal:330,prot:18,
-    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],['Yogur griego','60g'],[f[0]+' fresca','80g'],['Semillas de chía','10g'],['Miel de abejas','8ml']]},
+    i(f,v){return[['Avena en hojuelas','50g'],['Leche entera','150ml'],['Yogur griego','60g'],[f[0]+' fresca','80g'],['Semillas de chía','10g'],['Miel de abejas','8g']]},
     p:['Noche anterior: mezcla avena + leche + yogur + chía + miel en frasco. Refrigera.','En la mañana agrega la fruta fresca encima.'],
     tip:'Cero tiempo en la mañana. La chía aporta omega-3 que regula el ciclo hormonal.',
     s(f,v){return`${f[0]} → ${f[1]||'banano'} · Chía → linaza`}},
   pechuga_fruta:{n:'Pechuga en salsa de {{F0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:620,prot:42,
-    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Pulpa de '+f[0].toLowerCase(),'60ml'],['Miel de abejas','10ml'],['Ajo','2 dientes'],['Aceite de oliva','10ml'],['Sal, pimienta, comino','Al gusto'],['Arroz blanco (crudo)','70g'],['Plátano maduro','½ unidad'],[v[0]+' para ensalada','80g'],['Limón','½ unidad']]},
+    i(f,v){return[['Pechuga de pollo sin piel','180g'],['Pulpa de '+f[0].toLowerCase(),'60ml'],['Miel de abejas','10g'],['Ajo','2 dientes'],['Aceite de oliva','10ml'],['Sal, pimienta, comino','Al gusto'],['Arroz blanco (crudo)','70g'],['Plátano maduro','½ unidad'],[v[0]+' para ensalada','80g'],['Limón','½ unidad']]},
     p:['Marina la pechuga con ajo, sal, pimienta, comino y aceite 10 min.','Sella en sartén 3 min por lado. Reserva.','En la misma sartén mezcla la pulpa de la fruta + miel + 30ml agua. Espesa 2 min. Vierte sobre la pechuga.','Hornea a 180°C 12 min. Cocina el arroz. Asa el plátano sin grasa 3 min por lado.','Sirve con ensalada de la verdura de temporada con limón.'],
     tip:'Prepara 3 pechugas a la vez — duran 4 días en nevera. La fruta de temporada cambia el sabor completamente cada mes.',
     s(f,v){return`${f[0]} → ${f[1]||'naranja'} · Plátano → papa cocida`}},
@@ -2424,7 +2529,7 @@ const REC={
     tip:'Cocina 500g de lentejas el domingo — rinden toda la semana. Son excelente fuente de hierro y proteína vegetal.',
     s:'Carne res → pechuga · Arroz integral → blanco · Patacón → papa'},
   pollo_teriyaki:{n:'Pollo teriyaki con arroz y {{V0}}',t:'Almuerzo',cls:'chip-a',min:35,dif:'Fácil',kcal:600,prot:40,
-    i(f,v){return[['Muslo de pollo sin piel','180g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10ml'],['Vinagre de arroz','10ml'],['Ajo','2 dientes'],['Jengibre fresco','5g'],['Arroz blanco (crudo)','70g'],[v[0]+' fresca','100g'],['Aceite de oliva','5ml']]},
+    i(f,v){return[['Muslo de pollo sin piel','180g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10g'],['Vinagre de arroz','10ml'],['Ajo','2 dientes'],['Jengibre fresco','5g'],['Arroz blanco (crudo)','70g'],[v[0]+' fresca','100g'],['Aceite de oliva','5ml']]},
     p:['Salsa teriyaki: soya + miel + vinagre + ajo + jengibre. Divide en dos.','Marina el pollo 15 min en la primera mitad.','Sella en sartén 5 min por lado. Últimos 2 min glasea con la segunda mitad.','Sirve sobre arroz con la verdura de temporada salteada.'],
     tip:'El glaseado final crea ese brillo de restaurante japonés. Aplícalo en los últimos 2 min.',
     s(f,v){return`Muslo → pechuga · ${v[0]} → ${v[1]||'zanahoria'} · Miel → panela`}},
@@ -2494,7 +2599,7 @@ const REC={
     tip:'Congela cubos de caldo cuando cocines pollo. Transforma completamente el sabor del ramen.',
     s:'Fideos ramen → de arroz · Espinaca → repollo · Huevo → más pollo'},
   yakitori:{n:'Bowl yakitori de pollo',t:'Cena',cls:'chip-c',min:30,dif:'Fácil',kcal:430,prot:38,
-    i(f,v){return[['Pechuga de pollo en cubos','170g'],['Arroz sushi cocido','150g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10ml'],['Jengibre fresco rallado','5g'],['Ajo','1 diente'],['Repollo morado rallado','60g'],['Cebollín','15g'],['Sésamo tostado','5g']]},
+    i(f,v){return[['Pechuga de pollo en cubos','170g'],['Arroz sushi cocido','150g'],['Salsa soya baja en sodio','20ml'],['Miel de abejas','10g'],['Jengibre fresco rallado','5g'],['Ajo','1 diente'],['Repollo morado rallado','60g'],['Cebollín','15g'],['Sésamo tostado','5g']]},
     p:['Salsa yakitori: soya + miel + ajo + jengibre. Divide en dos mitades.','Marina el pollo en cubos 15 min.','Cocina en sartén 4 min por lado. Últimos 2 min glasea con la segunda mitad.','Sirve sobre arroz sushi con repollo morado, cebollín y sésamo.'],
     tip:'El glaseado al final para que la miel no se queme. Crea una capa brillante de restaurante japonés.',
     s:'Pechuga → muslo sin piel (más jugoso) · Miel → panela disuelta'},
@@ -3888,6 +3993,60 @@ function reconstruirTodo(){
 }
 
 // INIT inicial — solo el selector de mes, el resto espera a la sesión
+// ── Búsqueda en lista de compras e inventario ──
+function buscarEnLista(donde, texto){
+  const q = texto.trim().toLowerCase();
+  // Contenedor según dónde estemos
+  const cont = donde==='inventario'
+    ? document.getElementById('inv-container')
+    : document.getElementById('ctab-mercado');
+  if(!cont) return;
+  const items = cont.querySelectorAll(donde==='inventario' ? '.inv-item' : '.mlist-item');
+
+  if(!q){
+    // Sin texto: mostrar todo, quitar resaltados
+    items.forEach(el=>{ el.classList.remove('item-oculto-busqueda','item-resaltado'); });
+    // Reabrir categorías que se hayan cerrado
+    return;
+  }
+
+  let primero = null;
+  items.forEach(el=>{
+    const nombre = (el.querySelector('.inv-name, .mlist-name')||{}).textContent||'';
+    const coincide = nombre.toLowerCase().includes(q);
+    el.classList.toggle('item-oculto-busqueda', !coincide);
+    el.classList.remove('item-resaltado');
+    if(coincide && !primero) primero = el;
+  });
+
+  // Abrir las categorías que contienen coincidencias (desplegables)
+  if(donde==='mercado'){
+    cont.querySelectorAll('.mcat-body').forEach(body=>{
+      const tieneVisible = [...body.querySelectorAll('.mlist-item')].some(el=>!el.classList.contains('item-oculto-busqueda'));
+      if(tieneVisible){
+        body.classList.add('open');
+        const chev = body.previousElementSibling && body.previousElementSibling.querySelector('.mcat-chevron');
+        if(chev) chev.classList.add('open');
+      }
+    });
+  } else {
+    cont.querySelectorAll('.inv-cat-body').forEach(body=>{
+      const tieneVisible = [...body.querySelectorAll('.inv-item')].some(el=>!el.classList.contains('item-oculto-busqueda'));
+      if(tieneVisible){
+        body.classList.add('open');
+        const chev = body.previousElementSibling && body.previousElementSibling.querySelector('.mcat-chevron');
+        if(chev) chev.classList.add('open');
+      }
+    });
+  }
+
+  // Resaltar y llevar al primero encontrado
+  if(primero){
+    primero.classList.add('item-resaltado');
+    primero.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+
 // ── Botón volver arriba ──
 function scrollToTop(){ window.scrollTo({top:0,behavior:'smooth'}); }
 window.addEventListener('scroll',function(){
