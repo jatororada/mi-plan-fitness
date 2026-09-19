@@ -606,6 +606,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   .horario-tabla{font-size:9.5px;}
   .horario-tabla th,.horario-tabla td{padding:7px 3px;}
 }
+.calc-modal{background:var(--card);border-radius:var(--rad);padding:1.5rem;max-width:320px;width:100%;box-shadow:0 30px 90px rgba(28,26,23,.2);}
+.calc-item-name{font-size:12px;color:var(--mu);text-align:center;margin-bottom:.75rem;letter-spacing:.01em;}
+.calc-display{font-family:'DM Serif Display',serif;font-size:40px;text-align:right;padding:12px 16px;background:var(--bg);border-radius:var(--rad);margin-bottom:4px;min-height:64px;line-height:1;display:flex;align-items:center;justify-content:flex-end;overflow:hidden;}
+.calc-op-hint{font-size:12px;color:var(--am);text-align:right;height:16px;margin-bottom:12px;padding-right:4px;}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem;}
+.calc-grid button{padding:16px 0;border:1px solid var(--br);border-radius:var(--rad);background:transparent;font-size:18px;font-family:'DM Sans',sans-serif;color:var(--tx);cursor:pointer;transition:all .15s;}
+.calc-grid button:hover{background:var(--bg);border-color:var(--ink);}
+.calc-grid button:active{transform:scale(.95);}
+.calc-grid .calc-op{background:var(--al);color:var(--am);font-weight:600;}
+.calc-grid .calc-clear{background:var(--danger-l);color:var(--danger);}
+.calc-grid .calc-eq{background:var(--ink);color:var(--bg);font-weight:600;}
+.calc-btns{display:flex;gap:8px;}
+.calc-btns button{flex:1;}
 .buscar-input{
   width:100%;padding:12px 16px;margin-bottom:1rem;
   border:1px solid var(--br);border-radius:var(--pill);
@@ -815,6 +828,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <h3>Editar producto</h3>
     <input type="hidden" id="editItemId">
     <div class="fg"><label>Nombre</label><input type="text" id="editName"></div>
+    <div class="fg"><label>Categoría</label>
+      <select id="editCat">
+        <option value="Proteínas">🥩 Proteínas</option>
+        <option value="Lácteos">🥛 Lácteos</option>
+        <option value="Frutas">🍇 Frutas</option>
+        <option value="Verduras">🥬 Verduras</option>
+        <option value="Despensa">🌾 Despensa</option>
+        <option value="Especias">🧂 Especias</option>
+        <option value="Aseo">🧼 Aseo</option>
+        <option value="Mascotas">🐾 Mascotas</option>
+      </select>
+    </div>
     <div class="fg-row">
       <div class="fg"><label>Stock meta</label><input type="number" id="editMax" min="1"></div>
       <div class="fg"><label>Unidad</label><input type="text" id="editUnit" placeholder="g, ml, latas, porciones…"></div>
@@ -823,6 +848,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="form-btns">
       <button class="btn-sec" onclick="closeEditModal()">Cancelar</button>
       <button class="btn-prim" onclick="saveEditItem()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALCULADORA DE CANTIDAD -->
+<div class="overlay" id="calcOverlay" onclick="if(event.target===this)cerrarCalc()">
+  <div class="calc-modal">
+    <div class="calc-item-name" id="calcItemName">Producto</div>
+    <div class="calc-display" id="calcDisplay">0</div>
+    <div class="calc-op-hint" id="calcOpHint"></div>
+    <div class="calc-grid">
+      <button onclick="calcNum(7)">7</button>
+      <button onclick="calcNum(8)">8</button>
+      <button onclick="calcNum(9)">9</button>
+      <button class="calc-op" onclick="calcOp('+')">+</button>
+      <button onclick="calcNum(4)">4</button>
+      <button onclick="calcNum(5)">5</button>
+      <button onclick="calcNum(6)">6</button>
+      <button class="calc-op" onclick="calcOp('-')">−</button>
+      <button onclick="calcNum(1)">1</button>
+      <button onclick="calcNum(2)">2</button>
+      <button onclick="calcNum(3)">3</button>
+      <button class="calc-op" onclick="calcBorrar()">⌫</button>
+      <button onclick="calcNum(0)">0</button>
+      <button onclick="calcPunto()">.</button>
+      <button class="calc-clear" onclick="calcLimpiar()">C</button>
+      <button class="calc-eq" onclick="calcIgual()">=</button>
+    </div>
+    <div class="calc-btns">
+      <button class="btn-sec" onclick="cerrarCalc()">Cancelar</button>
+      <button class="btn-prim" onclick="calcGuardar()">Guardar cantidad</button>
     </div>
   </div>
 </div>
@@ -2177,12 +2233,9 @@ function renderItem(item){
     </div>
     <div class="inv-actions">
       <button class="qbtn" onclick="adj('${item.id}',-1)">−</button>
-      <input type="number" class="qty-input" id="qi-${item.id}" value="${item.cur}" min="0" max="${item.max}"
-        inputmode="numeric" pattern="[0-9]*"
-        oninput="adjDirectDebounced('${item.id}',this.value)"
-        onblur="adjDirect('${item.id}',this.value)"
-        onkeydown="if(event.key==='Enter')this.blur()"
-        title="Edita el número directamente">
+      <input type="text" readonly class="qty-input" id="qi-${item.id}" value="${item.cur}"
+        onclick="abrirCalc('${item.id}')"
+        title="Toca para abrir la calculadora">
       <button class="qbtn" onclick="adj('${item.id}',+1)">+</button>
       <span style="font-size:11px;color:var(--mu);margin-left:2px">/ ${item.max} ${item.unit}</span>
       <button class="iact" onclick="restock('${item.id}')">🔄 Llenar</button>
@@ -2191,6 +2244,78 @@ function renderItem(item){
       <button class="iact del" onclick="delItem('${item.id}')">🗑</button>
     </div>`;
   return div;
+}
+
+// ══════════════ CALCULADORA DE CANTIDAD ══════════════
+let _calc = { id:null, display:'0', acumulado:null, op:null, esperandoNum:false, max:0, unit:'' };
+
+function abrirCalc(id){
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===id);
+  if(!item)return;
+  _calc = { id:id, display:String(item.cur), acumulado:null, op:null, esperandoNum:false, max:item.max, unit:item.unit };
+  document.getElementById('calcItemName').textContent = item.name + ' · ' + item.cur + '/' + item.max + ' ' + item.unit;
+  actualizarCalcDisplay();
+  document.getElementById('calcOpHint').textContent = '';
+  document.getElementById('calcOverlay').classList.add('open');
+}
+function cerrarCalc(){ document.getElementById('calcOverlay').classList.remove('open'); }
+function actualizarCalcDisplay(){ document.getElementById('calcDisplay').textContent = _calc.display; }
+
+function calcNum(n){
+  if(_calc.esperandoNum){ _calc.display = String(n); _calc.esperandoNum=false; }
+  else { _calc.display = (_calc.display==='0') ? String(n) : _calc.display + n; }
+  actualizarCalcDisplay();
+}
+function calcPunto(){
+  if(_calc.esperandoNum){ _calc.display='0.'; _calc.esperandoNum=false; }
+  else if(!_calc.display.includes('.')){ _calc.display += '.'; }
+  actualizarCalcDisplay();
+}
+function calcOp(op){
+  const val = parseFloat(_calc.display)||0;
+  if(_calc.acumulado===null){ _calc.acumulado = val; }
+  else if(!_calc.esperandoNum){ _calc.acumulado = aplicarOp(_calc.acumulado, val, _calc.op); }
+  _calc.op = op;
+  _calc.esperandoNum = true;
+  document.getElementById('calcOpHint').textContent = _calc.acumulado + ' ' + op;
+}
+function aplicarOp(a,b,op){ return op==='+' ? a+b : op==='-' ? a-b : b; }
+function calcIgual(){
+  if(_calc.op===null) return;
+  const val = parseFloat(_calc.display)||0;
+  let res = aplicarOp(_calc.acumulado, val, _calc.op);
+  if(res<0) res=0;
+  _calc.display = String(Math.round(res*100)/100);
+  _calc.acumulado=null; _calc.op=null; _calc.esperandoNum=true;
+  document.getElementById('calcOpHint').textContent='';
+  actualizarCalcDisplay();
+}
+function calcBorrar(){
+  _calc.display = _calc.display.length>1 ? _calc.display.slice(0,-1) : '0';
+  actualizarCalcDisplay();
+}
+function calcLimpiar(){
+  _calc.display='0'; _calc.acumulado=null; _calc.op=null; _calc.esperandoNum=false;
+  document.getElementById('calcOpHint').textContent='';
+  actualizarCalcDisplay();
+}
+async function calcGuardar(){
+  // Si quedó una operación pendiente, resolverla primero
+  if(_calc.op!==null) calcIgual();
+  let val = Math.round((parseFloat(_calc.display)||0));
+  if(val<0) val=0;
+  if(val>_calc.max) val=_calc.max; // no pasar del máximo
+  const inv=loadInv();
+  const item=inv.find(i=>i.id===_calc.id);
+  if(item){
+    item.cur = val;
+    await saveInv(inv);
+    updateInvItemDOM(item);
+    updateInvSummary();
+    showToast(item.name + ': ' + val + '/' + item.max + ' ' + item.unit);
+  }
+  cerrarCalc();
 }
 
 // Guardado con debounce mientras se escribe (800ms tras dejar de teclear)
@@ -2283,6 +2408,7 @@ function editItem(id){
   // Abrir modal de edición prellenado con los valores actuales
   document.getElementById('editItemId').value = item.id;
   document.getElementById('editName').value = item.name;
+  document.getElementById('editCat').value = (item.cat==='Aseo del hogar'?'Aseo':item.cat) || 'Despensa';
   document.getElementById('editMax').value = item.max;
   document.getElementById('editUnit').value = item.unit;
   document.getElementById('editOverlay').classList.add('open');
@@ -2299,6 +2425,7 @@ async function saveEditItem(){
   if(!item){ closeEditModal(); return; }
 
   const nuevoNombre = document.getElementById('editName').value.trim();
+  const nuevaCategoria = document.getElementById('editCat').value;
   const nuevoMax = parseInt(document.getElementById('editMax').value);
   const nuevaUnidad = document.getElementById('editUnit').value.trim();
 
@@ -2307,6 +2434,7 @@ async function saveEditItem(){
   if(!nuevaUnidad){ alert('Escribe una unidad (g, ml, unidades, latas…)'); return; }
 
   item.name = nuevoNombre;
+  item.cat = nuevaCategoria;
   item.max = nuevoMax;
   item.unit = nuevaUnidad;
   item.cur = Math.min(item.cur, item.max);
