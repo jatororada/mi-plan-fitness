@@ -1664,6 +1664,46 @@ function parseQty(qtyStr){
 }
 
 // Calcula los ingredientes totales consumidos en una quincena
+// ══════════════════════════════════════════════════════════════
+// PESOS DE REFERENCIA — gramos/ml promedio por unidad física.
+// Se usan SOLO para calcular cuántas unidades comprar cuando la receta
+// pide g/ml pero el inventario está en unidades. NO cambia el inventario.
+// clave = nombre canónico del item (como aparece en el inventario)
+// ══════════════════════════════════════════════════════════════
+const PESO_UNIDAD = {
+  // Verduras
+  'Papa sabanera': 150, 'Papa': 150, 'Papa pastusa': 150, 'Papa criolla': 30,
+  'Aguacate hass': 200, 'Aguacate': 200,
+  'Plátano maduro': 200, 'Plátano verde': 200,
+  'Pimentón': 150, 'Brócoli': 400, 'Yuca': 300,
+  'Pepino cohombro': 300, 'Pepino': 300,
+  'Zucchini / Calabacín': 200, 'Calabacín': 200,
+  'Tomate chonto': 120, 'Cebolla cabezona blanca': 150, 'Cebolla cabezona': 150,
+  'Zanahoria': 100, 'Remolacha': 120, 'Ahuyama': 1000,
+  'Mazorca': 200, 'Cilantro fresco': 30, 'Cebollín': 30, 'Cebolla larga': 60,
+  'Habichuela': 8, 'Espinaca': 30, 'Repollo': 900, 'Repollo morado': 900,
+  'Edamame': 150,
+  // Frutas
+  'Mango tommy': 300, 'Maracuyá': 60, 'Papaya': 1500, 'Piña': 1200,
+  'Mora de castilla': 5, 'Lulo': 80, 'Guanábana': 2000, 'Feijoa': 40,
+  'Guayaba rosada': 80, 'Uchuva': 5, 'Fresa': 15, 'Banano': 120,
+  'Tomate de árbol': 90, 'Pitaya amarilla': 200, 'Granadilla': 100,
+  'Naranja': 200, 'Mandarina': 100, 'Melón': 1500, 'Sandía': 4000,
+  'Limón': 60,
+  // Proteínas por unidad
+  'Huevos': 55, 'Atún en agua (latas)': 140, 'Atún en agua': 140,
+  // Despensa por unidad
+  'Tortilla integral': 40, 'Galletas integrales': 8, 'Pan integral tajado': 500,
+  'Arepa blanca': 80, 'Panela': 500,
+};
+
+// Convierte una cantidad en g/ml a número de unidades físicas (redondeo arriba)
+function gramosAUnidades(nombreCanonico, gramos){
+  const peso = PESO_UNIDAD[nombreCanonico];
+  if(!peso || peso<=0) return null; // sin equivalencia conocida
+  return Math.ceil(gramos / peso);
+}
+
 // Tabla de normalización — unifica ingredientes redundantes bajo un nombre canónico
 const NORM_INGREDIENTES={
   // Huevos
@@ -1948,17 +1988,43 @@ function buildMercado(){
           invItem:invItem
         });
       } else {
-        // CASO B: unidades NO compatibles (frasco vs g, unidad vs ml…)
-        // → tratar por PRESENCIA: si tiene stock, ya lo tiene y no aparece.
-        // Si está en 0, aparece para comprar (1 unidad del inventario).
-        if(invItem && invItem.cur>0) return; // ya lo tiene → no comprar
-        needed[cat].push({
-          id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
-          name:c.nombre,
-          need: invItem ? ('comprar '+(invItem.unit||'')) : c.unit,
-          detalle:'',
-          invItem:invItem
-        });
+        // CASO B: unidades NO compatibles. Dos sub-casos:
+        const consUnit=(c.unit||'').toLowerCase();
+        const consEnPeso = ['g','gr','gramos','ml','l'].includes(consUnit);
+        const equivalencia = invItem ? PESO_UNIDAD[invItem.name] : null;
+
+        if(invItem && consEnPeso && equivalencia){
+          // ── SUB-CASO B1: receta en g/ml, inventario en unidades, HAY equivalencia ──
+          // Convertir gramos necesarios → unidades físicas (redondeo arriba)
+          let gramosNecesarios = c.num;
+          if(['g','gr','gramos'].includes(consUnit) && false){} // c.num ya en g
+          // convertir kg/l si aplica (el parse ya deja en la unidad base del ingrediente)
+          const unidadesNecesarias = Math.ceil(gramosNecesarios / equivalencia);
+          // Restar lo que ya tienes (en unidades)
+          const netoUnidades = Math.max(0, unidadesNecesarias - invItem.cur);
+          if(netoUnidades<=0) return; // ya tienes suficientes unidades
+          const uLabel = invItem.unit || 'unidades';
+          const tieneTxt = invItem.cur>0
+            ? ' (~'+Math.round(gramosNecesarios)+'g ≈ '+unidadesNecesarias+' '+uLabel+', tienes '+invItem.cur+')'
+            : ' (~'+Math.round(gramosNecesarios)+'g ≈ '+unidadesNecesarias+' '+uLabel+')';
+          needed[cat].push({
+            id:invItem.id,
+            name:c.nombre,
+            need: netoUnidades+' '+uLabel,
+            detalle: tieneTxt,
+            invItem:invItem
+          });
+        } else {
+          // ── SUB-CASO B2: sin equivalencia (frasco, paquete…) → por presencia ──
+          if(invItem && invItem.cur>0) return; // ya lo tiene → no comprar
+          needed[cat].push({
+            id:invItem?invItem.id:('x_'+c.nombre.replace(/\s/g,'_')),
+            name:c.nombre,
+            need: invItem ? ('comprar '+(invItem.unit||'')) : c.unit,
+            detalle:'',
+            invItem:invItem
+          });
+        }
       }
     });
 
