@@ -664,6 +664,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .recup-comida:last-child{border-bottom:none;}
 .recup-comida-et{min-width:78px;font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);padding-top:2px;}
 .recup-comida-txt{flex:1;color:var(--tx);}
+.recup-comida-nom{font-weight:500;color:var(--tx);margin-bottom:2px;}
+.recup-macros{font-size:10px;color:var(--mu);font-weight:400;margin-left:8px;letter-spacing:.02em;}
+.recup-ings{margin-top:7px;}
+.recup-ing{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--br);color:var(--mu);}
+.recup-ing:last-child{border-bottom:none;}
+.recup-ing-q{color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap;}
 .recup-nota{font-size:12px;color:var(--mu);background:var(--bg);border:1px solid var(--br);border-radius:var(--rad);padding:16px 20px;margin-top:1.5rem;line-height:1.75;}
 .recup-nota strong{color:var(--tx);}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:13px 24px;border-radius:var(--pill);font-size:12.5px;z-index:999;pointer-events:none;opacity:0;transition:opacity .3s;letter-spacing:.02em;box-shadow:0 8px 32px rgba(28,26,23,.16);}
@@ -4255,56 +4261,56 @@ const RECUP_DIAS = [
   { n:1, fase:'frio', faseTxt:'Frío · primeras 36 h',
     sub:'Hoy: ventana crítica de 36 h — frío, semilíquido, protege el coágulo',
     comidas:[
-      ['Desayuno','Batido de yogur griego con banano y avena remojada, a cuchara (nunca con pitillo). Frío.'],
-      ['Merienda','Yogur griego natural con una cucharadita de miel.'],
-      ['Almuerzo','Crema de ahuyama con pollo bien desmenuzado y suave + puré de papa. Tibio-ambiente, no caliente.'],
-      ['Merienda','Gelatina + batido de proteína frío (a sorbos del vaso).'],
-      ['Cena','Puré de papa cremoso con huevo pochado y aguacate machacado.'],
+      ['Desayuno','Batido de yogur griego, banano y avena (a cuchara, frío)',[['Yogur griego natural','170 g'],['Banano maduro','1 unidad'],['Avena en hojuelas remojada','40 g'],['Miel de abejas','5 ml']],340,24],
+      ['Merienda','Yogur griego con miel',[['Yogur griego natural','150 g'],['Miel de abejas','5 ml']],170,15],
+      ['Almuerzo','Crema de ahuyama con pollo desmenuzado + puré de papa',[['Ahuyama','250 g'],['Pechuga de pollo desmenuzada','120 g'],['Papa sabanera','200 g'],['Leche entera','60 ml'],['Aceite de oliva','5 ml']],480,38],
+      ['Merienda','Gelatina + batido de proteína frío',[['Gelatina sin azúcar','1 porción'],['Leche entera','200 ml'],['Avena en hojuelas','20 g'],['Banano','½ unidad']],260,18],
+      ['Cena','Puré de papa con huevo pochado y aguacate',[['Papa sabanera','200 g'],['Huevos','2 unidades'],['Aguacate hass','½ unidad'],['Leche entera','40 ml']],430,20],
     ]},
   { n:2, fase:'frio', faseTxt:'Frío → tibio',
     sub:'Mañana en la mañana cierra las 36 h · luego ya puedes entibiar',
     comidas:[
-      ['Desayuno','Avena bien cocida y cremosa con leche, dejada entibiar. Banano en puré encima.'],
-      ['Merienda','Yogur griego con papaya madura muy blanda en trozos pequeños.'],
-      ['Almuerzo','Puré de papa + tilapia desmenuzada suave (sin espinas) + aguacate. Ambiente.'],
-      ['Merienda','Batido de fresa con leche y avena, a cuchara.'],
-      ['Cena','Pasadas las 36 h ya puedes tibio: crema de verduras (zanahoria, calabacín) con huevo revuelto suave.'],
+      ['Desayuno','Avena cremosa con leche entibiada + banano en puré',[['Avena en hojuelas','50 g'],['Leche entera','200 ml'],['Banano maduro','1 unidad'],['Miel de abejas','5 ml']],360,16],
+      ['Merienda','Yogur griego con papaya blanda',[['Yogur griego natural','150 g'],['Papaya madura','120 g']],180,15],
+      ['Almuerzo','Puré de papa + tilapia desmenuzada + aguacate',[['Papa sabanera','200 g'],['Tilapia','150 g'],['Aguacate hass','½ unidad'],['Aceite de oliva','5 ml']],470,40],
+      ['Merienda','Batido de fresa con leche y avena (a cuchara)',[['Fresa','80 g'],['Leche entera','200 ml'],['Avena en hojuelas','20 g']],230,12],
+      ['Cena','Crema de verduras con huevo revuelto suave (ya tibio)',[['Zanahoria','100 g'],['Zucchini / Calabacín','100 g'],['Huevos','2 unidades'],['Leche entera','40 ml']],300,18],
     ]},
   { n:3, fase:'tibio', faseTxt:'Blando tibio',
     sub:'Ya no frío obligatorio · masticar del lado sano',
     comidas:[
-      ['Desayuno','Huevos revueltos muy suaves + avena cremosa tibia.'],
-      ['Merienda','Yogur griego con miel y papaya en trozos pequeños.'],
-      ['Almuerzo','Tilapia desmenuzada + puré de papa + calabacín muy cocido y blando.'],
-      ['Merienda','Pudín de chía con leche (dejar espesar, queda suave).'],
-      ['Cena','Sopa espesa de lentejas bien cocidas y un poco aplastadas + arroz blando.'],
+      ['Desayuno','Huevos revueltos suaves + avena cremosa',[['Huevos','2 unidades'],['Avena en hojuelas','50 g'],['Leche entera','200 ml']],420,24],
+      ['Merienda','Yogur griego con miel y papaya',[['Yogur griego natural','150 g'],['Papaya madura','120 g'],['Miel de abejas','5 ml']],200,15],
+      ['Almuerzo','Tilapia desmenuzada + puré + calabacín muy cocido',[['Tilapia','160 g'],['Papa sabanera','200 g'],['Zucchini / Calabacín','120 g'],['Aceite de oliva','5 ml']],470,42],
+      ['Merienda','Pudín de chía con leche',[['Semillas de chía','20 g'],['Leche entera','200 ml'],['Miel de abejas','5 ml']],250,10],
+      ['Cena','Sopa espesa de lentejas bien cocidas + arroz blando',[['Lentejas cocidas','120 g'],['Arroz blanco','60 g'],['Zanahoria','50 g']],410,20],
     ]},
   { n:4, fase:'tibio', faseTxt:'Blando tibio',
     sub:'Texturas suaves · proteína alta para cicatrizar',
     comidas:[
-      ['Desayuno','Arepa suave sin bordes duros con huevo revuelto y aguacate.'],
-      ['Merienda','Smoothie de banano, avena y leche (a sorbos, sin pitillo).'],
-      ['Almuerzo','Pollo desmenuzado en salsa suave + puré + espinaca muy cocida.'],
-      ['Merienda','Yogur griego con banano en puré.'],
-      ['Cena','Crema de ahuyama con pollo + un poco de arroz blando.'],
+      ['Desayuno','Arepa suave con huevo revuelto y aguacate',[['Harina de arepa','50 g'],['Huevos','2 unidades'],['Aguacate hass','½ unidad']],440,20],
+      ['Merienda','Smoothie de banano, avena y leche (a sorbos)',[['Banano','1 unidad'],['Avena en hojuelas','30 g'],['Leche entera','200 ml']],300,12],
+      ['Almuerzo','Pollo desmenuzado en salsa suave + puré + espinaca cocida',[['Pechuga de pollo','150 g'],['Papa sabanera','200 g'],['Espinaca','80 g'],['Aceite de oliva','5 ml']],480,42],
+      ['Merienda','Yogur griego con banano en puré',[['Yogur griego natural','150 g'],['Banano','1 unidad']],220,15],
+      ['Cena','Crema de ahuyama con pollo + arroz blando',[['Ahuyama','250 g'],['Pechuga de pollo desmenuzada','100 g'],['Arroz blanco','50 g']],390,32],
     ]},
   { n:5, fase:'prog', faseTxt:'Blando progresivo',
     sub:'Masticando adelante y del lado no intervenido',
     comidas:[
-      ['Desayuno','Arepa con huevo revuelto y queso campesino suave.'],
-      ['Merienda','Smoothie de fruta a sorbos + galletas integrales remojadas si molestan.'],
-      ['Almuerzo','Pollo desmenuzado + puré de papa + verdura muy cocida (brócoli bien blando).'],
-      ['Merienda','Yogur griego con fruta madura blanda.'],
-      ['Cena','Tortilla de claras suave + puré + aguacate.'],
+      ['Desayuno','Arepa con huevo revuelto y queso campesino',[['Harina de arepa','50 g'],['Huevos','2 unidades'],['Queso campesino','40 g']],450,26],
+      ['Merienda','Smoothie de fruta a sorbos',[['Papaya madura','120 g'],['Leche entera','200 ml'],['Avena en hojuelas','20 g']],250,11],
+      ['Almuerzo','Pollo desmenuzado + puré + brócoli bien blando',[['Pechuga de pollo','150 g'],['Papa sabanera','200 g'],['Brócoli','100 g'],['Aceite de oliva','5 ml']],470,42],
+      ['Merienda','Yogur griego con fruta madura blanda',[['Yogur griego natural','150 g'],['Papaya madura','100 g']],180,15],
+      ['Cena','Tortilla de claras suave + puré + aguacate',[['Clara de huevo líquida','150 ml'],['Papa sabanera','150 g'],['Aguacate hass','½ unidad']],360,26],
     ]},
   { n:6, fase:'prog', faseTxt:'Blando progresivo',
     sub:'Transición de vuelta a tu plan normal',
     comidas:[
-      ['Desayuno','Avena cremosa con fruta blanda + huevos revueltos.'],
-      ['Merienda','Yogur griego con granola remojada (que no esté dura).'],
-      ['Almuerzo','Pescado o pollo desmenuzado + arroz blando + verdura cocida suave.'],
-      ['Merienda','Batido de fruta con leche y avena.'],
-      ['Cena','Sopa espesa + proteína suave. Si todo va bien, al día 7 retomas tu plan normal.'],
+      ['Desayuno','Avena cremosa con fruta blanda + huevos revueltos',[['Avena en hojuelas','50 g'],['Leche entera','200 ml'],['Banano','1 unidad'],['Huevos','2 unidades']],480,26],
+      ['Merienda','Yogur griego con granola remojada',[['Yogur griego natural','150 g'],['Avena en hojuelas','30 g'],['Miel de abejas','5 ml']],260,16],
+      ['Almuerzo','Pescado o pollo desmenuzado + arroz blando + verdura cocida',[['Tilapia','160 g'],['Arroz blanco','70 g'],['Zanahoria','80 g'],['Aceite de oliva','5 ml']],480,40],
+      ['Merienda','Batido de fruta con leche y avena',[['Banano','1 unidad'],['Leche entera','200 ml'],['Avena en hojuelas','25 g']],290,12],
+      ['Cena','Sopa espesa + proteína suave (al día 7 retomas tu plan normal)',[['Lentejas cocidas','120 g'],['Pechuga de pollo desmenuzada','100 g'],['Arroz blanco','50 g']],430,34],
     ]},
 ];
 
@@ -4386,10 +4392,19 @@ function buildRecuperacion(){
 
     const body=document.createElement('div');
     body.className='recup-comidas'+(abierto?' open':'');
-    d.comidas.forEach(([et,txt])=>{
+    d.comidas.forEach(com=>{
+      const et=com[0], nombre=com[1], ings=com[2]||[], kcal=com[3], prot=com[4];
       const row=document.createElement('div');
       row.className='recup-comida';
-      row.innerHTML='<div class="recup-comida-et">'+et+'</div><div class="recup-comida-txt">'+txt+'</div>';
+      let ingHTML='';
+      if(ings.length){
+        ingHTML='<div class="recup-ings">'+ings.map(([n,q])=>
+          '<div class="recup-ing"><span>'+n+'</span><span class="recup-ing-q">'+q+'</span></div>'
+        ).join('')+'</div>';
+      }
+      const macros=(kcal||prot)?'<span class="recup-macros">'+(kcal?kcal+' kcal':'')+(kcal&&prot?' · ':'')+(prot?prot+'g prot':'')+'</span>':'';
+      row.innerHTML='<div class="recup-comida-et">'+et+'</div>'+
+        '<div class="recup-comida-txt"><div class="recup-comida-nom">'+nombre+macros+'</div>'+ingHTML+'</div>';
       body.appendChild(row);
     });
     card.appendChild(body);
